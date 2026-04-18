@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { CreditCard, Truck, Lock, ShieldCheck, Sparkles, ArrowLeft } from 'lucide-react'
@@ -90,10 +90,13 @@ export default function CheckoutPage() {
     setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }))
   }
 
-  if (items.length === 0) {
+  useEffect(() => {
+  if (!loading && items.length === 0) {
     router.push('/cart')
-    return null
   }
+}, [items, loading, router])
+
+if (items.length === 0) return null
 
   return (
     <div className="min-h-screen bg-[#fffdfa] py-16 px-6">
