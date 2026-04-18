@@ -2,33 +2,16 @@
 const nextConfig = {
   images: {
     remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'images.unsplash.com',
-      },
-      {
-        protocol: 'https',
-        hostname: '**.supabase.co',
-      },
-      {
-        protocol: 'https',
-        hostname: '**.cdninstagram.com',
-      },
-      {
-        protocol: 'https',
-        hostname: '**.fbcdn.net',
-      },
+      { protocol: 'https', hostname: 'images.unsplash.com' },
+      { protocol: 'https', hostname: '**.supabase.co' },
+      { protocol: 'https', hostname: '**.cdninstagram.com' },
+      { protocol: 'https', hostname: '**.fbcdn.net' },
     ],
   },
-  // ⚡ Crucial for Hostinger/Shared Hosting Deploys:
   typescript: {
-    // Ignore type errors during build so the site actually goes live
     ignoreBuildErrors: true,
   },
-  eslint: {
-    // Ignore linting errors during build to prevent build crashes
-    ignoreDuringBuilds: true,
-  },
+  // Note: We removed the 'eslint' block because Next 15+ handles it differently
 };
 
 export default nextConfig;
