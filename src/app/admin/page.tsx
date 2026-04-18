@@ -2,8 +2,12 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { motion } from 'framer-motion'
-import { Package, ShoppingCart, Users, TrendingUp, Plus, Edit, Trash2, Upload, X, Image as ImageIcon } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { 
+  Package, ShoppingCart, Users, TrendingUp, Plus, Edit, 
+  Trash2, Upload, X, Crown, ChevronRight, Sparkles, 
+  Search, Eye, Settings, Image as ImageIcon, History
+} from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import toast from 'react-hot-toast'
 import Image from 'next/image'
@@ -11,723 +15,266 @@ import Image from 'next/image'
 export default function AdminPage() {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState('products')
+  const [loading, setLoading] = useState(true)
+  
+  // Data States
   const [products, setProducts] = useState<any[]>([])
   const [orders, setOrders] = useState<any[]>([])
   const [blogPosts, setBlogPosts] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
+  const [customers, setCustomers] = useState<any[]>([])
+  
+  // UI States
   const [showProductForm, setShowProductForm] = useState(false)
-  const [editingProduct, setEditingProduct] = useState<any>(null)
-  const [uploadingImage, setUploadingImage] = useState(false)
-  const [imagePreview, setImagePreview] = useState<string>('')
-  const [productForm, setProductForm] = useState({
-    name: '',
-    slug: '',
-    description: '',
-    price: '',
-    category: 'Travel Treats',
-    stock: '',
-    sku: '',
-    image_url: '',
-    weight: '100g',
-  })
-  const [showBlogForm, setShowBlogForm] = useState(false)
-  const [editingPost, setEditingPost] = useState<any>(null)
-  const [blogForm, setBlogForm] = useState({
-    title: '',
-    slug: '',
-    content: '',
-    excerpt: '',
-    author: '',
-    published: false,
+  const [uploading, setUploading] = useState(false)
+  
+  // Multi-Image Form State
+  const [productForm, setProductForm] = useState<any>({
+    name: '', price: '', stock: '', category: 'Glass Heritage',
+    description: '', sku: '', image_url: '', gallery: []
   })
 
-  useEffect(() => {
-    checkAdmin()
-  }, [])
+  useEffect(() => { verifyAdmin() }, [])
 
-  const checkAdmin = async () => {
+  const verifyAdmin = async () => {
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) {
-      router.push('/login')
-      return
+    if (!user || user.app_metadata?.role !== 'admin') {
+      router.push('/login'); return
     }
     fetchData()
   }
 
   const fetchData = async () => {
     try {
-      const [productsData, ordersData, blogData] = await Promise.all([
+      const [p, o, b, c] = await Promise.all([
         supabase.from('products').select('*').order('created_at', { ascending: false }),
         supabase.from('orders').select('*').order('created_at', { ascending: false }),
         supabase.from('blog_posts').select('*').order('created_at', { ascending: false }),
+        supabase.from('user_profiles').select('*').order('created_at', { ascending: false })
       ])
-
-      setProducts(productsData.data || [])
-      setOrders(ordersData.data || [])
-      setBlogPosts(blogData.data || [])
-    } catch (error) {
-      console.error('Error fetching data:', error)
-    } finally {
-      setLoading(false)
-    }
+      setProducts(p.data || []); setOrders(o.data || []); 
+      setBlogPosts(b.data || []); setCustomers(c.data || [])
+    } finally { setLoading(false) }
   }
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      toast.error('Please upload an image file')
-      return
-    }
-
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('Image size should be less than 5MB')
-      return
-    }
-
-    setUploadingImage(true)
-
+  // --- 📸 MULTI-IMAGE GALLERY LOGIC ---
+  const handleImages = async (e: React.ChangeEvent<HTMLInputElement>, isMain: boolean) => {
+    const files = e.target.files; if (!files) return
+    setUploading(true)
     try {
-      // Create unique filename
-      const fileExt = file.name.split('.').pop()
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
-      const filePath = `products/${fileName}`
-
-      // Upload to Supabase Storage
-      const { data, error } = await supabase.storage
-        .from('products')
-        .upload(filePath, file)
-
-      if (error) throw error
-
-      // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('products')
-        .getPublicUrl(filePath)
-
-      // Update form with image URL
-      setProductForm(prev => ({ ...prev, image_url: publicUrl }))
-      setImagePreview(publicUrl)
-      toast.success('Image uploaded successfully!')
-    } catch (error: any) {
-      console.error('Error uploading image:', error)
-      toast.error(error.message || 'Failed to upload image')
-    } finally {
-      setUploadingImage(false)
-    }
-  }
-
-  const removeImage = () => {
-    setProductForm(prev => ({ ...prev, image_url: '' }))
-    setImagePreview('')
-  }
-
-  const handleProductSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-
-    try {
-      const productData = {
-        ...productForm,
-        price: parseFloat(productForm.price),
-        stock: parseInt(productForm.stock),
-      }
-
-      if (editingProduct) {
-        const { error } = await supabase
-          .from('products')
-          .update(productData)
-          .eq('id', editingProduct.id)
+      const uploadedUrls = []
+      for (const file of Array.from(files)) {
+        const path = `products/${Date.now()}-${file.name}`
+        const { error } = await supabase.storage.from('products').upload(path, file)
         if (error) throw error
-        toast.success('Product updated successfully!')
-      } else {
-        const { error } = await supabase.from('products').insert(productData)
-        if (error) throw error
-        toast.success('Product created successfully!')
+        const { data: { publicUrl } } = supabase.storage.from('products').getPublicUrl(path)
+        uploadedUrls.push(publicUrl)
       }
-
-      setShowProductForm(false)
-      setEditingProduct(null)
-      setImagePreview('')
-      setProductForm({
-        name: '',
-        slug: '',
-        description: '',
-        price: '',
-        category: 'Travel Treats',
-        stock: '',
-        sku: '',
-        image_url: '',
-        weight: '100g',
-      })
-      fetchData()
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to save product')
-    } finally {
-      setLoading(false)
-    }
+      if (isMain) setProductForm({ ...productForm, image_url: uploadedUrls[0] })
+      else setProductForm({ ...productForm, gallery: [...productForm.gallery, ...uploadedUrls].slice(0, 5) })
+      toast.success('Visuals Secured')
+    } catch (err) { toast.error('Upload Failed') } finally { setUploading(false) }
   }
 
-  const handleDeleteProduct = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this product?')) return
-
-    try {
-      const { error } = await supabase.from('products').delete().eq('id', id)
-      if (error) throw error
-      toast.success('Product deleted successfully!')
-      fetchData()
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to delete product')
-    }
-  }
-
-  const handleEditProduct = (product: any) => {
-    setEditingProduct(product)
-    setProductForm({
-      name: product.name,
-      slug: product.slug,
-      description: product.description,
-      price: product.price.toString(),
-      category: product.category,
-      stock: product.stock.toString(),
-      sku: product.sku,
-      image_url: product.image_url || '',
-      weight: product.weight || '100g',
-    })
-    setImagePreview(product.image_url || '')
-    setShowProductForm(true)
-  }
-
-  const updateOrderStatus = async (orderId: string, status: string) => {
-    try {
-      const { error } = await supabase
-        .from('orders')
-        .update({ status })
-        .eq('id', orderId)
-      if (error) throw error
-      toast.success('Order status updated!')
-      fetchData()
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to update order')
-    }
-  }
-
-  const handleBlogSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-
-    try {
-      const blogData = {
-        ...blogForm,
-      }
-
-      if (editingPost) {
-        const { error } = await supabase
-          .from('blog_posts')
-          .update(blogData)
-          .eq('id', editingPost.id)
-        if (error) throw error
-        toast.success('Blog post updated successfully!')
-      } else {
-        const { error } = await supabase.from('blog_posts').insert(blogData)
-        if (error) throw error
-        toast.success('Blog post created successfully!')
-      }
-
-      setShowBlogForm(false)
-      setEditingPost(null)
-      setBlogForm({
-        title: '',
-        slug: '',
-        content: '',
-        excerpt: '',
-        author: '',
-        published: false,
-      })
-      fetchData()
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to save blog post')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleDeletePost = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this post?')) return
-
-    try {
-      const { error } = await supabase.from('blog_posts').delete().eq('id', id)
-      if (error) throw error
-      toast.success('Post deleted successfully!')
-      fetchData()
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to delete post')
-    }
-  }
-
-  const handleEditPost = (post: any) => {
-    setEditingPost(post)
-    setBlogForm({
-      title: post.title,
-      slug: post.slug,
-      content: post.content,
-      excerpt: post.excerpt || '',
-      author: post.author || '',
-      published: post.published,
-    })
-    setShowBlogForm(true)
-  }
-
-  const stats = [
-    { icon: Package, label: 'Total Products', value: products.length, color: 'text-blue-600' },
-    { icon: ShoppingCart, label: 'Total Orders', value: orders.length, color: 'text-green-600' },
-    { icon: TrendingUp, label: 'Revenue', value: `₹${orders.reduce((sum, o) => sum + o.total, 0)}`, color: 'text-purple-600' },
-    { icon: Users, label: 'Customers', value: new Set(orders.map(o => o.user_id)).size, color: 'text-orange-600' },
-  ]
-
-  if (loading && products.length === 0) {
-    return <div className="min-h-screen flex items-center justify-center">Loading...</div>
-  }
+  if (loading) return <div className="min-h-screen bg-[#FAF9F6] flex items-center justify-center italic text-[#0F2C3E]/40">Accessing Archives...</div>
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
-      <div className="container mx-auto px-4">
-        <h1 className="text-4xl font-bold mb-8">Admin Dashboard</h1>
+    <div className="min-h-screen bg-[#FAF9F6] py-12 px-6">
+      <div className="max-w-7xl mx-auto">
+        <header className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6 border-b border-[#D4AF37]/10 pb-10">
+          <div>
+            <span className="text-[#D4AF37] text-[10px] font-bold tracking-[0.5em] uppercase mb-2 block">Executive Control</span>
+            <h1 className="text-5xl font-serif text-[#0F2C3E]">Admin <span className="italic font-light">Atelier</span></h1>
+          </div>
+          <div className="flex gap-4">
+            <button onClick={() => setActiveTab('settings')} className="p-4 bg-white rounded-full text-[#0F2C3E] shadow-sm hover:bg-[#0F2C3E] hover:text-white transition-all"><Settings size={20}/></button>
+          </div>
+        </header>
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {stats.map((stat, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-              className="bg-white rounded-xl shadow-md p-6"
-            >
-              <stat.icon className={`${stat.color} mb-3`} size={32} />
-              <h3 className="text-sm text-gray-600 mb-1">{stat.label}</h3>
-              <p className="text-3xl font-bold">{stat.value}</p>
-            </motion.div>
+        {/* 🏛️ Tab Navigation */}
+        <div className="flex gap-2 mb-8 overflow-x-auto pb-2">
+          {['products', 'orders', 'patrons', 'journal', 'settings'].map(tab => (
+            <button key={tab} onClick={() => setActiveTab(tab)} className={`px-8 py-3 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all ${activeTab === tab ? 'bg-[#0F2C3E] text-white' : 'bg-white text-gray-400 hover:text-[#0F2C3E]'}`}>
+              {tab === 'journal' ? 'The Journal' : tab}
+            </button>
           ))}
         </div>
 
-        {/* Tabs */}
-        <div className="bg-white rounded-xl shadow-md overflow-hidden">
-          <div className="flex border-b">
-            <button
-              onClick={() => setActiveTab('products')}
-              className={`flex-1 py-4 px-6 font-semibold ${
-                activeTab === 'products' ? 'bg-primary-50 text-primary-600 border-b-2 border-primary-600' : 'text-gray-600'
-              }`}
-            >
-              Products
-            </button>
-            <button
-              onClick={() => setActiveTab('orders')}
-              className={`flex-1 py-4 px-6 font-semibold ${
-                activeTab === 'orders' ? 'bg-primary-50 text-primary-600 border-b-2 border-primary-600' : 'text-gray-600'
-              }`}
-            >
-              Orders
-            </button>
-            <button
-              onClick={() => setActiveTab('blog')}
-              className={`flex-1 py-4 px-6 font-semibold ${
-                activeTab === 'blog' ? 'bg-primary-50 text-primary-600 border-b-2 border-primary-600' : 'text-gray-600'
-              }`}
-            >
-              Blog
-            </button>
-          </div>
+        {/* 🏺 PRODUCT MANAGEMENT WITH MULTI-IMAGE */}
+        {activeTab === 'products' && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+            <div className="flex justify-between items-center mb-8">
+              <h2 className="text-2xl font-serif">Artifact Inventory</h2>
+              <button onClick={() => setShowProductForm(!showProductForm)} className="bg-[#D4AF37] text-white px-8 py-3 rounded-full text-[10px] font-bold uppercase tracking-widest flex items-center gap-2">
+                <Plus size={16}/> {showProductForm ? 'Close Form' : 'New Artifact'}
+              </button>
+            </div>
 
-          <div className="p-6">
-            {/* PRODUCTS TAB */}
-            {activeTab === 'products' && (
-              <div>
-                <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-2xl font-bold">Products Management</h2>
-                  <button
-                    onClick={() => {
-                      setShowProductForm(!showProductForm)
-                      setEditingProduct(null)
-                      setImagePreview('')
-                      setProductForm({
-                        name: '',
-                        slug: '',
-                        description: '',
-                        price: '',
-                        category: 'Travel Treats',
-                        stock: '',
-                        sku: '',
-                        image_url: '',
-                        weight: '100g',
-                      })
-                    }}
-                    className="btn-primary flex items-center"
-                  >
-                    <Plus size={20} className="mr-2" />
-                    Add Product
-                  </button>
-                </div>
-
-                {showProductForm && (
-                  <form onSubmit={handleProductSubmit} className="bg-gray-50 rounded-lg p-6 mb-6">
-                    <h3 className="text-xl font-bold mb-4">{editingProduct ? 'Edit' : 'Add'} Product</h3>
-                    
-                    {/* Image Upload Section */}
-                    <div className="mb-6">
-                      <label className="block text-sm font-semibold mb-2">Product Image</label>
-                      
-                      {imagePreview || productForm.image_url ? (
-                        <div className="relative inline-block">
-                          <Image
-                            src={imagePreview || productForm.image_url}
-                            alt="Product preview"
-                            width={200}
-                            height={200}
-                            className="rounded-lg object-cover"
-                          />
-                          <button
-                            type="button"
-                            onClick={removeImage}
-                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
-                          >
-                            <X size={16} />
-                          </button>
-                        </div>
-                      ) : (
-                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-primary-500 transition-colors">
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={handleImageUpload}
-                            className="hidden"
-                            id="image-upload"
-                            disabled={uploadingImage}
-                          />
-                          <label htmlFor="image-upload" className="cursor-pointer">
-                            <ImageIcon className="mx-auto text-gray-400 mb-2" size={40} />
-                            <p className="text-gray-600 mb-1">
-                              {uploadingImage ? 'Uploading...' : 'Click to upload product image'}
-                            </p>
-                            <p className="text-sm text-gray-500">PNG, JPG up to 5MB</p>
-                          </label>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <input
-                        type="text"
-                        placeholder="Product Name"
-                        value={productForm.name}
-                        onChange={(e) => setProductForm({ ...productForm, name: e.target.value })}
-                        required
-                        className="input-field"
-                      />
-                      <input
-                        type="text"
-                        placeholder="Slug (e.g., travel-treats)"
-                        value={productForm.slug}
-                        onChange={(e) => setProductForm({ ...productForm, slug: e.target.value })}
-                        required
-                        className="input-field"
-                      />
-                      <input
-                        type="number"
-                        placeholder="Price"
-                        value={productForm.price}
-                        onChange={(e) => setProductForm({ ...productForm, price: e.target.value })}
-                        required
-                        className="input-field"
-                      />
-                      <input
-                        type="number"
-                        placeholder="Stock"
-                        value={productForm.stock}
-                        onChange={(e) => setProductForm({ ...productForm, stock: e.target.value })}
-                        required
-                        className="input-field"
-                      />
-                      <select
-                        value={productForm.category}
-                        onChange={(e) => setProductForm({ ...productForm, category: e.target.value })}
-                        className="input-field"
-                      >
-                        <option>Travel Treats</option>
-                        <option>Lunch Box Trails</option>
-                        <option>Workout Boost</option>
-                        <option>Yogic Superfoods</option>
-                        <option>Festival Bliss</option>
-                        <option>Smart Snacks</option>
-                      </select>
-                      <input
-                        type="text"
-                        placeholder="SKU"
-                        value={productForm.sku}
-                        onChange={(e) => setProductForm({ ...productForm, sku: e.target.value })}
-                        required
-                        className="input-field"
-                      />
-
-                      <input
-  type="text"
-  placeholder="Weight (e.g., 100g, 200g, 500g)"
-  value={productForm.weight}
-  onChange={(e) => setProductForm({ ...productForm, weight: e.target.value })}
-  required
-  className="input-field"
-/>
-                      <textarea
-                        placeholder="Description"
-                        value={productForm.description}
-                        onChange={(e) => setProductForm({ ...productForm, description: e.target.value })}
-                        rows={3}
-                        className="input-field md:col-span-2"
-                      />
-                    </div>
-                    <div className="flex gap-4 mt-4">
-                      <button type="submit" className="btn-primary" disabled={uploadingImage}>
-                        {editingProduct ? 'Update' : 'Create'} Product
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setShowProductForm(false)
-                          setEditingProduct(null)
-                          setImagePreview('')
-                        }}
-                        className="btn-outline"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </form>
-                )}
-
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="bg-gray-100">
-                      <tr>
-                        <th className="px-4 py-3 text-left">Image</th>
-                        <th className="px-4 py-3 text-left">Product</th>
-                        <th className="px-4 py-3 text-left">Category</th>
-                        <th className="px-4 py-3 text-left">Weight</th> 
-                        <th className="px-4 py-3 text-left">Price</th>
-                        <th className="px-4 py-3 text-left">Stock</th>
-                        <th className="px-4 py-3 text-left">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {products.map((product) => (
-                        <tr key={product.id} className="border-b hover:bg-gray-50">
-                          <td className="px-4 py-3">
-                            {product.image_url && (
-                              <Image
-                                src={product.image_url}
-                                alt={product.name}
-                                width={50}
-                                height={50}
-                                className="rounded object-cover"
-                              />
-                            )}
-                          </td>
-                          <td className="px-4 py-3">
-                            <div className="font-semibold">{product.name}</div>
-                            <div className="text-sm text-gray-600">{product.sku}</div>
-                          </td>
-                          <td className="px-4 py-3">{product.category}</td>
-                          <td className="px-4 py-3">{product.weight}</td>
-                          <td className="px-4 py-3">₹{product.price}</td>
-                          <td className="px-4 py-3">{product.stock}</td>
-                          <td className="px-4 py-3">
-                            <div className="flex gap-2">
-                              <button
-                                onClick={() => handleEditProduct(product)}
-                                className="text-blue-600 hover:text-blue-800"
-                              >
-                                <Edit size={18} />
-                              </button>
-                              <button
-                                onClick={() => handleDeleteProduct(product.id)}
-                                className="text-red-600 hover:text-red-800"
-                              >
-                                <Trash2 size={18} />
-                              </button>
+            <AnimatePresence>
+              {showProductForm && (
+                <motion.form initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="bg-white p-10 rounded-[3rem] border border-[#D4AF37]/20 mb-10 overflow-hidden">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                    {/* Visual Manager */}
+                    <div className="space-y-6">
+                       <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Master Cover</label>
+                       <div className="relative aspect-square w-full max-w-[200px] bg-[#FAF9F6] rounded-[2rem] flex items-center justify-center border-2 border-dashed border-gray-200 overflow-hidden">
+                          {productForm.image_url ? <Image src={productForm.image_url} fill alt="Main" className="object-cover"/> : <Upload className="text-gray-300"/>}
+                          <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => handleImages(e, true)}/>
+                       </div>
+                       
+                       <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Gallery Showcase ({productForm.gallery.length}/5)</label>
+                       <div className="flex flex-wrap gap-4">
+                          {productForm.gallery.map((url:string, i:number) => (
+                            <div key={i} className="relative w-16 h-16 rounded-xl overflow-hidden shadow-md">
+                              <Image src={url} fill alt="Gallery" className="object-cover"/>
+                              <button onClick={() => setProductForm({...productForm, gallery: productForm.gallery.filter((_:any,idx:number)=>idx!==i)})} className="absolute top-0 right-0 bg-red-500 text-white rounded-bl-lg p-1"><X size={10}/></button>
                             </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
-
-            {/* ORDERS & BLOG TABS - Keep the same as before */}
-            {activeTab === 'orders' && (
-              <div>
-                <h2 className="text-2xl font-bold mb-6">Orders Management</h2>
-                <div className="space-y-4">
-                  {orders.map((order) => (
-                    <div key={order.id} className="border rounded-lg p-4">
-                      <div className="flex justify-between items-start mb-4">
-                        <div>
-                          <p className="font-semibold">Order #{order.id.substring(0, 8)}</p>
-                          <p className="text-sm text-gray-600">{new Date(order.created_at).toLocaleString()}</p>
-                        </div>
-                        <p className="font-bold text-lg">₹{order.total}</p>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-semibold mb-2">Order Status</label>
-                        <select
-                          value={order.status}
-                          onChange={(e) => updateOrderStatus(order.id, e.target.value)}
-                          className="input-field w-full md:w-auto"
-                        >
-                          <option value="pending">Pending</option>
-                          <option value="processing">Processing</option>
-                          <option value="shipped">Shipped</option>
-                          <option value="delivered">Delivered</option>
-                          <option value="cancelled">Cancelled</option>
-                        </select>
-                      </div>
+                          ))}
+                          <label className="w-16 h-16 rounded-xl border-2 border-dashed border-gray-100 flex items-center justify-center cursor-pointer hover:bg-gray-50"><Plus size={16} className="text-gray-300"/><input type="file" multiple className="hidden" onChange={(e) => handleImages(e, false)}/></label>
+                       </div>
                     </div>
-                  ))}
-                  {orders.length === 0 && (
-                    <p className="text-center text-gray-500 py-8">No orders yet.</p>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'blog' && (
-              <div>
-                <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-2xl font-bold">Blog Posts Management</h2>
-                  <button
-                    onClick={() => setShowBlogForm(!showBlogForm)}
-                    className="btn-primary flex items-center"
-                  >
-                    <Plus size={20} className="mr-2" />
-                    Add Post
-                  </button>
-                </div>
-
-                {showBlogForm && (
-                  <form onSubmit={handleBlogSubmit} className="bg-gray-50 rounded-lg p-6 mb-6">
-                    <h3 className="text-xl font-bold mb-4">{editingPost ? 'Edit' : 'Add'} Blog Post</h3>
+                    {/* Details Manager */}
                     <div className="grid grid-cols-1 gap-4">
-                      <input
-                        type="text"
-                        placeholder="Post Title"
-                        value={blogForm.title}
-                        onChange={(e) => setBlogForm({ ...blogForm, title: e.target.value })}
-                        required
-                        className="input-field"
-                      />
-                      <input
-                        type="text"
-                        placeholder="Slug (e.g., benefits-dry-fruits)"
-                        value={blogForm.slug}
-                        onChange={(e) => setBlogForm({ ...blogForm, slug: e.target.value })}
-                        required
-                        className="input-field"
-                      />
-                      <input
-                        type="text"
-                        placeholder="Author Name"
-                        value={blogForm.author}
-                        onChange={(e) => setBlogForm({ ...blogForm, author: e.target.value })}
-                        className="input-field"
-                      />
-                      <textarea
-                        placeholder="Excerpt (Short summary)"
-                        value={blogForm.excerpt}
-                        onChange={(e) => setBlogForm({ ...blogForm, excerpt: e.target.value })}
-                        rows={2}
-                        className="input-field"
-                      />
-                      <textarea
-                        placeholder="Content (HTML supported)"
-                        value={blogForm.content}
-                        onChange={(e) => setBlogForm({ ...blogForm, content: e.target.value })}
-                        required
-                        rows={10}
-                        className="input-field"
-                      />
-                      <label className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          checked={blogForm.published}
-                          onChange={(e) => setBlogForm({ ...blogForm, published: e.target.checked })}
-                          className="w-5 h-5"
-                        />
-                        <span className="font-semibold">Publish (make visible on website)</span>
-                      </label>
+                      <input placeholder="Artifact Name" className="bg-[#FAF9F6] rounded-full py-4 px-8 text-sm outline-none" onChange={(e)=>setProductForm({...productForm, name: e.target.value})}/>
+                      <div className="grid grid-cols-2 gap-4">
+                        <input placeholder="Price (INR)" className="bg-[#FAF9F6] rounded-full py-4 px-8 text-sm outline-none"/>
+                        <input placeholder="Stock" className="bg-[#FAF9F6] rounded-full py-4 px-8 text-sm outline-none"/>
+                      </div>
+                      <textarea placeholder="The Narrative (Description)" className="bg-[#FAF9F6] rounded-[2rem] p-8 text-sm outline-none" rows={4}/>
+                      <button className="bg-[#0F2C3E] text-white py-4 rounded-full text-[10px] font-bold uppercase tracking-[0.4em]">Seal into Archives</button>
                     </div>
-                    <div className="flex gap-4 mt-4">
-                      <button type="submit" className="btn-primary">
-                        {editingPost ? 'Update' : 'Create'} Post
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setShowBlogForm(false)
-                          setEditingPost(null)
-                        }}
-                        className="btn-outline"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </form>
-                )}
+                  </div>
+                </motion.form>
+              )}
+            </AnimatePresence>
 
-                <div className="space-y-4">
-                  {blogPosts.map((post) => (
-                    <div key={post.id} className="border rounded-lg p-4 flex justify-between items-start">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <h3 className="font-semibold text-lg">{post.title}</h3>
-                          {post.published ? (
-                            <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">Published</span>
-                          ) : (
-                            <span className="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded-full">Draft</span>
-                          )}
-                        </div>
-                        <p className="text-sm text-gray-600 mb-2">{post.excerpt}</p>
-                        <p className="text-xs text-gray-500">
-                          {new Date(post.created_at).toLocaleDateString()} • {post.author || 'YUMMIGO Team'}
-                        </p>
-                      </div>
-                      <div className="flex gap-2 ml-4">
-                        <button
-                          onClick={() => handleEditPost(post)}
-                          className="text-blue-600 hover:text-blue-800"
-                        >
-                          <Edit size={18} />
-                        </button>
-                        <button
-                          onClick={() => handleDeletePost(post.id)}
-                          className="text-red-600 hover:text-red-800"
-                        >
-                          <Trash2 size={18} />
-                        </button>
-                      </div>
+            <div className="space-y-4">
+              {products.map(p => (
+                <div key={p.id} className="bg-white p-6 rounded-3xl flex items-center justify-between border border-gray-50 hover:border-[#D4AF37]/20 transition-all group">
+                  <div className="flex items-center gap-6">
+                    <div className="w-16 h-16 bg-[#FAF9F6] rounded-2xl overflow-hidden relative shadow-sm">
+                      <Image src={p.image_url} fill alt={p.name} className="object-cover"/>
                     </div>
-                  ))}
-                  {blogPosts.length === 0 && (
-                    <p className="text-center text-gray-500 py-8">No blog posts yet. Create your first post!</p>
-                  )}
+                    <div>
+                      <h4 className="font-serif text-[#0F2C3E] text-lg">{p.name}</h4>
+                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{p.category} • {p.stock} Units</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-all">
+                    <button className="p-3 bg-[#FAF9F6] rounded-full text-[#0F2C3E] hover:bg-[#D4AF37] hover:text-white"><Edit size={16}/></button>
+                    <button className="p-3 bg-[#FAF9F6] rounded-full text-red-400 hover:bg-red-50"><Trash2 size={16}/></button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
+        {/* 👑 PATRON MANAGEMENT (CRM) */}
+        {activeTab === 'patrons' && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+            <h2 className="text-2xl font-serif mb-8">Patron Registry</h2>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {customers.map(patron => {
+                const patronOrders = orders.filter(o => o.user_id === patron.id);
+                return (
+                  <div key={patron.id} className="bg-white p-10 rounded-[3rem] border border-gray-50 relative overflow-hidden group">
+                    <div className="flex justify-between items-start mb-6">
+                       <div>
+                          <h3 className="text-2xl font-serif text-[#0F2C3E]">{patron.full_name}</h3>
+                          <p className="text-[10px] font-bold text-[#D4AF37] tracking-widest uppercase mt-1">Acquisitions: {patronOrders.length}</p>
+                       </div>
+                       <Users className="text-gray-100 group-hover:text-[#D4AF37]/20 transition-colors" size={48} />
+                    </div>
+                    
+                    {/* Order History Preview */}
+                    <div className="space-y-3">
+                       <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest border-b pb-2">Acquisition History</p>
+                       {patronOrders.length > 0 ? patronOrders.slice(0,2).map(o => (
+                         <div key={o.id} className="flex justify-between items-center text-xs">
+                           <span className="text-gray-500 font-medium">#{o.id.substring(0,8).toUpperCase()}</span>
+                           <span className="font-serif text-[#0F2C3E]">₹{o.total.toLocaleString()}</span>
+                         </div>
+                       )) : <p className="text-[10px] italic text-gray-300">No transactions recorded.</p>}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
+
+        {/* 📦 ORDER MANAGEMENT */}
+        {activeTab === 'orders' && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+            <h2 className="text-2xl font-serif mb-8">Acquisition Logs</h2>
+            {orders.map(order => (
+              <div key={order.id} className="bg-white p-8 rounded-[2.5rem] flex flex-col md:flex-row justify-between items-center gap-6 border border-gray-50 shadow-sm">
+                <div className="flex items-center gap-6">
+                  <div className="w-12 h-12 bg-[#FAF9F6] rounded-2xl flex items-center justify-center text-[#D4AF37]"><History size={20}/></div>
+                  <div>
+                    <p className="text-[10px] font-bold text-gray-400 tracking-widest uppercase">Acquisition #{order.id.substring(0,8).toUpperCase()}</p>
+                    <p className="font-serif text-[#0F2C3E] text-xl">₹{order.total.toLocaleString()}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4">
+                   <select defaultValue={order.status} className="bg-[#FAF9F6] border-none rounded-full py-3 px-6 text-[10px] font-bold uppercase tracking-widest text-[#0F2C3E] outline-none">
+                      <option value="pending">Atelier Processing</option>
+                      <option value="shipped">Dispatched</option>
+                      <option value="delivered">Delivered</option>
+                   </select>
+                   <button className="p-3 bg-gray-50 rounded-full text-[#D4AF37] hover:bg-[#0F2C3E] hover:text-white transition-all"><Eye size={18}/></button>
                 </div>
               </div>
-            )}
-          </div>
-        </div>
+            ))}
+          </motion.div>
+        )}
+
+        {/* 📝 JOURNAL (BLOG) MANAGEMENT */}
+        {activeTab === 'journal' && (
+           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+              <div className="flex justify-between items-center mb-10">
+                <h2 className="text-2xl font-serif">The Journal Editor</h2>
+                <button className="bg-[#0F2C3E] text-white px-8 py-3 rounded-full text-[10px] font-bold uppercase tracking-widest">Compose Narrative</button>
+              </div>
+              <div className="grid grid-cols-1 gap-6">
+                {blogPosts.map(post => (
+                  <div key={post.id} className="bg-white p-8 rounded-[2.5rem] flex justify-between items-center group">
+                    <div className="flex items-center gap-6">
+                       <div className="w-20 h-20 bg-gray-50 rounded-3xl overflow-hidden relative"><ImageIcon size={24} className="m-auto text-gray-200" /></div>
+                       <div>
+                          <h4 className="text-xl font-serif text-[#0F2C3E]">{post.title}</h4>
+                          <p className="text-[10px] font-bold text-gray-400 tracking-widest uppercase">{post.published ? 'Public Release' : 'Draft Narrative'}</p>
+                       </div>
+                    </div>
+                    <div className="flex gap-2">
+                       <button className="p-3 bg-[#FAF9F6] rounded-full text-[#0F2C3E]"><Edit size={16}/></button>
+                       <button className="p-3 bg-red-50 rounded-full text-red-400"><Trash2 size={16}/></button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+           </motion.div>
+        )}
+
+        {/* ⚙️ PROFILE SETTINGS */}
+        {activeTab === 'settings' && (
+           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-2xl mx-auto text-center py-20">
+              <div className="w-24 h-24 bg-[#0F2C3E] rounded-full mx-auto mb-8 flex items-center justify-center text-[#D4AF37] shadow-2xl">
+                 <Crown size={40} strokeWidth={1}/>
+              </div>
+              <h2 className="text-3xl font-serif text-[#0F2C3E] mb-2">Master Profile</h2>
+              <p className="text-[10px] font-bold text-[#D4AF37] tracking-[0.4em] uppercase mb-12">Security Level: Administrative</p>
+              
+              <div className="bg-white p-12 rounded-[3rem] shadow-sm space-y-6 text-left border border-gray-50">
+                 <div>
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400 ml-4 mb-2 block">Display Name</label>
+                    <input value="Ankit Tiwari" className="w-full bg-[#FAF9F6] py-4 px-8 rounded-full border-none outline-none text-sm font-medium"/>
+                 </div>
+                 <button className="w-full bg-[#0F2C3E] text-white py-4 rounded-full text-[10px] font-bold uppercase tracking-[0.3em] mt-8">Update Master Credentials</button>
+                 <button onClick={() => supabase.auth.signOut()} className="w-full text-[10px] font-bold uppercase tracking-[0.3em] text-red-400 hover:text-red-600">Secure Sign Out</button>
+              </div>
+           </motion.div>
+        )}
       </div>
     </div>
   )
