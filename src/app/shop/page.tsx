@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Filter, Search, X, SlidersHorizontal, Sparkles } from 'lucide-react'
-import { supabase, Product } from '@/lib/supabase'
+import { supabase, Product } from '../../lib/supabase'
 import ProductCard from '../../components/ProductCard'
 
 // SB Creation Specific Categories
