@@ -1,33 +1,34 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { motion } from 'framer-motion'
-import { Filter, Search, X } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Filter, Search, X, SlidersHorizontal, Sparkles } from 'lucide-react'
 import { supabase, Product } from '@/lib/supabase'
 import ProductCard from '@/components/ProductCard'
 
+// SB Creation Specific Categories
 const categories = [
-  'All Products',
-  'Travel Treats',
-  'Lunch Box Trails',
-  'Workout Boost',
-  'Yogic Superfoods',
-  'Festival Bliss',
-  'Smart Snacks',
+  'All Collections',
+  'Glass Heritage',
+  'Metal Elegance',
+  'Bridal Special',
+  'Daily Adornments',
+  'Velvet Finish',
+  'Designer Kangan',
 ]
 
 const sortOptions = [
-  { value: 'newest', label: 'Newest First' },
-  { value: 'price-low', label: 'Price: Low to High' },
-  { value: 'price-high', label: 'Price: High to Low' },
-  { value: 'name', label: 'Name: A to Z' },
+  { value: 'newest', label: 'Latest Arrivals' },
+  { value: 'price-low', label: 'Valuation: Low to High' },
+  { value: 'price-high', label: 'Valuation: High to Low' },
+  { value: 'name', label: 'Alphabetical' },
 ]
 
 export default function ShopPage() {
   const [products, setProducts] = useState<Product[]>([])
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
-  const [selectedCategory, setSelectedCategory] = useState('All Products')
+  const [selectedCategory, setSelectedCategory] = useState('All Collections')
   const [searchQuery, setSearchQuery] = useState('')
   const [sortBy, setSortBy] = useState('newest')
   const [showFilters, setShowFilters] = useState(false)
@@ -50,7 +51,7 @@ export default function ShopPage() {
       if (error) throw error
       setProducts(data || [])
     } catch (error) {
-      console.error('Error fetching products:', error)
+      console.error('Error:', error)
     } finally {
       setLoading(false)
     }
@@ -58,182 +59,149 @@ export default function ShopPage() {
 
   const filterAndSortProducts = () => {
     let filtered = [...products]
-
-    // Filter by category
-    if (selectedCategory !== 'All Products') {
+    if (selectedCategory !== 'All Collections') {
       filtered = filtered.filter((p) => p.category === selectedCategory)
     }
-
-    // Filter by search query
     if (searchQuery) {
       filtered = filtered.filter((p) =>
         p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.description.toLowerCase().includes(searchQuery.toLowerCase())
+        p.description?.toLowerCase().includes(searchQuery.toLowerCase())
       )
     }
 
-    // Sort products
     switch (sortBy) {
-      case 'price-low':
-        filtered.sort((a, b) => a.price - b.price)
-        break
-      case 'price-high':
-        filtered.sort((a, b) => b.price - a.price)
-        break
-      case 'name':
-        filtered.sort((a, b) => a.name.localeCompare(b.name))
-        break
-      case 'newest':
-      default:
-        filtered.sort((a, b) => 
-          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-        )
+      case 'price-low': filtered.sort((a, b) => a.price - b.price); break
+      case 'price-high': filtered.sort((a, b) => b.price - a.price); break
+      case 'name': filtered.sort((a, b) => a.name.localeCompare(b.name)); break
+      default: filtered.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
     }
-
     setFilteredProducts(filtered)
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Hero Section */}
-      <section className="bg-gradient-to-br from-primary-50 to-secondary-50 py-16">
-        <div className="container mx-auto px-4">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center"
-          >
-            <h1 className="text-5xl font-bold mb-4">Our Products</h1>
-            <p className="text-xl text-gray-600">
-              Discover our complete range of premium healthy snacks
+    <div className="min-h-screen bg-[#fffdfa]">
+      {/* 🏛️ Editorial Hero */}
+      <section className="bg-[#0F2C3E] py-24 relative overflow-hidden">
+        <div className="container mx-auto px-6 text-center relative z-10">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+            <span className="text-[#D4AF37] text-[10px] font-bold tracking-[0.6em] uppercase mb-4 block">
+              Firozabad Heritage
+            </span>
+            <h1 className="text-5xl md:text-7xl font-serif text-white mb-6">
+              The <span className="italic font-light text-[#D4AF37]">Boutique</span> Gallery
+            </h1>
+            <p className="text-[#FAF9F6]/50 text-base max-w-xl mx-auto font-light leading-relaxed">
+              Explore our curated selection of handcrafted bangles, where centuries of tradition meet modern elegance.
             </p>
           </motion.div>
         </div>
+        <div className="absolute top-0 right-0 w-96 h-96 bg-[#D4AF37]/5 rounded-full blur-[100px]" />
       </section>
 
-      {/* Main Content */}
-      <div className="container mx-auto px-4 py-12">
-        <div className="flex flex-col lg:flex-row gap-8">
-          {/* Sidebar Filters */}
-          <aside className={`lg:w-64 ${showFilters ? 'block' : 'hidden lg:block'}`}>
-            <div className="bg-white rounded-xl shadow-md p-6 sticky top-24">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold">Filters</h2>
-                <button
-                  onClick={() => setShowFilters(false)}
-                  className="lg:hidden"
-                >
-                  <X size={24} />
-                </button>
+      {/* 🛠️ Shop Interface */}
+      <div className="container mx-auto px-6 py-16">
+        <div className="flex flex-col lg:flex-row gap-12">
+          
+          {/* 📍 Sidebar: High-End Filter */}
+          <aside className={`lg:w-72 ${showFilters ? 'fixed inset-0 z-50 bg-white p-10 overflow-y-auto' : 'hidden lg:block'}`}>
+            <div className="sticky top-32 space-y-12">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xs font-bold uppercase tracking-[0.4em] text-[#0F2C3E]">Collections</h2>
+                <button onClick={() => setShowFilters(false)} className="lg:hidden text-[#0F2C3E]"><X size={24} /></button>
               </div>
 
-              {/* Categories */}
-              <div className="mb-6">
-                <h3 className="font-semibold mb-3">Categories</h3>
-                <div className="space-y-2">
-                  {categories.map((category) => (
-                    <button
-                      key={category}
-                      onClick={() => setSelectedCategory(category)}
-                      className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${
-                        selectedCategory === category
-                          ? 'bg-primary-100 text-primary-700 font-semibold'
-                          : 'hover:bg-gray-100'
-                      }`}
-                    >
-                      {category}
-                    </button>
-                  ))}
-                </div>
+              <div className="space-y-3">
+                {categories.map((category) => (
+                  <button
+                    key={category}
+                    onClick={() => { setSelectedCategory(category); setShowFilters(false); }}
+                    className={`w-full text-left py-2 text-sm transition-all duration-300 relative group ${
+                      selectedCategory === category ? 'text-[#db2777] font-bold' : 'text-[#0F2C3E]/60 hover:text-[#0F2C3E]'
+                    }`}
+                  >
+                    {category}
+                    {selectedCategory === category && (
+                      <motion.div layoutId="activeCat" className="absolute -left-4 top-1/2 -translate-y-1/2 w-1 h-1 bg-[#D4AF37] rounded-full" />
+                    )}
+                  </button>
+                ))}
               </div>
 
-              {/* Clear Filters */}
-              <button
-                onClick={() => {
-                  setSelectedCategory('All Products')
-                  setSearchQuery('')
-                }}
-                className="w-full btn-outline py-2"
-              >
-                Clear Filters
-              </button>
+              <div className="pt-8 border-t border-[#D4AF37]/10">
+                 <button 
+                  onClick={() => { setSelectedCategory('All Collections'); setSearchQuery(''); }}
+                  className="text-[10px] font-bold uppercase tracking-widest text-[#0F2C3E]/40 hover:text-[#db2777]"
+                 >
+                   Reset Selection
+                 </button>
+              </div>
             </div>
           </aside>
 
-          {/* Products Grid */}
+          {/* 💎 Product Grid Area */}
           <main className="flex-1">
-            {/* Search and Sort Bar */}
-            <div className="bg-white rounded-xl shadow-md p-4 mb-6">
-              <div className="flex flex-col sm:flex-row gap-4">
-                {/* Search */}
-                <div className="flex-1 relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-                  <input
-                    type="text"
-                    placeholder="Search products..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border-2 border-gray-200 rounded-lg focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none"
-                  />
-                </div>
+            {/* Control Bar */}
+            <div className="flex flex-col md:flex-row justify-between items-center mb-12 gap-6 bg-white p-4 rounded-3xl shadow-[0_10px_40px_-15px_rgba(15,44,62,0.05)] border border-[#D4AF37]/5">
+              <div className="relative w-full md:w-96 group">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#D4AF37] opacity-40 group-focus-within:opacity-100 transition-opacity" size={18} />
+                <input
+                  type="text"
+                  placeholder="Find your artifact..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-12 pr-6 py-3 bg-[#FAF9F6] border-none rounded-full text-sm focus:ring-1 focus:ring-[#D4AF37] transition-all"
+                />
+              </div>
 
-                {/* Sort */}
+              <div className="flex items-center gap-4 w-full md:w-auto">
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
-                  className="px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none"
+                  className="flex-1 md:w-48 bg-[#FAF9F6] border-none rounded-full py-3 px-6 text-[10px] font-bold uppercase tracking-widest text-[#0F2C3E] focus:ring-1 focus:ring-[#D4AF37]"
                 >
-                  {sortOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
+                  {sortOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                 </select>
-
-                {/* Mobile Filter Button */}
-                <button
+                
+                <button 
                   onClick={() => setShowFilters(true)}
-                  className="lg:hidden btn-outline py-2 px-4 flex items-center justify-center space-x-2"
+                  className="lg:hidden p-3 bg-[#0F2C3E] text-white rounded-full shadow-lg"
                 >
-                  <Filter size={20} />
-                  <span>Filters</span>
+                  <SlidersHorizontal size={20} />
                 </button>
               </div>
             </div>
 
-            {/* Results Count */}
-            <div className="mb-6">
-              <p className="text-gray-600">
-                Showing {filteredProducts.length} of {products.length} products
-              </p>
+            {/* Catalog Info */}
+            <div className="flex items-center gap-4 mb-8">
+               <Sparkles size={16} className="text-[#D4AF37]" />
+               <p className="text-[10px] font-bold uppercase tracking-widest text-[#0F2C3E]/30">
+                 Revealing {filteredProducts.length} Artisanal Pieces
+               </p>
             </div>
 
-            {/* Products Grid */}
-            {loading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {[1, 2, 3, 4, 5, 6].map((i) => (
-                  <div key={i} className="card animate-pulse">
-                    <div className="h-64 bg-gray-200" />
-                    <div className="p-6 space-y-3">
-                      <div className="h-6 bg-gray-200 rounded" />
-                      <div className="h-4 bg-gray-200 rounded w-2/3" />
-                      <div className="h-8 bg-gray-200 rounded w-1/3" />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : filteredProducts.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {filteredProducts.map((product) => (
-                  <ProductCard key={product.id} product={product} />
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-20">
-                <p className="text-2xl text-gray-600">No products found</p>
-                <p className="text-gray-500 mt-2">Try adjusting your filters or search query</p>
-              </div>
-            )}
+            {/* Grid */}
+            <AnimatePresence mode="wait">
+              {loading ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+                  {[...Array(6)].map((_, i) => (
+                    <div key={i} className="aspect-[3/4] bg-gray-50 animate-pulse rounded-[2.5rem]" />
+                  ))}
+                </div>
+              ) : filteredProducts.length > 0 ? (
+                <motion.div 
+                  layout
+                  className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10"
+                >
+                  {filteredProducts.map((product) => (
+                    <ProductCard key={product.id} product={product} />
+                  ))}
+                </motion.div>
+              ) : (
+                <div className="text-center py-32">
+                  <h3 className="text-3xl font-serif text-[#0F2C3E] opacity-20">The collection is currently empty</h3>
+                </div>
+              )}
+            </AnimatePresence>
           </main>
         </div>
       </div>

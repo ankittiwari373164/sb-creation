@@ -1,109 +1,20 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --font-inter: 'Inter', sans-serif;
+}
+
 body {
-  font-family: 'Inter', sans-serif;
-  color: #111827;
-  background-color: white;
+  @apply bg-accent-silk text-accent-charcoal font-sans antialiased;
 }
 
-h1, h2, h3, h4, h5, h6 {
-  font-family: 'Space Grotesk', sans-serif;
-}
-
+/* Ensure buttons use the new Pink-500 from the config */
 .btn-primary {
-  background-color: #ff6b35;
-  color: white;
-  font-weight: 600;
-  padding: 0.75rem 1.5rem;
-  border-radius: 0.5rem;
-  transition: all 0.3s;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-}
-
-.btn-primary:hover {
-  background-color: #f05123;
-  transform: scale(1.05);
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-}
-
-.btn-secondary {
-  background-color: #e95b54;
-  color: white;
-  font-weight: 600;
-  padding: 0.75rem 1.5rem;
-  border-radius: 0.5rem;
-  transition: all 0.3s;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-}
-
-.btn-secondary:hover {
-  background-color: #d43b3b;
-  transform: scale(1.05);
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  @apply bg-primary-500 text-white px-8 py-3 rounded-full font-bold hover:bg-primary-600 transition-all shadow-lg;
 }
 
 .btn-outline {
-  border: 2px solid #ff6b35;
-  color: #ff6b35;
-  font-weight: 600;
-  padding: 0.75rem 1.5rem;
-  border-radius: 0.5rem;
-  transition: all 0.3s;
-  background-color: transparent;
-}
-
-.btn-outline:hover {
-  background-color: #ff6b35;
-  color: white;
-}
-
-.input-field {
-  width: 100%;
-  padding: 0.75rem 1rem;
-  border: 2px solid #e5e7eb;
-  border-radius: 0.5rem;
-  outline: none;
-  transition: all 0.3s;
-}
-
-.input-field:focus {
-  border-color: #ff6b35;
-  box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
-}
-
-.card {
-  background-color: white;
-  border-radius: 0.75rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-  transition: all 0.3s;
-}
-
-.card:hover {
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-}
-
-.section-title {
-  font-size: 2.25rem;
-  font-weight: bold;
-  color: #111827;
-  margin-bottom: 1rem;
-}
-
-.section-subtitle {
-  font-size: 1.125rem;
-  color: #6b7280;
-  max-width: 42rem;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-@media (min-width: 768px) {
-  .section-title {
-    font-size: 3rem;
-  }
+  @apply border-2 border-primary-500 text-primary-500 px-8 py-3 rounded-full font-bold hover:bg-primary-50 transition-all;
 }
