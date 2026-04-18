@@ -5,7 +5,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { ShoppingCart, Star } from 'lucide-react'
 import { Product } from '@/lib/supabase'
-import { useCartStore } from '@/lib/cartStore'
+import { useCartStore } from '../lib/cartStore'
 import toast from 'react-hot-toast'
 
 interface ProductCardProps {

@@ -1,10 +1,9 @@
 "use client";
 import React, { useEffect, useState } from 'react';
-import Hero from '@/components/Hero';
-import Categories from '@/components/Categories';
-import FeaturedProducts from '@/components/FeaturedProducts';
-// 1. Import supabase from your lib folder
-import { supabase } from '@/lib/supabase'; 
+import Hero from '../components/Hero'
+import Categories from '../components/Categories'
+import FeaturedProducts from '../components/FeaturedProducts'
+import { supabase } from '../lib/supabase'
 import Heritage from '@/components/Heritage';
 import CreativeGallery from '@/components/CreativeGallery';
 import ProductSlider from '@/components/ProductSlider';
