@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { Calendar, User, ArrowLeft, Sparkles } from 'lucide-react'
-import { supabase } from '@/lib/supabase'
+import { supabase } from '../../../lib/supabase'
 
 export default function BlogDetailPage() {
   const params = useParams()

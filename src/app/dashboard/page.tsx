@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Package, User, MapPin, Heart, Sparkles, Crown, ArrowRight, Settings, ShoppingBag } from 'lucide-react'
-import { supabase } from '@/lib/supabase'
+import { supabase } from '../../lib/supabase'
 import Link from 'next/link'
 
 export default function DashboardPage() {
