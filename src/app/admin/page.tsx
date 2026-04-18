@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Package, ShoppingCart, Users, TrendingUp, Plus, Edit, Trash2, Upload, X, Image as ImageIcon } from 'lucide-react'
-import { supabase } from '@/lib/supabase'
+import { supabase } from '../../lib/supabase'
 import toast from 'react-hot-toast'
 import Image from 'next/image'
 
