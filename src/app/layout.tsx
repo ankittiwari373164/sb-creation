@@ -5,8 +5,8 @@ import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 
 export const metadata: Metadata = {
-  title: 'YUMMIGO - Healthy Snacking for the On-the-Go Generation',
-  description: 'Premium dry fruit mixes offering perfect balance of taste, nutrition, and convenience. Shop our six signature SKUs for every moment of your day.',
+  title: 'SB Creation | Handcrafted Firozabad Bangles',
+  description: 'Traditional elegance from the City of Bangles. Shop Glass, Metal, and Designer bangles.',
   keywords: 'healthy snacks, dry fruits, nuts, trail mix, workout snacks, travel snacks',
 }
 

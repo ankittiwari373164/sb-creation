@@ -23,7 +23,7 @@ const Heritage = () => {
               className="relative z-10 w-[85%] aspect-[4/5] rounded-t-full overflow-hidden border-[12px] border-white shadow-2xl"
             >
               <Image 
-                src="/heritage-1.jpg" 
+                src="/bangles.jpeg" 
                 alt="Artisan at work" 
                 fill 
                 className="object-cover"
@@ -39,7 +39,7 @@ const Heritage = () => {
               className="absolute -bottom-10 -right-4 z-20 w-[50%] aspect-square rounded-full overflow-hidden border-[8px] border-[#FAF9F6] shadow-2xl"
             >
               <Image 
-                src="/heritage-2.jpg" 
+                src="/bangles1.jpeg" 
                 alt="Glass bangles detail" 
                 fill 
                 className="object-cover"
