@@ -5,7 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { motion } from 'framer-motion'
 import { Calendar, User, ArrowRight, Sparkles, BookOpen } from 'lucide-react'
-import { supabase } from '@/lib/supabase'
+import { supabase } from '../../lib/supabase'
 
 export default function JournalPage() {
   const [posts, setPosts] = useState<any[]>([])

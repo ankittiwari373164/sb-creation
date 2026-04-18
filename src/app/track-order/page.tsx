@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Search, Package, Truck, CheckCircle, XCircle } from 'lucide-react'
-import { supabase } from '@/lib/supabase'
+import { supabase } from '../../lib/supabase'
 import toast from 'react-hot-toast'
 
 export default function TrackOrderPage() {

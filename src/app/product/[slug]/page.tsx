@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { ShoppingBag, Plus, Minus, Star, Truck, ShieldCheck, Sparkles, ArrowRight, X } from 'lucide-react'
 import { Product, supabase } from '../../../lib/supabase'
 import { useCartStore } from '../../../lib/cartStore'
-import ProductCard from '@/components/ProductCard'
+import ProductCard from '../../../components/ProductCard'
 import toast from 'react-hot-toast'
 
 export default function ProductDetailPage() {

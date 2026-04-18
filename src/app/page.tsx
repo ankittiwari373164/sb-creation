@@ -4,12 +4,12 @@ import Hero from '../components/Hero'
 import Categories from '../components/Categories'
 import FeaturedProducts from '../components/FeaturedProducts'
 import { supabase } from '../lib/supabase'
-import Heritage from '@/components/Heritage';
-import CreativeGallery from '@/components/CreativeGallery';
-import ProductSlider from '@/components/ProductSlider';
-import Testimonials from '@/components/Testimonials';
-import PublicInstaFeed from '@/components/PublicInstaFeed';
-import Newsletter from '@/components/Newsletter';
+import Heritage from '../components/Heritage';
+import CreativeGallery from '../components/CreativeGallery';
+import ProductSlider from '../components/ProductSlider';
+import Testimonials from '../components/Testimonials';
+import PublicInstaFeed from '../components/PublicInstaFeed';
+import Newsletter from '../components/Newsletter';
 
 
 export default function Home() {

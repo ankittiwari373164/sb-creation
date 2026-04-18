@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ShoppingBag, Menu, X, Search, User, Home, Store } from "lucide-react";
-import { useCartStore } from "@/lib/cartStore";
+import { useCartStore } from "../lib/cartStore";
 
 export default function Header() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);

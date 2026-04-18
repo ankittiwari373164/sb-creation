@@ -3,7 +3,7 @@ import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ShoppingBag, Heart, Eye } from 'lucide-react';
-import { useCartStore } from '@/lib/cartStore'; // Import your Yummigo cart logic
+import { useCartStore } from '../lib/cartStore'; // Import your Yummigo cart logic
 import toast from 'react-hot-toast';
 
 const FeaturedProducts = ({ products }: { products: any[] }) => {

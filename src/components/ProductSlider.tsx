@@ -4,7 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { ShoppingBag, Heart, Eye } from 'lucide-react';
-import { useCartStore } from '@/lib/cartStore';
+import { useCartStore } from '../lib/cartStore';
 import toast from 'react-hot-toast';
 
 const ProductSlider = ({ products }: { products: any[] }) => {
