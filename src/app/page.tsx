@@ -10,35 +10,47 @@ import ProductSlider from '../components/ProductSlider';
 import Testimonials from '../components/Testimonials';
 import PublicInstaFeed from '../components/PublicInstaFeed';
 import Newsletter from '../components/Newsletter';
+import ProductGrid from '@/components/ProductGrid';
+import ArtisanalStack from '../components/ArtisanalStack'
+import ProductVault from '../components/ProductVault'
+
 
 
 export default function Home() {
-  // 2. Set up a state to hold your products
-  const [products, setProducts] = useState<any[]>([]);
+  const [products, setProducts] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // 3. Create an async function inside useEffect
     const fetchProducts = async () => {
-      const { data } = await supabase.from('products').select('*').limit(8);
-      if (data) setProducts(data);
-    };
-
-    fetchProducts();
-  }, []);
+      try {
+        const { data } = await supabase.from('products').select('*')
+        setProducts(data || [])
+      } catch (err) {
+        console.error("Fetch error:", err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchProducts()
+  }, [])
 
   return (
     <main className="min-h-screen bg-[#FAF9F6]">
-      <Hero />
-      <Categories />
+      <ProductGrid products={products} title="Our Masterpieces" />
+      {/* <Hero />
+      <Categories /> */}
       {/* 4. Pass the fetched products to the component */}
       <FeaturedProducts products={products} />
 
       
       <CreativeGallery products={products} />
       <ProductSlider products={products.slice(0, 8)} />
-      <Heritage />
-      <Testimonials />
-      <PublicInstaFeed />
+      {/* <Heritage /> */}
+      <ArtisanalStack products={products} />
+
+      <ProductVault products={products} />
+      {/* <Testimonials />
+      <PublicInstaFeed /> */}
       <Newsletter />
     </main>
   );

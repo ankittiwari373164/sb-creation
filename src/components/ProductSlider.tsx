@@ -1,97 +1,99 @@
-"use client";
-import React from 'react';
-import Image from 'next/image';
-import Link from 'next/link';
-import { motion } from 'framer-motion';
-import { ShoppingBag, Heart, Eye } from 'lucide-react';
-import { useCartStore } from '../lib/cartStore';
-import toast from 'react-hot-toast';
+'use client'
+
+import React from 'react'
+import Image from 'next/image'
+import Link from 'next/link'
+import { ShoppingBag, Heart, Eye } from 'lucide-react'
+import { useCartStore } from '../lib/cartStore'
+import toast from 'react-hot-toast'
 
 const ProductSlider = ({ products }: { products: any[] }) => {
-  const addItem = useCartStore((state) => state.addItem);
-
-  // We clone the products array to ensure there's no "gap" in the infinite loop
-  const infiniteProducts = [...products, ...products];
+  const addItem = useCartStore((state) => state.addItem)
+  const infiniteProducts = [...products, ...products]
 
   const handleAddToCart = (e: React.MouseEvent, product: any) => {
-    e.preventDefault();
-    addItem(product);
-    toast.success(`${product.name} added to bag!`, {
-      style: { background: '#0F2C3E', color: '#fff', borderRadius: '12px' }
-    });
-  };
+    e.preventDefault(); // 🛑 Prevents navigating to the product page
+    e.stopPropagation(); // 🛑 Stops the click from bubbling up to the card link
+    addItem(product)
+    toast.success(`${product.name} added`, {
+      style: { background: '#0F2C3E', color: '#fff', borderRadius: '50px' }
+    })
+  }
 
   return (
-    <section className="bg-white py-24 overflow-hidden">
+    <section className="bg-[#fffdfa] py-24 overflow-hidden">
       <div className="container mx-auto px-6 mb-16 text-center">
-        <span className="text-[#db2777] text-[10px] font-bold tracking-[0.4em] uppercase mb-3 block">
-          Infinite Collection
+        <span className="text-[#db2777] text-[10px] font-bold tracking-[0.5em] uppercase mb-3 block">
+          The Eternal Collection
         </span>
-        <h2 className="text-4xl md:text-5xl font-serif text-[#0F2C3E] uppercase tracking-tighter">
-          Our <span className="italic font-light text-[#D4AF37] lowercase">Signature</span> Series
+        <h2 className="text-5xl font-serif text-[#0F2C3E]">
+          Signature <span className="italic font-light text-[#D4AF37]">Artifacts</span>
         </h2>
       </div>
 
-      {/* ♾️ Infinite Marquee Container */}
-      <div className="relative flex overflow-hidden">
-        <div className="flex animate-marquee hover:pause-marquee gap-8 py-4">
-          {infiniteProducts.map((product, index) => (
-            <motion.div 
-              key={`${product.id}-${index}`}
-              className="min-w-[300px] md:min-w-[380px] group cursor-pointer"
-            >
-              <div className="relative aspect-[4/5] rounded-[2.5rem] overflow-hidden bg-[#FAF9F6] mb-6 shadow-sm border border-gray-50">
-                {/* 📸 Image 1 (Default) */}
-                <Image 
-                  src={product.images?.[0] || product.image_url || '/placeholder.jpg'} 
-                  alt={product.name} 
-                  fill 
-                  className="object-cover transition-opacity duration-700 group-hover:opacity-0"
-                />
+      <div className="relative flex group/marquee">
+        <div className="flex animate-marquee group-hover/marquee:pause-marquee gap-10 py-10">
+          {infiniteProducts.map((product, index) => {
+            const primaryImage = product.gallery?.[0] || product.image_url || '/placeholder.jpg'
+            const secondaryImage = product.gallery?.[1] || product.image_url || primaryImage
 
-                {/* 📸 Image 2 (Hover) */}
-                <Image 
-                  src={product.images?.[1] || product.images?.[0] || product.image_url} 
-                  alt={`${product.name} detail`} 
-                  fill 
-                  className="object-cover opacity-0 transition-all duration-1000 group-hover:opacity-100 group-hover:scale-110"
-                />
+            return (
+              <div key={`${product.id}-${index}`} className="min-w-[320px] md:min-w-[400px]">
+                
+                {/* 🏺 WRAPPER LINK: Makes the whole card clickable */}
+                <Link href={`/product/${product.slug}`} className="block group">
+                  <div className="relative aspect-[4/5] rounded-[3rem] overflow-hidden bg-white shadow-sm border border-gray-100">
+                    
+                    {/* Image Swap Logic */}
+                    <Image src={primaryImage} alt={product.name} fill className="object-cover transition-all duration-1000 group-hover:scale-110 group-hover:opacity-0" />
+                    <Image src={secondaryImage} alt="Detail" fill className="object-cover opacity-0 scale-125 transition-all duration-1000 group-hover:opacity-100 group-hover:scale-105" />
 
-                {/* 🔘 Interactive Buttons */}
-                <div className="absolute inset-0 flex items-end justify-center gap-3 opacity-0 group-hover:opacity-100 transition-all duration-500 bg-black/5 backdrop-blur-[2px] pb-20">
-                   <button 
-                    onClick={(e) => handleAddToCart(e, product)}
-                    className="p-4 bg-white rounded-full shadow-xl hover:bg-[#db2777] hover:text-white transition-all transform hover:scale-110"
-                   >
-                     <ShoppingBag size={20} />
-                   </button>
-                   <button className="p-4 bg-white rounded-full shadow-xl hover:bg-pink-50 transition-all transform hover:scale-110">
-                     <Heart size={20} className="text-[#db2777]" />
-                   </button>
-                   <Link href={`/product/${product.slug}`} className="p-4 bg-white rounded-full shadow-xl hover:bg-gray-100 transition-all transform hover:scale-110">
-                     <Eye size={20} className="text-[#0F2C3E]" />
-                   </Link>
-                </div>
+                    {/* 🔘 PERMANENT ACTION BUTTONS */}
+                    <div className="absolute inset-x-0 bottom-8 flex justify-center gap-3 z-30">
+                       <button 
+                        onClick={(e) => handleAddToCart(e, product)}
+                        className="p-4 bg-[#0F2C3E] text-white rounded-full shadow-2xl hover:bg-[#db2777] transition-all transform active:scale-95 z-40"
+                       >
+                         <ShoppingBag size={20} strokeWidth={2.5} />
+                       </button>
+                       
+                       {/* This specific Eye button is redundant since the card is clickable, 
+                           but we keep it for visual balance. We use a div instead of a link here
+                           to avoid nested link errors. */}
+                       <div className="p-4 bg-white/90 backdrop-blur-md text-[#0F2C3E] rounded-full shadow-2xl border border-white/20 hover:text-[#db2777] transition-all transform active:scale-95">
+                         <Eye size={20} strokeWidth={2.5} />
+                       </div>
+
+                       <button 
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                        className="p-4 bg-white/90 backdrop-blur-md text-[#0F2C3E] rounded-full shadow-2xl border border-white/20 hover:text-[#db2777] transition-all transform active:scale-95"
+                       >
+                         <Heart size={20} strokeWidth={2.5} />
+                       </button>
+                    </div>
+                  </div>
+
+                  {/* Info Text */}
+                  <div className="mt-8 text-center">
+                    <h4 className="font-serif text-xl text-[#0F2C3E] mb-1 group-hover:text-[#db2777] transition-colors uppercase tracking-tight">
+                      {product.name}
+                    </h4>
+                    <p className="text-[#db2777] font-bold tracking-widest text-sm">
+                      ₹{product.price.toLocaleString()}
+                    </p>
+                  </div>
+                </Link>
               </div>
-
-              <div className="text-center">
-                <h4 className="font-serif text-lg text-[#0F2C3E] mb-1 uppercase tracking-widest">{product.name}</h4>
-                <p className="text-[#D4AF37] font-bold tracking-widest text-sm">₹{product.price}</p>
-              </div>
-            </motion.div>
-          ))}
+            )
+          })}
         </div>
       </div>
 
-      {/* CSS for Infinite Loop & No Scrollbar */}
       <style jsx>{`
-        .no-scrollbar::-webkit-scrollbar {
-          display: none;
-        }
         .animate-marquee {
           display: flex;
           width: max-content;
-          animation: marquee 40s linear infinite;
+          animation: marquee 50s linear infinite;
         }
         .pause-marquee {
           animation-play-state: paused;
@@ -102,7 +104,7 @@ const ProductSlider = ({ products }: { products: any[] }) => {
         }
       `}</style>
     </section>
-  );
-};
+  )
+}
 
-export default ProductSlider;
+export default ProductSlider
