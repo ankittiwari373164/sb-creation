@@ -10,7 +10,7 @@ import ProductSlider from '../components/ProductSlider';
 import Testimonials from '../components/Testimonials';
 import PublicInstaFeed from '../components/PublicInstaFeed';
 import Newsletter from '../components/Newsletter';
-import ProductGrid from '@/components/ProductGrid';
+import ProductGrid from '../components/ProductGrid';
 import ArtisanalStack from '../components/ArtisanalStack'
 import ProductVault from '../components/ProductVault'
 
