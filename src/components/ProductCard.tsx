@@ -1,10 +1,11 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import Image from 'next/image'
 import Link from 'next/link'
-import { ShoppingCart, Star } from 'lucide-react'
-import { Product } from '../lib/supabase'
+import { ShoppingCart, Star, Heart } from 'lucide-react'
+import { Product, supabase } from '../lib/supabase'
 import { useCartStore } from '../lib/cartStore'
 import toast from 'react-hot-toast'
 
@@ -14,6 +15,59 @@ interface ProductCardProps {
 
 export default function ProductCard({ product }: ProductCardProps) {
   const addItem = useCartStore((state) => state.addItem)
+  const [isWishlisted, setIsWishlisted] = useState(false)
+
+  // Check if item is already in wishlist on load
+  useEffect(() => {
+    const checkWishlist = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        const { data } = await supabase
+          .from('wishlist')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('product_id', product.id)
+          .single()
+        if (data) setIsWishlisted(true)
+      }
+    }
+    checkWishlist()
+  }, [product.id])
+
+  const toggleWishlist = async (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      toast.error('Please login to save favorites')
+      return
+    }
+
+    if (isWishlisted) {
+      // Remove from wishlist
+      const { error } = await supabase
+        .from('wishlist')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('product_id', product.id)
+
+      if (!error) {
+        setIsWishlisted(false)
+        toast.success('Removed from favorites')
+      }
+    } else {
+      // Add to wishlist
+      const { error } = await supabase
+        .from('wishlist')
+        .insert({ user_id: user.id, product_id: product.id })
+
+      if (!error) {
+        setIsWishlisted(true)
+        toast.success('Saved to favorites ❤️')
+      }
+    }
+  }
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault()
@@ -29,7 +83,19 @@ export default function ProductCard({ product }: ProductCardProps) {
       transition={{ duration: 0.3 }}
     >
       <Link href={`/product/${product.slug}`}>
-        <div className="card group cursor-pointer h-full">
+        <div className="card group cursor-pointer h-full relative">
+          
+          {/* ❤️ Wishlist Heart Icon */}
+          <button 
+            onClick={toggleWishlist}
+            className="absolute top-4 left-4 z-10 p-2 bg-white/80 backdrop-blur-md rounded-full shadow-sm hover:scale-110 transition-transform"
+          >
+            <Heart 
+              size={18} 
+              className={isWishlisted ? 'fill-red-500 text-red-500' : 'text-gray-400'} 
+            />
+          </button>
+
           <div className="relative h-64 overflow-hidden">
             <Image
               src={product.image_url || '/placeholder-product.jpg'}
@@ -72,7 +138,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                 <span className="text-2xl font-bold text-primary-600">
                   ₹{product.price}
                 </span>
-                <span className="text-sm text-gray-500 ml-2">{product.weight}</span>
+                
               </div>
 
               <button

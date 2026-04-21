@@ -15,7 +15,7 @@ export default function ContactPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    toast.success('Your inquiry has been received. Our concierge will contact you shortly.', {
+    toast.success('Thank you. We have received your message and will get back to you soon.', {
       style: { background: '#0F2C3E', color: '#fff', borderRadius: '12px' }
     })
     setFormData({ name: '', email: '', subject: '', message: '' })
@@ -27,20 +27,19 @@ export default function ContactPage() {
 
   return (
     <div className="min-h-screen bg-[#fffdfa]">
-      {/* 🏛️ Hero Section: Boutique Header */}
+      {/* 🏛️ Header Section */}
       <section className="relative py-28 overflow-hidden bg-[#0F2C3E]">
         <div className="container mx-auto px-6 text-center relative z-10">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
             <span className="text-[#D4AF37] text-[10px] font-bold tracking-[0.6em] uppercase mb-4 block">
-              Client Concierge
+              Contact Us
             </span>
             <h1 className="text-5xl md:text-7xl font-serif text-white mb-6">
-              How can we <span className="italic font-light text-[#D4AF37]">assist you?</span>
+              How can we <span className="italic font-light text-[#D4AF37]">help you?</span>
             </h1>
             <div className="w-20 h-[1px] bg-[#D4AF37] mx-auto opacity-30" />
           </motion.div>
         </div>
-        {/* Background Glow */}
         <div className="absolute top-0 right-0 w-96 h-96 bg-[#D4AF37]/5 rounded-full blur-[100px]" />
       </section>
 
@@ -48,7 +47,7 @@ export default function ContactPage() {
         <div className="container mx-auto px-6 max-w-7xl">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
             
-            {/* 📍 Info Column */}
+            {/* 📍 Contact Information */}
             <motion.div 
               className="lg:col-span-5 space-y-12"
               initial={{ opacity: 0, x: -30 }} 
@@ -56,9 +55,9 @@ export default function ContactPage() {
               viewport={{ once: true }}
             >
               <div>
-                <h2 className="text-3xl font-serif text-[#0F2C3E] mb-6">Contact the Atelier</h2>
+                <h2 className="text-3xl font-serif text-[#0F2C3E] mb-6">Get in Touch</h2>
                 <p className="text-[#0F2C3E]/60 font-light leading-relaxed mb-8">
-                  Whether you have a question about our heritage collections, a bespoke bridal order, or shipping—our specialists are here to provide a seamless experience.
+                  Have a question about our jewelry, a custom order, or shipping? Our team is here to help you with everything you need.
                 </p>
               </div>
 
@@ -68,8 +67,8 @@ export default function ContactPage() {
                     <Mail size={20} strokeWidth={1.5} />
                   </div>
                   <div>
-                    <h3 className="text-[10px] font-bold uppercase tracking-widest text-[#D4AF37] mb-1">Email Concierge</h3>
-                    <p className="text-[#0F2C3E] font-medium italic">hello@sbcreation.com</p>
+                    <h3 className="text-[10px] font-bold uppercase tracking-widest text-[#D4AF37] mb-1">Email ID</h3>
+                    <p className="text-[#0F2C3E] font-medium">sbcreation1808@gmail.com</p>
                   </div>
                 </div>
 
@@ -78,8 +77,8 @@ export default function ContactPage() {
                     <Phone size={20} strokeWidth={1.5} />
                   </div>
                   <div>
-                    <h3 className="text-[10px] font-bold uppercase tracking-widest text-[#D4AF37] mb-1">Direct Line</h3>
-                    <p className="text-[#0F2C3E] font-medium tracking-tighter">+91 91XXX XXXXX</p>
+                    <h3 className="text-[10px] font-bold uppercase tracking-widest text-[#D4AF37] mb-1">Contact Number</h3>
+                    <p className="text-[#0F2C3E] font-medium tracking-tighter">+91-9557111954</p>
                   </div>
                 </div>
 
@@ -88,29 +87,29 @@ export default function ContactPage() {
                     <MapPin size={20} strokeWidth={1.5} />
                   </div>
                   <div>
-                    <h3 className="text-[10px] font-bold uppercase tracking-widest text-[#D4AF37] mb-1">Boutique Address</h3>
+                    <h3 className="text-[10px] font-bold uppercase tracking-widest text-[#D4AF37] mb-1">Address</h3>
                     <p className="text-[#0F2C3E] font-medium leading-relaxed">
-                      SB Creation, Firozabad Heritage Complex <br />
-                      Uttar Pradesh, India
+                      Orchid Green, Raja ka taal, <br />
+                      Firozabad, Uttar Pradesh (283203)
                     </p>
                   </div>
                 </div>
               </div>
 
-              {/* Operating Hours */}
+              {/* Opening Hours */}
               <div className="p-8 bg-[#FAF9F6] rounded-[2rem] border border-[#D4AF37]/10">
                 <div className="flex items-center gap-3 text-[#0F2C3E] mb-4">
                   <Clock size={18} className="text-[#D4AF37]" />
-                  <span className="text-xs font-bold uppercase tracking-widest">Atelier Hours</span>
+                  <span className="text-xs font-bold uppercase tracking-widest">Business Hours</span>
                 </div>
                 <div className="space-y-2 text-sm text-[#0F2C3E]/60 font-light">
-                  <div className="flex justify-between"><span>Mon — Sat</span><span>10:00 AM — 08:00 PM</span></div>
-                  <div className="flex justify-between"><span>Sunday</span><span>By Appointment Only</span></div>
+                  <div className="flex justify-between"><span>Mon — Sun</span><span>10:00 AM — 08:00 PM</span></div>
+                  {/* <div className="flex justify-between"><span>Sunday</span><span>Closed</span></div> */}
                 </div>
               </div>
             </motion.div>
 
-            {/* ✉️ Form Column */}
+            {/* ✉️ Message Form */}
             <motion.div 
               className="lg:col-span-7"
               initial={{ opacity: 0, x: 30 }} 
@@ -131,7 +130,7 @@ export default function ContactPage() {
                       name="name"
                       value={formData.name}
                       onChange={handleChange}
-                      placeholder="Jane Doe"
+                      placeholder="Enter your name"
                       required
                       className="w-full bg-[#FAF9F6] border-none rounded-full py-4 px-8 text-sm text-[#0F2C3E] focus:ring-1 focus:ring-[#D4AF37] transition-all"
                     />
@@ -143,7 +142,7 @@ export default function ContactPage() {
                       name="email"
                       value={formData.email}
                       onChange={handleChange}
-                      placeholder="jane@example.com"
+                      placeholder="Enter your email"
                       required
                       className="w-full bg-[#FAF9F6] border-none rounded-full py-4 px-8 text-sm text-[#0F2C3E] focus:ring-1 focus:ring-[#D4AF37] transition-all"
                     />
@@ -158,7 +157,7 @@ export default function ContactPage() {
                       name="subject"
                       value={formData.subject}
                       onChange={handleChange}
-                      placeholder="Custom Bridal Order / Wholesale Inquiry"
+                      placeholder="What is this regarding?"
                       required
                       className="w-full bg-[#FAF9F6] border-none rounded-full py-4 px-8 text-sm text-[#0F2C3E] focus:ring-1 focus:ring-[#D4AF37] transition-all"
                     />
@@ -171,13 +170,13 @@ export default function ContactPage() {
                       onChange={handleChange}
                       required
                       rows={4}
-                      placeholder="Tell us how we can help..."
+                      placeholder="How can we help you today?"
                       className="w-full bg-[#FAF9F6] border-none rounded-[2rem] py-6 px-8 text-sm text-[#0F2C3E] focus:ring-1 focus:ring-[#D4AF37] transition-all resize-none"
                     />
                   </div>
                   
                   <button type="submit" className="w-full bg-[#0F2C3E] text-white py-5 rounded-full flex items-center justify-center gap-3 text-xs font-bold uppercase tracking-[0.3em] hover:bg-[#db2777] transition-all shadow-xl group">
-                    Send Inquiry
+                    Send Message
                     <Send size={16} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
                   </button>
                 </div>
@@ -187,14 +186,16 @@ export default function ContactPage() {
         </div>
       </section>
 
-      {/* 🟢 Floating WhatsApp Support */}
+      {/* 🟢 WhatsApp Support */}
       <a 
-        href="https://wa.me/91XXXXXXXXXX" 
+        href="https://wa.me/919557111954" 
+        target="_blank"
+        rel="noopener noreferrer"
         className="fixed bottom-24 right-8 md:bottom-12 md:right-12 z-[100] bg-[#25D366] text-white p-4 rounded-full shadow-2xl hover:scale-110 transition-transform flex items-center gap-2 group"
       >
         <MessageCircle size={24} fill="white" />
         <span className="max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-500 text-[10px] font-bold uppercase tracking-widest whitespace-nowrap">
-          Live Concierge
+          Chat With Us
         </span>
       </a>
     </div>

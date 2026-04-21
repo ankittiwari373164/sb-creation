@@ -20,7 +20,7 @@ const PublicInstaFeed = () => {
   }, []);
 
   return (
-    <section className="bg-white py-24 px-6 overflow-hidden">
+    <section className="bg-grey py-14 px-6 overflow-hidden">
       <div className="container mx-auto max-w-7xl">
         
         {/* 🎨 SB Creation Custom Title */}
@@ -44,19 +44,8 @@ const PublicInstaFeed = () => {
         ></div>
 
         {/* 🔘 Custom Follow CTA */}
-        <div className="mt-16 flex justify-center">
-           <Link 
-             href="https://instagram.com/sb_creation" 
-             target="_blank" 
-             className="group flex items-center gap-4"
-           >
-              <span className="text-xs font-bold uppercase tracking-widest text-[#0F2C3E]">
-                Follow @SBCreation
-              </span>
-              <div className="w-10 h-10 rounded-full bg-[#0F2C3E] text-white flex items-center justify-center group-hover:bg-[#db2777] transition-colors shadow-lg">
-                <ExternalLink size={14} />
-              </div>
-           </Link>
+        <div className="mt-1 flex justify-center">
+           
         </div>
       </div>
 

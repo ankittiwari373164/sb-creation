@@ -21,7 +21,7 @@ export default function ProductVault({ products }: { products: any[] }) {
   }
 
   return (
-    <section className="bg-white py-10 px-4 md:px-0">
+    <section className="bg-white py-5 px-4 md:px-0">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-0">
         {products.slice(0, 4).map((product, index) => (
           <motion.div

@@ -21,7 +21,7 @@ const CreativeGallery = ({ products }: { products: any[] }) => {
   }, [carouselProducts.length]);
 
   return (
-    <section className="bg-[#FAF9F6] py-20 px-4 md:px-10">
+    <section className="bg-[#FAF9F6] py-10 px-4 md:px-10">
       <div className="container mx-auto max-w-7xl">
         
         {/* Creative Header */}

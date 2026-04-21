@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ShoppingBag, Plus, Minus, Star, Truck, ShieldCheck, Sparkles, ArrowRight, X } from 'lucide-react'
+import { ShoppingBag, Plus, Minus, Star, Truck, ShieldCheck, Sparkles, ArrowRight, X, Heart } from 'lucide-react'
 import { Product, supabase } from '../../../lib/supabase'
 import { useCartStore } from '../../../lib/cartStore'
 import ProductCard from '../../../components/ProductCard'
@@ -21,12 +21,35 @@ export default function ProductDetailPage() {
   const [quantity, setQuantity] = useState(1)
   const [activeImg, setActiveImg] = useState(0)
   const [isWritingReview, setIsWritingReview] = useState(false)
+  const [isWishlisted, setIsWishlisted] = useState(false)
   
+  // --- New Selection States ---
+  const [selectedSize, setSelectedSize] = useState('')
+  const [selectedColor, setSelectedColor] = useState('')
+
   const addItem = useCartStore((state) => state.addItem)
 
   useEffect(() => {
     if (slug) fetchProduct()
   }, [slug])
+
+  // --- 🔄 Check Wishlist Status ---
+  useEffect(() => {
+    const checkWishlist = async () => {
+      if (!product) return
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        const { data } = await supabase
+          .from('wishlist')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('product_id', product.id)
+          .single()
+        if (data) setIsWishlisted(true)
+      }
+    }
+    checkWishlist()
+  }, [product])
 
   const fetchProduct = async () => {
     try {
@@ -39,7 +62,15 @@ export default function ProductDetailPage() {
       if (error) throw error
       setProduct(data)
       
-      // Fetch Similar Products from same category
+      // Fetch Sizes from Admin Data (Fallback to standard if empty)
+      const availableSizes = data.sizes && data.sizes.length > 0 ? data.sizes : ['2.2', '2.4', '2.6', '2.8']
+      setSelectedSize(availableSizes[0])
+
+      // Fetch Colors from Admin Data
+      if (data.colors && data.colors.length > 0) {
+        setSelectedColor(data.colors[0])
+      }
+
       const { data: similar } = await supabase
         .from('products')
         .select('*')
@@ -54,15 +85,44 @@ export default function ProductDetailPage() {
     }
   }
 
-  // Combine main image and gallery array from your DB
-  // Adjust 'gallery' to match your DB column name (e.g., gallery_urls)
+  // --- ❤️ Wishlist Toggle Logic ---
+  const toggleWishlist = async () => {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      toast.error('Please login to save favorites')
+      return
+    }
+
+    if (isWishlisted) {
+      const { error } = await supabase
+        .from('wishlist')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('product_id', product.id)
+
+      if (!error) {
+        setIsWishlisted(false)
+        toast.success('Removed from favorites')
+      }
+    } else {
+      const { error } = await supabase
+        .from('wishlist')
+        .insert({ user_id: user.id, product_id: product.id })
+
+      if (!error) {
+        setIsWishlisted(true)
+        toast.success('Saved to favorites ❤️')
+      }
+    }
+  }
+
   const productImages = product 
     ? [product.image_url, ...(product.gallery || [])].filter(Boolean)
     : []
 
   const handleAddToCart = () => {
     if (product) {
-      addItem(product, quantity)
+      addItem({ ...product, selectedSize, selectedColor }, quantity)
       toast.success(`Added to your collection`, {
         style: { background: '#0F2C3E', color: '#fff', borderRadius: '50px' },
       })
@@ -83,7 +143,6 @@ export default function ProductDetailPage() {
 
   return (
     <div className="min-h-screen bg-[#fffdfa] pb-20">
-      {/* --- Breadcrumb --- */}
       <nav className="container mx-auto px-6 py-8 text-[10px] font-bold uppercase tracking-[0.4em] text-[#0F2C3E]/30">
         <Link href="/">Home</Link> <span className="mx-2">/</span>
         <Link href="/shop">Collections</Link> <span className="mx-2">/</span>
@@ -93,25 +152,29 @@ export default function ProductDetailPage() {
       <div className="container mx-auto px-6">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
           
-          {/* 🖼️ DYNAMIC MULTI-IMAGE GALLERY */}
           <div className="lg:col-span-7 flex flex-col md:flex-row-reverse gap-6">
-            {/* Main Featured Image */}
             <motion.div 
               key={activeImg}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               className="relative aspect-[4/5] w-full rounded-[3rem] overflow-hidden shadow-2xl border-[12px] border-white bg-[#FAF9F6]"
             >
+              <button 
+                onClick={toggleWishlist}
+                className="absolute top-6 right-6 z-10 p-4 bg-white/80 backdrop-blur-md rounded-full shadow-lg hover:scale-110 transition-transform"
+              >
+                <Heart size={24} className={isWishlisted ? 'fill-red-500 text-red-500' : 'text-[#0F2C3E]'} />
+              </button>
+
               <Image 
                 src={productImages[activeImg] || '/placeholder.jpg'} 
                 alt={product.name} 
                 fill 
                 className="object-cover transition-all duration-700 hover:scale-105"
-                unoptimized // Use this if your admin panel uploads to an external storage
+                unoptimized 
               />
             </motion.div>
             
-            {/* Thumbnails mapped from DB */}
             <div className="flex md:flex-col gap-4 overflow-x-auto md:overflow-visible pb-4 md:pb-0 scrollbar-hide">
               {productImages.map((img, i) => (
                 <button 
@@ -127,7 +190,6 @@ export default function ProductDetailPage() {
             </div>
           </div>
 
-          {/* 📜 CONTENT AREA */}
           <div className="lg:col-span-5 space-y-10">
             <div className="space-y-4">
               <div className="flex items-center gap-2">
@@ -146,7 +208,52 @@ export default function ProductDetailPage() {
               {product.description}
             </p>
 
-            {/* ATELIER SERVICES */}
+            {/* --- 📏 DYNAMIC SIZE & COLOUR FROM ADMIN --- */}
+            <div className="space-y-8">
+              {/* Size Selection */}
+              <div className="space-y-4">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-[#0F2C3E]">Choose Bangle Size</span>
+                <div className="flex flex-wrap gap-3">
+                  {(product.sizes && product.sizes.length > 0 ? product.sizes : ['2.2', '2.4', '2.6', '2.8']).map((size: string) => (
+                    <button
+                      key={size}
+                      onClick={() => setSelectedSize(size)}
+                      className={`w-12 h-12 rounded-full border text-xs font-bold transition-all flex items-center justify-center ${
+                        selectedSize === size 
+                        ? 'bg-[#0F2C3E] text-white border-[#0F2C3E]' 
+                        : 'border-gray-200 text-[#0F2C3E] hover:border-[#D4AF37]'
+                      }`}
+                    >
+                      {size}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Colour Selection */}
+              {product.colors && product.colors.length > 0 && (
+                <div className="space-y-4">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-[#0F2C3E]">Available Colours</span>
+                  <div className="flex gap-4">
+                    {product.colors.map((color: string) => (
+                      <button
+                        key={color}
+                        onClick={() => setSelectedColor(color)}
+                        className={`group relative w-8 h-8 rounded-full border-2 transition-all p-0.5 ${
+                          selectedColor === color ? 'border-[#D4AF37]' : 'border-transparent'
+                        }`}
+                      >
+                        <div 
+                          className="w-full h-full rounded-full shadow-inner" 
+                          style={{ backgroundColor: color }} 
+                        />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
             <div className="grid grid-cols-2 gap-4 py-8 border-y border-[#D4AF37]/10">
               <div className="flex items-center gap-3">
                 <ShieldCheck className="text-[#D4AF37]" size={20} />
@@ -158,7 +265,6 @@ export default function ProductDetailPage() {
               </div>
             </div>
 
-            {/* ACTION BUTTONS */}
             <div className="flex flex-col gap-6">
               <div className="flex items-center bg-[#FAF9F6] w-fit rounded-full p-2 border border-[#D4AF37]/10">
                 <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="p-3 hover:text-[#db2777]"><Minus size={18} /></button>
@@ -184,9 +290,8 @@ export default function ProductDetailPage() {
           </div>
         </div>
 
-        {/* ⭐ REVIEWS SECTION */}
         <div className="mt-32 pt-20 border-t border-[#D4AF37]/10">
-           <div className="flex justify-between items-end mb-16">
+            <div className="flex justify-between items-end mb-16">
               <h2 className="text-4xl font-serif text-[#0F2C3E]">Patron <span className="italic font-light">Experiences</span></h2>
               <button 
                 onClick={() => setIsWritingReview(!isWritingReview)} 
@@ -194,30 +299,30 @@ export default function ProductDetailPage() {
               >
                 {isWritingReview ? 'Close' : 'Share Experience'}
               </button>
-           </div>
-           
-           <AnimatePresence>
-             {isWritingReview && (
-               <motion.div 
-                 initial={{ height: 0, opacity: 0 }} 
-                 animate={{ height: 'auto', opacity: 1 }} 
-                 exit={{ height: 0, opacity: 0 }}
-                 className="overflow-hidden"
-                >
-                 <form className="bg-[#FAF9F6] p-10 rounded-[3rem] mb-16 grid grid-cols-1 md:grid-cols-2 gap-6 border border-[#D4AF37]/10">
-                    <input placeholder="Full Name" className="bg-white rounded-full py-4 px-8 border-none outline-none focus:ring-1 focus:ring-[#D4AF37]" />
-                    <div className="flex items-center gap-4 px-8">
-                       <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Valuation:</span>
-                       <div className="flex text-[#D4AF37] gap-1"><Star size={16} /><Star size={16} /><Star size={16} /><Star size={16} /><Star size={16} /></div>
-                    </div>
-                    <textarea placeholder="Your experience with this piece..." className="md:col-span-2 bg-white rounded-[2rem] p-8 border-none outline-none focus:ring-1 focus:ring-[#D4AF37]" rows={4} />
-                    <button className="md:col-span-1 bg-[#0F2C3E] text-white py-4 rounded-full text-[10px] font-bold uppercase tracking-[0.3em]">Submit Narrative</button>
-                 </form>
-               </motion.div>
-             )}
-           </AnimatePresence>
+            </div>
+            
+            <AnimatePresence>
+              {isWritingReview && (
+                <motion.div 
+                  initial={{ height: 0, opacity: 0 }} 
+                  animate={{ height: 'auto', opacity: 1 }} 
+                  exit={{ height: 0, opacity: 0 }}
+                  className="overflow-hidden"
+                 >
+                  <form className="bg-[#FAF9F6] p-10 rounded-[3rem] mb-16 grid grid-cols-1 md:grid-cols-2 gap-6 border border-[#D4AF37]/10">
+                     <input placeholder="Full Name" className="bg-white rounded-full py-4 px-8 border-none outline-none focus:ring-1 focus:ring-[#D4AF37]" />
+                     <div className="flex items-center gap-4 px-8">
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Valuation:</span>
+                        <div className="flex text-[#D4AF37] gap-1"><Star size={16} /><Star size={16} /><Star size={16} /><Star size={16} /><Star size={16} /></div>
+                     </div>
+                     <textarea placeholder="Your experience with this piece..." className="md:col-span-2 bg-white rounded-[2rem] p-8 border-none outline-none focus:ring-1 focus:ring-[#D4AF37]" rows={4} />
+                     <button className="md:col-span-1 bg-[#0F2C3E] text-white py-4 rounded-full text-[10px] font-bold uppercase tracking-[0.3em]">Submit Narrative</button>
+                  </form>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
-           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {[1, 2, 3].map(i => (
                 <div key={i} className="bg-white p-10 rounded-[2.5rem] shadow-sm border border-gray-50 group hover:border-[#D4AF37]/30 transition-all">
                   <div className="flex text-[#D4AF37] mb-6"><Star size={12} fill="currentColor" /><Star size={12} fill="currentColor" /><Star size={12} fill="currentColor" /><Star size={12} fill="currentColor" /><Star size={12} fill="currentColor" /></div>
@@ -225,10 +330,9 @@ export default function ProductDetailPage() {
                   <p className="mt-8 text-[10px] font-bold uppercase tracking-[0.2em] text-[#0F2C3E]">Aditi V. • Verified Patron</p>
                 </div>
               ))}
-           </div>
+            </div>
         </div>
 
-        {/* 🏺 SIMILAR PRODUCTS */}
         {similarProducts.length > 0 && (
           <section className="mt-32">
             <h2 className="text-4xl font-serif text-[#0F2C3E] mb-12 uppercase tracking-tighter">Heritage <span className="italic font-light">Related</span></h2>

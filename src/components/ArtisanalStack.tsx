@@ -25,7 +25,7 @@ export default function ArtisanalStack({ products }: { products: any[] }) {
   const stackItems = products.slice(0, 5)
 
   return (
-    <section className="bg-[#fffdfa] py-24 px-6 overflow-hidden min-h-[800px] flex items-center">
+    <section className="bg-[#fffggg] py-1 px-6 overflow-hidden min-h-[550px] flex items-center">
       <div className="container mx-auto max-w-7xl grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
         
         {/* 📜 Left Side: Content Reveal */}

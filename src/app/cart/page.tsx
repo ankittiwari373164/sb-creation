@@ -1,30 +1,60 @@
 'use client'
 
+import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
 import Link from 'next/link'
-import { Trash2, Plus, Minus, ShoppingBag, ArrowRight, ShieldCheck, Truck } from 'lucide-react'
+import { Trash2, Plus, Minus, ShoppingBag, ArrowRight, ShieldCheck, Truck, Tag } from 'lucide-react'
 import { useCartStore } from '../../lib/cartStore'
+import { supabase } from '../../lib/supabase'
+import toast from 'react-hot-toast'
 
 export default function CartPage() {
   const { items, updateQuantity, removeItem, getTotalPrice, getTotalItems } = useCartStore()
+  
+  // --- Coupon Logic ---
+  const [couponInput, setCouponInput] = useState('')
+  const [appliedDiscount, setAppliedDiscount] = useState(0)
+
+  const handleApplyCoupon = async () => {
+    if (!couponInput) return
+    
+    try {
+      const { data, error } = await supabase
+        .from('coupons')
+        .select('*')
+        .eq('code', couponInput.toUpperCase())
+        .eq('is_active', true)
+        .single()
+
+      if (error || !data) {
+        toast.error('Invalid code')
+        setAppliedDiscount(0)
+      } else {
+        setAppliedDiscount(data.discount_percent)
+        toast.success(`Discount applied: ${data.discount_percent}% off!`)
+      }
+    } catch (err) {
+      toast.error('Error checking code')
+    }
+  }
+
+  const subtotal = getTotalPrice()
+  const discountAmount = (subtotal * appliedDiscount) / 100
+  const finalTotal = subtotal - discountAmount
 
   if (items.length === 0) {
     return (
       <div className="min-h-screen bg-[#fffdfa] flex items-center justify-center p-6">
         <div className="text-center">
-          <motion.div 
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="w-24 h-24 bg-[#FAF9F6] rounded-full flex items-center justify-center mx-auto mb-6"
-          >
+          <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="w-24 h-24 bg-[#FAF9F6] rounded-full flex items-center justify-center mx-auto mb-6">
             <ShoppingBag size={40} strokeWidth={1} className="text-[#0F2C3E]/20" />
           </motion.div>
           <h2 className="text-4xl font-serif text-[#0F2C3E] mb-4">Your Bag is Empty</h2>
-          <p className="text-[#0F2C3E]/50 mb-10 font-light italic">The finest handcrafted bangles are waiting for you.</p>
+          <p className="text-[#0F2C3E]/50 mb-10">You haven't added any jewelry yet.</p>
           <Link href="/shop">
-            <button className="bg-[#0F2C3E] text-white px-12 py-4 rounded-full text-[11px] font-bold uppercase tracking-[0.3em] hover:bg-[#db2777] transition-all shadow-xl">
-              Discover Collections
+            <button className="bg-[#0F2C3E] text-white px-12 py-4 rounded-full text-[11px] font-bold uppercase tracking-[0.3em] hover:bg-[#db2777] transition-all">
+              Go Shopping
             </button>
           </Link>
         </div>
@@ -35,93 +65,40 @@ export default function CartPage() {
   return (
     <div className="min-h-screen bg-[#fffdfa] py-20 px-6">
       <div className="container mx-auto max-w-7xl">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
-          <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-4 border-b border-[#D4AF37]/10 pb-8">
-            <div>
-              <span className="text-[#D4AF37] text-[10px] font-bold tracking-[0.4em] uppercase mb-2 block">Your Selection</span>
-              <h1 className="text-5xl font-serif text-[#0F2C3E] tracking-tighter">Shopping <span className="italic font-light">Bag</span></h1>
-            </div>
-            <p className="text-[#0F2C3E]/40 text-sm font-medium uppercase tracking-widest">
-              {getTotalItems()} Artifacts Selected
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+          
+          <div className="mb-12 border-b border-gray-100 pb-8">
+            <h1 className="text-5xl font-serif text-[#0F2C3E]">Your <span className="italic font-light text-gray-400">Bag</span></h1>
+            <p className="text-gray-400 text-xs font-bold uppercase tracking-widest mt-2">
+              {getTotalItems()} Items Selected
             </p>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
-            {/* 💎 Cart Items */}
-            <div className="lg:col-span-8 space-y-6">
+            {/* 💎 List of Items */}
+            <div className="lg:col-span-8 space-y-4">
               <AnimatePresence>
                 {items.map((item) => (
-                  <motion.div
-                    key={item.product.id}
-                    layout
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 20 }}
-                    className="bg-white rounded-[2rem] border border-gray-50 p-6 md:p-8 shadow-[0_10px_40px_-15px_rgba(15,44,62,0.05)] hover:shadow-[0_20px_60px_-15px_rgba(15,44,62,0.08)] transition-all group"
-                  >
-                    <div className="flex flex-col md:flex-row gap-8">
-                      {/* Product Image */}
-                      <div className="relative w-full md:w-40 aspect-square flex-shrink-0 rounded-2xl overflow-hidden bg-[#FAF9F6]">
-                        <Image
-                          src={item.product.image_url || '/placeholder-product.jpg'}
-                          alt={item.product.name}
-                          fill
-                          className="object-cover transition-transform duration-700 group-hover:scale-110"
-                        />
+                  <motion.div key={item.product.id} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="bg-white rounded-3xl p-6 border border-gray-50 shadow-sm flex flex-col md:flex-row gap-6">
+                    <div className="relative w-32 h-32 flex-shrink-0 rounded-2xl overflow-hidden bg-gray-50">
+                      <Image src={item.product.image_url || '/placeholder.jpg'} alt={item.product.name} fill className="object-cover" />
+                    </div>
+
+                    <div className="flex-1 flex flex-col justify-between">
+                      <div className="flex justify-between items-start">
+                        <h3 className="text-xl font-bold text-[#0F2C3E]">{item.product.name}</h3>
+                        <button onClick={() => removeItem(item.product.id)} className="text-gray-300 hover:text-red-500 transition-colors">
+                          <Trash2 size={18} />
+                        </button>
                       </div>
 
-                      <div className="flex-1 flex flex-col justify-between">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <h3 className="text-2xl font-serif text-[#0F2C3E] mb-1 group-hover:text-[#db2777] transition-colors">
-                              {item.product.name}
-                            </h3>
-                            <div className="flex items-center gap-3">
-                              <span className="text-[10px] font-bold uppercase tracking-widest text-[#D4AF37]">{item.product.category}</span>
-                              <span className="w-1 h-1 rounded-full bg-gray-200" />
-                              <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">SKU: SBC-{item.product.id.toString().slice(0,4)}</span>
-                            </div>
-                          </div>
-                          <button
-                            onClick={() => removeItem(item.product.id)}
-                            className="p-2 text-gray-300 hover:text-red-400 transition-colors"
-                          >
-                            <Trash2 size={20} strokeWidth={1.5} />
-                          </button>
+                      <div className="flex items-center justify-between mt-6">
+                        <div className="flex items-center bg-gray-50 rounded-full p-1">
+                          <button onClick={() => updateQuantity(item.product.id, Math.max(1, item.quantity - 1))} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white"><Minus size={12} /></button>
+                          <span className="px-4 font-bold text-sm">{item.quantity}</span>
+                          <button onClick={() => updateQuantity(item.product.id, item.quantity + 1)} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white"><Plus size={12} /></button>
                         </div>
-
-                        <div className="flex flex-col md:flex-row md:items-center justify-between mt-8 gap-6">
-                          {/* Quantity Selector */}
-                          <div className="flex items-center bg-[#FAF9F6] rounded-full p-1 w-fit border border-gray-100">
-                            <button
-                              onClick={() => updateQuantity(item.product.id, Math.max(1, item.quantity - 1))}
-                              className="w-10 h-10 rounded-full flex items-center justify-center text-[#0F2C3E] hover:bg-white hover:shadow-sm transition-all"
-                            >
-                              <Minus size={14} />
-                            </button>
-                            <span className="font-bold text-sm px-4 min-w-[3rem] text-center text-[#0F2C3E]">
-                              {item.quantity}
-                            </span>
-                            <button
-                              onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
-                              className="w-10 h-10 rounded-full flex items-center justify-center text-[#0F2C3E] hover:bg-white hover:shadow-sm transition-all"
-                            >
-                              <Plus size={14} />
-                            </button>
-                          </div>
-
-                          <div className="text-right">
-                            <p className="text-2xl font-serif text-[#0F2C3E]">
-                              ₹{(item.product.price * item.quantity).toLocaleString()}
-                            </p>
-                            <p className="text-[10px] font-bold uppercase tracking-widest text-[#D4AF37] mt-1">
-                              ₹{item.product.price.toLocaleString()} per piece
-                            </p>
-                          </div>
-                        </div>
+                        <p className="text-xl font-serif text-[#0F2C3E]">₹{(item.product.price * item.quantity).toLocaleString()}</p>
                       </div>
                     </div>
                   </motion.div>
@@ -131,56 +108,57 @@ export default function CartPage() {
 
             {/* 📜 Order Summary */}
             <div className="lg:col-span-4">
-              <div className="bg-[#0F2C3E] text-white rounded-[2.5rem] p-10 sticky top-24 shadow-2xl overflow-hidden relative">
-                {/* Decorative Pattern Overlay */}
-                <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/black-paper.png')]" />
-                
-                <h2 className="text-2xl font-serif mb-10 uppercase tracking-widest text-[#D4AF37]">Summary</h2>
+              <div className="bg-[#0F2C3E] text-white rounded-[2.5rem] p-8 sticky top-24 shadow-2xl">
+                <h2 className="text-xl font-serif mb-8 text-[#D4AF37]">Order Summary</h2>
 
-                <div className="space-y-6 mb-10 relative z-10">
-                  <div className="flex justify-between text-sm opacity-60 font-light">
-                    <span className="uppercase tracking-[0.2em]">Subtotal</span>
-                    <span className="font-semibold tracking-tighter">₹{getTotalPrice().toLocaleString()}</span>
+                {/* --- 🏷️ Coupon Section --- */}
+                <div className="mb-8 p-4 bg-white/5 rounded-2xl border border-white/10">
+                   <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-3">Apply Coupon</p>
+                   <div className="flex gap-2">
+                      <input 
+                        type="text" 
+                        placeholder="Enter Code" 
+                        value={couponInput}
+                        onChange={(e) => setCouponInput(e.target.value)}
+                        className="flex-1 bg-white/10 border-none rounded-full px-4 py-2 text-xs focus:ring-1 focus:ring-[#D4AF37]" 
+                      />
+                      <button onClick={handleApplyCoupon} className="bg-[#D4AF37] text-[#0F2C3E] px-4 py-2 rounded-full text-[10px] font-bold uppercase">Apply</button>
+                   </div>
+                </div>
+
+                <div className="space-y-4 mb-8">
+                  <div className="flex justify-between text-xs opacity-60">
+                    <span>Subtotal</span>
+                    <span>₹{subtotal.toLocaleString()}</span>
                   </div>
-                  <div className="flex justify-between text-sm items-center">
-                    <span className="uppercase tracking-[0.2em] opacity-60 font-light">Shipping</span>
-                    <span className="text-[10px] font-bold uppercase tracking-[0.3em] bg-[#D4AF37]/20 text-[#D4AF37] px-3 py-1 rounded-full">Complimentary</span>
-                  </div>
-                  <div className="border-t border-white/10 pt-8 mt-8">
-                    <div className="flex justify-between items-end">
-                      <span className="text-[11px] font-bold uppercase tracking-[0.5em] opacity-40">Total Amount</span>
-                      <span className="text-4xl font-serif text-[#D4AF37] tracking-tighter">
-                        ₹{getTotalPrice().toLocaleString()}
-                      </span>
+                  
+                  {appliedDiscount > 0 && (
+                    <div className="flex justify-between text-xs text-green-400">
+                      <span>Discount ({appliedDiscount}%)</span>
+                      <span>- ₹{discountAmount.toLocaleString()}</span>
                     </div>
+                  )}
+
+                  <div className="flex justify-between text-xs">
+                    <span className="opacity-60">Shipping</span>
+                    <span className="text-green-400">Free</span>
+                  </div>
+                  
+                  <div className="pt-6 border-t border-white/10 flex justify-between items-end">
+                    <span className="text-[10px] font-bold uppercase opacity-40">Total</span>
+                    <span className="text-3xl font-serif text-[#D4AF37]">₹{finalTotal.toLocaleString()}</span>
                   </div>
                 </div>
 
-                <div className="space-y-4 relative z-10">
-                  <Link href="/checkout">
-                    <button className="w-full bg-[#D4AF37] text-[#0F2C3E] py-5 rounded-full text-xs font-bold uppercase tracking-[0.3em] hover:bg-white transition-all shadow-xl group flex items-center justify-center gap-3">
-                      Begin Checkout
-                      <ArrowRight size={18} className="group-hover:translate-x-2 transition-transform" />
+                <div className="space-y-3">
+                  <Link href={{ pathname: '/checkout', query: { code: couponInput, discount: appliedDiscount } }}>
+                    <button className="w-full bg-[#D4AF37] text-[#0F2C3E] py-4 rounded-full text-xs font-bold uppercase tracking-widest hover:bg-white transition-all flex items-center justify-center gap-2">
+                      Checkout <ArrowRight size={16} />
                     </button>
                   </Link>
-
-                  <Link href="/shop">
-                    <button className="w-full bg-white/5 border border-white/10 text-white py-5 rounded-full text-[10px] font-bold uppercase tracking-[0.3em] hover:bg-white/10 transition-all">
-                      Return to Gallery
-                    </button>
+                  <Link href="/shop" className="block text-center text-[10px] uppercase tracking-widest opacity-40 hover:opacity-100 mt-4">
+                    Continue Shopping
                   </Link>
-                </div>
-
-                {/* Trust Badges */}
-                <div className="mt-12 pt-10 border-t border-white/5 grid grid-cols-2 gap-4">
-                  <div className="flex items-center gap-3">
-                    <ShieldCheck size={18} className="text-[#D4AF37]" />
-                    <span className="text-[8px] font-bold uppercase tracking-widest opacity-40">Secure <br/>Payments</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Truck size={18} className="text-[#D4AF37]" />
-                    <span className="text-[8px] font-bold uppercase tracking-widest opacity-40">Insured <br/>Delivery</span>
-                  </div>
                 </div>
               </div>
             </div>

@@ -13,6 +13,7 @@ import Newsletter from '../components/Newsletter';
 import ProductGrid from '../components/ProductGrid';
 import ArtisanalStack from '../components/ArtisanalStack'
 import ProductVault from '../components/ProductVault'
+import VideoShowcase from '../components/VideoShowcase';
 
 
 
@@ -36,22 +37,20 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-[#FAF9F6]">
-      <ProductGrid products={products} title="Our Masterpieces" />
+      <ProductSlider products={products.slice(0, 8)} />
+      <CreativeGallery products={products} />
+      {/* <ProductGrid products={products} title="Our Masterpieces" /> */}
+      <ArtisanalStack products={products} />
+      <ProductVault products={products} />
+      {/* <VideoShowcase product={products[0]} /> */}
       {/* <Hero />
       <Categories /> */}
       {/* 4. Pass the fetched products to the component */}
-      <FeaturedProducts products={products} />
-
-      
-      <CreativeGallery products={products} />
-      <ProductSlider products={products.slice(0, 8)} />
+      {/* <FeaturedProducts products={products} /> */}
       {/* <Heritage /> */}
-      <ArtisanalStack products={products} />
-
-      <ProductVault products={products} />
-      {/* <Testimonials />
-      <PublicInstaFeed /> */}
-      <Newsletter />
+      {/* <Testimonials /> */}
+      <PublicInstaFeed />
+      {/* <Newsletter /> */}
     </main>
   );
 }
