@@ -1,93 +1,87 @@
 "use client";
 import React from 'react';
 import Link from 'next/link';
-import { Facebook, Instagram, Twitter, Mail, Phone, MapPin, Sparkles } from 'lucide-react';
+import Image from 'next/image';
+import { Facebook, Instagram, Twitter, Mail, Phone, MapPin } from 'lucide-react';
 
 const Footer = () => {
   return (
-    <footer className="bg-[#fffdfa] text-[#0F2C3E] border-t border-[#D4AF37]/10">
-      <div className="container mx-auto px-6 py-20">
+    <footer className="bg-[#fffff] text-[#0F2C3E] border-t border-gray-200">
+      <div className="container mx-auto px-6 py-16">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-12">
           
-          {/* 🏛️ Brand & Philosophy (Spans 4 columns) */}
-          <div className="md:col-span-4 space-y-8">
-            <div className="flex flex-col">
-              <span className="text-3xl font-serif tracking-tighter uppercase font-bold text-[#db2777]">
-                SB <span className="text-[#0F2C3E]">Creation</span>
-              </span>
-              <div className="flex items-center gap-2 mt-1">
-                <div className="h-[1px] w-8 bg-[#D4AF37]" />
-                <span className="text-[10px] font-bold tracking-[0.4em] uppercase text-[#D4AF37]">
-                  Firozabad Heritage
-                </span>
-              </div>
-            </div>
+          {/* 🏛️ Brand Info */}
+          <div className="md:col-span-4 space-y-6">
+            <Link href="/" className="relative h-16 w-44 block">
+              <Image 
+                src="/logo.png" 
+                alt="SB Creation Logo" 
+                fill 
+                className="object-contain"
+              />
+            </Link>
             
-            <p className="text-sm leading-relaxed text-[#0F2C3E]/70 max-w-xs font-light italic">
-              "Preserving the timeless art of handcrafted glass and metal bangles. Every piece is a testament to the legacy of our artisans."
+            <p className="text-sm leading-relaxed text-gray-600 max-w-xs">
+              Your destination for beautiful, handcrafted bangles. We bring the famous glass art of Firozabad straight to your home.
             </p>
 
-            <div className="flex space-x-6">
-              <a href="#" className="text-[#0F2C3E]/40 hover:text-[#db2777] transition-all">
+            <div className="flex space-x-5">
+              <a href="https://instagram.com/_sbcreation" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-[#db2777] transition-colors">
                 <Instagram size={20} />
               </a>
-              <a href="#" className="text-[#0F2C3E]/40 hover:text-[#db2777] transition-all">
+              <a href="https://facebook.com/sbcreation" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-[#db2777] transition-colors">
                 <Facebook size={20} />
               </a>
-              <a href="#" className="text-[#0F2C3E]/40 hover:text-[#db2777] transition-all">
+              <a href="https://twitter.com/sbcreation" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-[#db2777] transition-colors">
                 <Twitter size={20} />
               </a>
             </div>
           </div>
 
-          {/* 🔗 Quick Links (Spans 2 columns) */}
+          {/* 🔗 Shop Links */}
           <div className="md:col-span-2">
-            <h3 className="text-[11px] font-bold uppercase tracking-[0.3em] text-[#D4AF37] mb-8">Collections</h3>
-            <ul className="space-y-4">
-              {['Glass Sets', 'Metal Kangan', 'Bridal Special', 'Daily Wear'].map((item) => (
-                <li key={item}>
-                  <Link href="/shop" className="text-sm font-medium hover:text-[#db2777] transition-all opacity-80 hover:opacity-100">
-                    {item}
-                  </Link>
-                </li>
-              ))}
+            <h3 className="text-[13px] font-bold uppercase tracking-wider text-gray-800 mb-6">Shop</h3>
+            <ul className="space-y-3">
+              <li><Link href="/shop" className="text-sm text-gray-600 hover:text-[#db2777] transition-all">Glass Sets</Link></li>
+              <li><Link href="/shop" className="text-sm text-gray-600 hover:text-[#db2777] transition-all">Metal Kangan</Link></li>
+              <li><Link href="/shop" className="text-sm text-gray-600 hover:text-[#db2777] transition-all">Bridal Wear</Link></li>
+              <li><Link href="/shop" className="text-sm text-gray-600 hover:text-[#db2777] transition-all">Daily Use</Link></li>
             </ul>
           </div>
 
-          {/* 📞 Customer Care (Spans 3 columns) */}
+          {/* 📞 Help & Support */}
           <div className="md:col-span-3">
-            <h3 className="text-[11px] font-bold uppercase tracking-[0.3em] text-[#D4AF37] mb-8">Concierge</h3>
-            <ul className="space-y-4">
-              {['Track Order', 'Shipping Policy', 'Returns & Exchange', 'Gift Cards'].map((item) => (
-                <li key={item}>
-                  <Link href="#" className="text-sm font-medium hover:text-[#db2777] transition-all opacity-80 hover:opacity-100">
-                    {item}
-                  </Link>
-                </li>
-              ))}
+            <h3 className="text-[13px] font-bold uppercase tracking-wider text-gray-800 mb-6">Support</h3>
+            <ul className="space-y-3">
+              <li><Link href="/track-order" className="text-sm text-gray-600 hover:text-[#db2777] transition-all">Track Order</Link></li>
+              <li><Link href="/shipping" className="text-sm text-gray-600 hover:text-[#db2777] transition-all">Shipping Info</Link></li>
+              <li><Link href="/returns" className="text-sm text-gray-600 hover:text-[#db2777] transition-all">Easy Returns</Link></li>
+              <li><Link href="/contact" className="text-sm text-gray-600 hover:text-[#db2777] transition-all">Contact Us</Link></li>
             </ul>
           </div>
 
-          {/* 📍 Atelier Info (Spans 3 columns) */}
-          <div className="md:col-span-3 space-y-8">
-            <h3 className="text-[11px] font-bold uppercase tracking-[0.3em] text-[#D4AF37] mb-8">Atelier</h3>
-            <ul className="space-y-6">
+          {/* 📍 Contact Details */}
+          <div className="md:col-span-3 space-y-6">
+            <h3 className="text-[13px] font-bold uppercase tracking-wider text-gray-800 mb-6">Get in Touch</h3>
+            <ul className="space-y-4">
               <li className="flex items-start gap-3">
-                <MapPin size={18} className="text-[#D4AF37] mt-0.5" />
-                <span className="text-sm leading-relaxed opacity-80">
-                  Firozabad, Uttar Pradesh <br />
-                  Heart of the Glass City, India
+                <MapPin size={18} className="text-[#db2777] shrink-0 mt-0.5" />
+                <span className="text-sm text-gray-600">
+                  Orchid Green, Raja ka taal, <br />
+                  Firozabad, UP (283203)
                 </span>
               </li>
               <li className="flex items-center gap-3">
-                <Mail size={18} className="text-[#D4AF37]" />
-                <a href="mailto:hello@sbcreation.com" className="text-sm opacity-80 hover:text-[#db2777]">
-                  hello@sbcreation.com
+                <Mail size={18} className="text-[#db2777] shrink-0" />
+                <a href="mailto:contact@sbcreationofficial.com" className="text-sm text-gray-600 hover:text-[#db2777]">
+                  contact@sbcreationofficial.com
                 </a>
               </li>
               <li className="flex items-center gap-3">
-                <Phone size={18} className="text-[#D4AF37]" />
-                <span className="text-sm opacity-80">+91 91XXX XXXXX</span>
+                <Phone size={18} className="text-[#db2777] shrink-0" />
+                <a href="tel:+919557111954" className="text-sm text-gray-600 hover:text-[#db2777]">
+                  +91 95571 11954
+                </a>
               </li>
             </ul>
           </div>
@@ -95,13 +89,13 @@ const Footer = () => {
         </div>
 
         {/* 📜 Bottom Bar */}
-        <div className="mt-24 pt-8 border-t border-[#0F2C3E]/5 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-[#0F2C3E]/40">
-            &copy; {new Date().getFullYear()} SB Creation Heritage. All rights reserved.
+        <div className="mt-12 pt-8 border-t border-gray-200 flex flex-col md:flex-row justify-between items-center gap-4">
+          <p className="text-xs text-gray-500">
+            © {new Date().getFullYear()} SB Creation. All rights reserved.
           </p>
-          <div className="flex gap-8">
-            <Link href="#" className="text-[10px] font-bold uppercase tracking-widest text-[#0F2C3E]/40 hover:text-[#db2777]">Privacy</Link>
-            <Link href="#" className="text-[10px] font-bold uppercase tracking-widest text-[#0F2C3E]/40 hover:text-[#db2777]">Terms</Link>
+          <div className="flex gap-6">
+            <Link href="/privacy" className="text-xs text-gray-500 hover:text-[#db2777]">Privacy Policy</Link>
+            <Link href="/terms" className="text-xs text-gray-500 hover:text-[#db2777]">Terms of Service</Link>
           </div>
         </div>
       </div>

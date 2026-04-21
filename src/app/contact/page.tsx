@@ -16,7 +16,7 @@ export default function ContactPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     toast.success('Thank you. We have received your message and will get back to you soon.', {
-      style: { background: '#0F2C3E', color: '#fff', borderRadius: '12px' }
+      style: { background: '#db2777', color: '#fff', borderRadius: '50px', fontSize: '12px' }
     })
     setFormData({ name: '', email: '', subject: '', message: '' })
   }
@@ -26,158 +26,155 @@ export default function ContactPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#fffdfa]">
-      {/* 🏛️ Header Section */}
-      <section className="relative py-28 overflow-hidden bg-[#0F2C3E]">
+    <div className="min-h-screen bg-white">
+      {/* 🏛️ Header Section - Tightened Padding */}
+      <section className="relative py-12 md:py-16 overflow-hidden bg-[#fff1f2]">
         <div className="container mx-auto px-6 text-center relative z-10">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            <span className="text-[#D4AF37] text-[10px] font-bold tracking-[0.6em] uppercase mb-4 block">
-              Contact Us
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+            <span className="text-[#db2777] text-[9px] font-bold tracking-[0.5em] uppercase mb-2 block">
+              Concierge
             </span>
-            <h1 className="text-5xl md:text-7xl font-serif text-white mb-6">
-              How can we <span className="italic font-light text-[#D4AF37]">help you?</span>
+            <h1 className="text-4xl md:text-6xl font-serif text-[#0F2C3E] mb-4">
+              How can we <span className="italic font-light text-[#db2777]">help?</span>
             </h1>
-            <div className="w-20 h-[1px] bg-[#D4AF37] mx-auto opacity-30" />
+            <div className="w-16 h-[1px] bg-[#db2777] mx-auto opacity-20" />
           </motion.div>
         </div>
-        <div className="absolute top-0 right-0 w-96 h-96 bg-[#D4AF37]/5 rounded-full blur-[100px]" />
       </section>
 
-      <section className="py-24">
-        <div className="container mx-auto px-6 max-w-7xl">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
+      <section className="py-10 md:py-14">
+        <div className="container mx-auto px-6 max-w-6xl">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             
-            {/* 📍 Contact Information */}
+            {/* 📍 Contact Information - Minimalist Spacing */}
             <motion.div 
-              className="lg:col-span-5 space-y-12"
-              initial={{ opacity: 0, x: -30 }} 
+              className="lg:col-span-5 space-y-6"
+              initial={{ opacity: 0, x: -20 }} 
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
             >
               <div>
-                <h2 className="text-3xl font-serif text-[#0F2C3E] mb-6">Get in Touch</h2>
-                <p className="text-[#0F2C3E]/60 font-light leading-relaxed mb-8">
-                  Have a question about our jewelry, a custom order, or shipping? Our team is here to help you with everything you need.
+                <h2 className="text-2xl font-serif text-[#0F2C3E] mb-3">Get in Touch</h2>
+                <p className="text-gray-500 text-sm font-light leading-relaxed mb-6">
+                  Have a question about our jewelry, a custom order, or shipping? Our team is here to help you.
                 </p>
               </div>
 
-              <div className="space-y-8">
-                <div className="flex items-start gap-6 group">
-                  <div className="w-12 h-12 rounded-full border border-[#D4AF37]/20 flex items-center justify-center text-[#D4AF37] group-hover:bg-[#0F2C3E] group-hover:text-white transition-all duration-500">
-                    <Mail size={20} strokeWidth={1.5} />
+              <div className="space-y-4">
+                <div className="flex items-center gap-4 group">
+                  <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-[#db2777] border border-gray-100">
+                    <Mail size={16} strokeWidth={1.5} />
                   </div>
                   <div>
-                    <h3 className="text-[10px] font-bold uppercase tracking-widest text-[#D4AF37] mb-1">Email ID</h3>
-                    <p className="text-[#0F2C3E] font-medium">sbcreation1808@gmail.com</p>
+                    <h3 className="text-[8px] font-bold uppercase tracking-widest text-gray-400">Email ID</h3>
+                    <p className="text-[#0F2C3E] text-sm font-medium">sbcreation1808@gmail.com,  contact@sbcreationofficial.com</p>
                   </div>
                 </div>
 
-                <div className="flex items-start gap-6 group">
-                  <div className="w-12 h-12 rounded-full border border-[#D4AF37]/20 flex items-center justify-center text-[#D4AF37] group-hover:bg-[#0F2C3E] group-hover:text-white transition-all duration-500">
-                    <Phone size={20} strokeWidth={1.5} />
+                <div className="flex items-center gap-4 group">
+                  <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-[#db2777] border border-gray-100">
+                    <Phone size={16} strokeWidth={1.5} />
                   </div>
                   <div>
-                    <h3 className="text-[10px] font-bold uppercase tracking-widest text-[#D4AF37] mb-1">Contact Number</h3>
-                    <p className="text-[#0F2C3E] font-medium tracking-tighter">+91-9557111954</p>
+                    <h3 className="text-[8px] font-bold uppercase tracking-widest text-gray-400">Contact</h3>
+                    <p className="text-[#0F2C3E] text-sm font-medium">+91-9557111954</p>
                   </div>
                 </div>
 
-                <div className="flex items-start gap-6 group">
-                  <div className="w-12 h-12 rounded-full border border-[#D4AF37]/20 flex items-center justify-center text-[#D4AF37] group-hover:bg-[#0F2C3E] group-hover:text-white transition-all duration-500">
-                    <MapPin size={20} strokeWidth={1.5} />
+                <div className="flex items-center gap-4 group">
+                  <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-[#db2777] border border-gray-100">
+                    <MapPin size={16} strokeWidth={1.5} />
                   </div>
                   <div>
-                    <h3 className="text-[10px] font-bold uppercase tracking-widest text-[#D4AF37] mb-1">Address</h3>
-                    <p className="text-[#0F2C3E] font-medium leading-relaxed">
-                      Orchid Green, Raja ka taal, <br />
-                      Firozabad, Uttar Pradesh (283203)
+                    <h3 className="text-[8px] font-bold uppercase tracking-widest text-gray-400">Address</h3>
+                    <p className="text-[#0F2C3E] text-sm font-medium leading-tight">
+                      Orchid Green, Raja ka taal, Firozabad, Uttar Pradesh (283203)
                     </p>
                   </div>
                 </div>
               </div>
 
-              {/* Opening Hours */}
-              <div className="p-8 bg-[#FAF9F6] rounded-[2rem] border border-[#D4AF37]/10">
-                <div className="flex items-center gap-3 text-[#0F2C3E] mb-4">
-                  <Clock size={18} className="text-[#D4AF37]" />
-                  <span className="text-xs font-bold uppercase tracking-widest">Business Hours</span>
+              {/* Opening Hours - Compact Box */}
+              <div className="p-6 bg-[#F9FAFB] rounded-3xl border border-gray-100">
+                <div className="flex items-center gap-2 text-[#0F2C3E] mb-2">
+                  <Clock size={14} className="text-[#db2777]" />
+                  <span className="text-[9px] font-bold uppercase tracking-widest">Business Hours</span>
                 </div>
-                <div className="space-y-2 text-sm text-[#0F2C3E]/60 font-light">
+                <div className="text-xs text-gray-500 font-light">
                   <div className="flex justify-between"><span>Mon — Sun</span><span>10:00 AM — 08:00 PM</span></div>
-                  {/* <div className="flex justify-between"><span>Sunday</span><span>Closed</span></div> */}
                 </div>
               </div>
             </motion.div>
 
-            {/* ✉️ Message Form */}
+            {/* ✉️ Message Form - Refined Design */}
             <motion.div 
               className="lg:col-span-7"
-              initial={{ opacity: 0, x: 30 }} 
+              initial={{ opacity: 0, x: 20 }} 
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
             >
-              <form onSubmit={handleSubmit} className="bg-white rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(15,44,62,0.08)] p-10 md:p-14 border border-gray-50">
-                <div className="mb-10 text-center md:text-left">
-                   <Sparkles className="text-[#D4AF37] mb-4 mx-auto md:mx-0" size={24} />
-                   <h2 className="text-3xl font-serif text-[#0F2C3E]">Send a Message</h2>
+              <form onSubmit={handleSubmit} className="bg-white rounded-[2rem] shadow-xl shadow-gray-100/50 p-8 md:p-10 border border-gray-50">
+                <div className="mb-6 flex items-center gap-2">
+                   <Sparkles className="text-[#db2777]" size={18} />
+                   <h2 className="text-xl font-serif text-[#0F2C3E]">Send a Message</h2>
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#0F2C3E]/40 ml-4">Full Name</label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                  <div className="space-y-1">
+                    <label className="text-[9px] font-bold uppercase tracking-widest text-gray-400 ml-4">Full Name</label>
                     <input
                       type="text"
                       name="name"
                       value={formData.name}
                       onChange={handleChange}
-                      placeholder="Enter your name"
+                      placeholder="Name"
                       required
-                      className="w-full bg-[#FAF9F6] border-none rounded-full py-4 px-8 text-sm text-[#0F2C3E] focus:ring-1 focus:ring-[#D4AF37] transition-all"
+                      className="w-full bg-[#F9FAFB] border-none rounded-full py-3 px-6 text-sm text-[#0F2C3E] focus:ring-1 focus:ring-[#db2777] outline-none transition-all"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#0F2C3E]/40 ml-4">Email Address</label>
+                  <div className="space-y-1">
+                    <label className="text-[9px] font-bold uppercase tracking-widest text-gray-400 ml-4">Email</label>
                     <input
                       type="email"
                       name="email"
                       value={formData.email}
                       onChange={handleChange}
-                      placeholder="Enter your email"
+                      placeholder="Email"
                       required
-                      className="w-full bg-[#FAF9F6] border-none rounded-full py-4 px-8 text-sm text-[#0F2C3E] focus:ring-1 focus:ring-[#D4AF37] transition-all"
+                      className="w-full bg-[#F9FAFB] border-none rounded-full py-3 px-6 text-sm text-[#0F2C3E] focus:ring-1 focus:ring-[#db2777] outline-none transition-all"
                     />
                   </div>
                 </div>
 
-                <div className="space-y-8">
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#0F2C3E]/40 ml-4">Subject</label>
+                <div className="space-y-4">
+                  <div className="space-y-1">
+                    <label className="text-[9px] font-bold uppercase tracking-widest text-gray-400 ml-4">Subject</label>
                     <input
                       type="text"
                       name="subject"
                       value={formData.subject}
                       onChange={handleChange}
-                      placeholder="What is this regarding?"
+                      placeholder="Regarding..."
                       required
-                      className="w-full bg-[#FAF9F6] border-none rounded-full py-4 px-8 text-sm text-[#0F2C3E] focus:ring-1 focus:ring-[#D4AF37] transition-all"
+                      className="w-full bg-[#F9FAFB] border-none rounded-full py-3 px-6 text-sm text-[#0F2C3E] focus:ring-1 focus:ring-[#db2777] outline-none transition-all"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#0F2C3E]/40 ml-4">Your Message</label>
+                  <div className="space-y-1">
+                    <label className="text-[9px] font-bold uppercase tracking-widest text-gray-400 ml-4">Your Message</label>
                     <textarea
                       name="message"
                       value={formData.message}
                       onChange={handleChange}
                       required
-                      rows={4}
-                      placeholder="How can we help you today?"
-                      className="w-full bg-[#FAF9F6] border-none rounded-[2rem] py-6 px-8 text-sm text-[#0F2C3E] focus:ring-1 focus:ring-[#D4AF37] transition-all resize-none"
+                      rows={3}
+                      placeholder="How can we help?"
+                      className="w-full bg-[#F9FAFB] border-none rounded-[1.5rem] py-4 px-6 text-sm text-[#0F2C3E] focus:ring-1 focus:ring-[#db2777] outline-none transition-all resize-none"
                     />
                   </div>
                   
-                  <button type="submit" className="w-full bg-[#0F2C3E] text-white py-5 rounded-full flex items-center justify-center gap-3 text-xs font-bold uppercase tracking-[0.3em] hover:bg-[#db2777] transition-all shadow-xl group">
+                  <button type="submit" className="w-full bg-[#0F2C3E] text-white py-4 rounded-full flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] hover:bg-[#db2777] transition-all shadow-md group">
                     Send Message
-                    <Send size={16} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                    <Send size={14} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
                   </button>
                 </div>
               </form>
@@ -186,16 +183,16 @@ export default function ContactPage() {
         </div>
       </section>
 
-      {/* 🟢 WhatsApp Support */}
+      {/* 🟢 WhatsApp Support - Compact */}
       <a 
         href="https://wa.me/919557111954" 
         target="_blank"
         rel="noopener noreferrer"
-        className="fixed bottom-24 right-8 md:bottom-12 md:right-12 z-[100] bg-[#25D366] text-white p-4 rounded-full shadow-2xl hover:scale-110 transition-transform flex items-center gap-2 group"
+        className="fixed bottom-24 right-6 md:bottom-10 md:right-10 z-[100] bg-[#25D366] text-white p-3 rounded-full shadow-lg hover:scale-110 transition-transform flex items-center gap-2 group"
       >
-        <MessageCircle size={24} fill="white" />
-        <span className="max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-500 text-[10px] font-bold uppercase tracking-widest whitespace-nowrap">
-          Chat With Us
+        <MessageCircle size={20} fill="white" />
+        <span className="max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-500 text-[9px] font-bold uppercase tracking-widest whitespace-nowrap">
+          Chat Support
         </span>
       </a>
     </div>
