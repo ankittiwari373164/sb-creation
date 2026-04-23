@@ -7,7 +7,24 @@ import Footer from '../components/Footer'
 export const metadata: Metadata = {
   title: 'SB Creation | Handcrafted Firozabad Bangles',
   description: 'Traditional elegance from the City of Bangles. Shop Glass, Metal, and Designer bangles.',
-  keywords: 'healthy snacks, dry fruits, nuts, trail mix, workout snacks, travel snacks',
+  keywords: 'bangles, firozabad bangles, glass bangles, handcrafted bangles, bridal jewelry, SB Creation',
+  metadataBase: new URL('https://sbcreationofficial.com'),
+  openGraph: {
+    title: 'SB Creation | Handcrafted Firozabad Bangles',
+    description: 'Traditional elegance from the City of Bangles.',
+    url: 'https://sbcreationofficial.com',
+    siteName: 'SB Creation',
+    images: [
+      {
+        url: '/logo.png', // This points to your floral logo in the public folder
+        width: 1200,
+        height: 630,
+        alt: 'SB Creation Floral Logo',
+      },
+    ],
+    locale: 'en_IN',
+    type: 'website',
+  },
 }
 
 export default function RootLayout({
