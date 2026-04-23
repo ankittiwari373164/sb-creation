@@ -38,6 +38,7 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-[#FAF9F6]">
       <ProductSlider products={products.slice(0, 8)} />
+      <PublicInstaFeed />
       <CreativeGallery products={products} />
       {/* <ProductGrid products={products} title="Our Masterpieces" /> */}
       <ArtisanalStack products={products} />
@@ -49,7 +50,7 @@ export default function Home() {
       {/* <FeaturedProducts products={products} /> */}
       {/* <Heritage /> */}
       {/* <Testimonials /> */}
-      <PublicInstaFeed />
+      
       {/* <Newsletter /> */}
     </main>
   );

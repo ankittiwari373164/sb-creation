@@ -90,7 +90,7 @@ export default function WishlistPage() {
             <Heart size={40} className="text-[#db2777]" fill="#db2777" />
           </div>
           <h2 className="text-4xl font-serif text-[#0F2C3E] mb-4">Your Wishlist is Empty</h2>
-          <p className="text-gray-400 text-lg mb-10">Save your favorite jewelry here to buy them later.</p>
+          <p className="text-gray-400 text-lg mb-10">Sign in to add to wishlist.</p>
           <Link href="/shop">
             <button className="bg-[#0F2C3E] text-white px-12 py-4 rounded-full text-sm font-bold uppercase tracking-widest hover:bg-[#db2777] transition-all shadow-lg">
               Go Shopping

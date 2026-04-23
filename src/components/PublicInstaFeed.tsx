@@ -30,7 +30,7 @@ const PublicInstaFeed = () => {
               Social <span className="italic font-light text-[#ffc857]">Vibe</span>
             </h2>
             <p className="text-xs font-bold tracking-[0.3em] uppercase text-[#e8378e]">
-              Live from our Atelier
+              Live from our Workshop
             </p>
           </div>
           <div className="h-[1px] flex-grow bg-gray-200 mx-8 hidden md:block" />

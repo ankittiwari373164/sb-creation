@@ -6,19 +6,43 @@ import { Facebook, Instagram, Twitter, Mail, Phone, MapPin } from 'lucide-react'
 
 const Footer = () => {
   return (
-    <footer className="bg-[#fffff] text-[#0F2C3E] border-t border-gray-200">
+    <footer className="bg-[#f8f9fa] text-[#0F2C3E] border-t border-gray-200">
       <div className="container mx-auto px-6 py-16">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-12">
           
-          {/* 🏛️ Brand Info */}
+          {/* 🏛️ Brand Info & Logo */}
           <div className="md:col-span-4 space-y-6">
-            <Link href="/" className="relative h-16 w-44 block">
-              <Image 
-                src="/logo.png" 
-                alt="SB Creation Logo" 
-                fill 
-                className="object-contain"
-              />
+            <Link href="/" className="flex items-center gap-3 group hover:opacity-90 transition-opacity w-fit">
+              <div className="relative h-16 w-16 shrink-0">
+                <Image 
+                  src="/logo.png" 
+                  alt="SB Creation Logo" 
+                  fill 
+                  className="object-contain drop-shadow-sm"
+                />
+              </div>
+              <div className="flex items-baseline gap-2 whitespace-nowrap">
+                <span 
+                  className="text-3xl md:text-3xl text-[#0F2C3E] italic"
+                  style={{ 
+                    fontFamily: '"Pargrid", sans-serif', 
+                    fontWeight: 900,
+                    lineHeight: '1'
+                  }}
+                >
+                  SB
+                </span>
+                <span 
+                  className="text-xl md:text-3xl text-[#db2777]"
+                  style={{ 
+                    fontFamily: '"Montserrat", "Helvetica Neue", sans-serif', 
+                    fontWeight: 600,
+                    // letterSpacing: '0.3em'
+                  }}
+                >
+                  CREATION
+                </span>
+              </div>
             </Link>
             
             <p className="text-sm leading-relaxed text-gray-600 max-w-xs">
@@ -29,12 +53,12 @@ const Footer = () => {
               <a href="https://instagram.com/_sbcreation" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-[#db2777] transition-colors">
                 <Instagram size={20} />
               </a>
-              <a href="https://facebook.com/sbcreation" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-[#db2777] transition-colors">
+              <a href="https://www.facebook.com/share/17fTCz8vQ8/?mibextid=wwXIfr" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-[#db2777] transition-colors">
                 <Facebook size={20} />
               </a>
-              <a href="https://twitter.com/sbcreation" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-[#db2777] transition-colors">
+              {/* <a href="https://twitter.com/sbcreation" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-[#db2777] transition-colors">
                 <Twitter size={20} />
-              </a>
+              </a> */}
             </div>
           </div>
 
@@ -42,10 +66,10 @@ const Footer = () => {
           <div className="md:col-span-2">
             <h3 className="text-[13px] font-bold uppercase tracking-wider text-gray-800 mb-6">Shop</h3>
             <ul className="space-y-3">
-              <li><Link href="/shop" className="text-sm text-gray-600 hover:text-[#db2777] transition-all">Glass Sets</Link></li>
-              <li><Link href="/shop" className="text-sm text-gray-600 hover:text-[#db2777] transition-all">Metal Kangan</Link></li>
-              <li><Link href="/shop" className="text-sm text-gray-600 hover:text-[#db2777] transition-all">Bridal Wear</Link></li>
-              <li><Link href="/shop" className="text-sm text-gray-600 hover:text-[#db2777] transition-all">Daily Use</Link></li>
+              <li><Link href="/wishlist" className="text-sm text-gray-600 hover:text-[#db2777] transition-all">Wishlist</Link></li>
+              <li><Link href="/blogs" className="text-sm text-gray-600 hover:text-[#db2777] transition-all">Blogs</Link></li>
+              <li><Link href="/about" className="text-sm text-gray-600 hover:text-[#db2777] transition-all">About Us</Link></li>
+              <li><Link href="/dashboard" className="text-sm text-gray-600 hover:text-[#db2777] transition-all">Dashboard</Link></li>
             </ul>
           </div>
 

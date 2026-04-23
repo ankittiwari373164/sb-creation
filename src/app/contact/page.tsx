@@ -32,7 +32,7 @@ export default function ContactPage() {
         <div className="container mx-auto px-6 text-center relative z-10">
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
             <span className="text-[#db2777] text-[9px] font-bold tracking-[0.5em] uppercase mb-2 block">
-              Concierge
+              Support
             </span>
             <h1 className="text-4xl md:text-6xl font-serif text-[#0F2C3E] mb-4">
               How can we <span className="italic font-light text-[#db2777]">help?</span>
