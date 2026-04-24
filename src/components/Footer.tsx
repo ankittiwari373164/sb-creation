@@ -79,7 +79,7 @@ const Footer = () => {
             <ul className="space-y-3">
               <li><Link href="/track-order" className="text-sm text-gray-600 hover:text-[#db2777] transition-all">Track Order</Link></li>
               <li><Link href="/shipping" className="text-sm text-gray-600 hover:text-[#db2777] transition-all">Shipping Info</Link></li>
-              <li><Link href="/returns" className="text-sm text-gray-600 hover:text-[#db2777] transition-all">Easy Returns</Link></li>
+              <li><Link href="/returns" className="text-sm text-gray-600 hover:text-[#db2777] transition-all">Return & Refund</Link></li>
               <li><Link href="/contact" className="text-sm text-gray-600 hover:text-[#db2777] transition-all">Contact Us</Link></li>
             </ul>
           </div>
@@ -118,7 +118,7 @@ const Footer = () => {
             © {new Date().getFullYear()} SB Creation. All rights reserved.
           </p>
           <div className="flex gap-6">
-            <Link href="/privacy" className="text-xs text-gray-500 hover:text-[#db2777]">Privacy Policy</Link>
+            <Link href="/privacy-policy" className="text-xs text-gray-500 hover:text-[#db2777]">Privacy Policy</Link>
             <Link href="/terms" className="text-xs text-gray-500 hover:text-[#db2777]">Terms of Service</Link>
           </div>
         </div>
