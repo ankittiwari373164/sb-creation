@@ -68,7 +68,7 @@ const Footer = () => {
             <ul className="space-y-3">
               <li><Link href="/wishlist" className="text-sm text-gray-600 hover:text-[#db2777] transition-all">Wishlist</Link></li>
               <li><Link href="/blogs" className="text-sm text-gray-600 hover:text-[#db2777] transition-all">Blogs</Link></li>
-              <li><Link href="/about" className="text-sm text-gray-600 hover:text-[#db2777] transition-all">About Us</Link></li>
+              <li><Link href="/shop" className="text-sm text-gray-600 hover:text-[#db2777] transition-all">Collections</Link></li>
               <li><Link href="/dashboard" className="text-sm text-gray-600 hover:text-[#db2777] transition-all">Dashboard</Link></li>
             </ul>
           </div>
@@ -78,8 +78,7 @@ const Footer = () => {
             <h3 className="text-[13px] font-bold uppercase tracking-wider text-gray-800 mb-6">Support</h3>
             <ul className="space-y-3">
               <li><Link href="/track-order" className="text-sm text-gray-600 hover:text-[#db2777] transition-all">Track Order</Link></li>
-              <li><Link href="/shipping" className="text-sm text-gray-600 hover:text-[#db2777] transition-all">Shipping Info</Link></li>
-              <li><Link href="/returns" className="text-sm text-gray-600 hover:text-[#db2777] transition-all">Return & Refund</Link></li>
+              <li><Link href="/about" className="text-sm text-gray-600 hover:text-[#db2777] transition-all">About Us</Link></li>
               <li><Link href="/contact" className="text-sm text-gray-600 hover:text-[#db2777] transition-all">Contact Us</Link></li>
             </ul>
           </div>

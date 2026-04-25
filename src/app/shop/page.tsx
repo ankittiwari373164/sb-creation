@@ -80,18 +80,18 @@ export default function ShopPage() {
   return (
     <div className="min-h-screen bg-white">
       {/* 🏛️ Editorial Hero - Tightened Spacing */}
-      <section className="bg-[#fff1f2] py-12 md:py-20 relative overflow-hidden">
+      <section className="bg-[#fff1f2] py-1 md:py-2 relative overflow-hidden">
         <div className="container mx-auto px-6 text-center relative z-10">
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
             <span className="text-[#db2777] text-[9px] font-bold tracking-[0.5em] uppercase mb-3 block">
               Firozabad Heritage
             </span>
-            <h1 className="text-4xl md:text-6xl font-serif text-[#0F2C3E] mb-4">
+            <h1 className="text-4xl md:text-5xl font-serif text-[#0F2C3E] mb-4">
               The <span className="italic font-light text-[#db2777]">Boutique</span> Gallery
             </h1>
-            <p className="text-gray-500 text-sm max-w-xl mx-auto font-light leading-relaxed">
+            {/* <p className="text-gray-500 text-sm max-w-xl mx-auto font-light leading-relaxed">
               Explore our curated selection of handcrafted bangles, where centuries of tradition meet modern elegance.
-            </p>
+            </p> */}
           </motion.div>
         </div>
         <div className="absolute top-0 right-0 w-64 h-64 bg-white/40 rounded-full blur-[80px]" />

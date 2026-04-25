@@ -4,26 +4,45 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { ShoppingBag, Menu, X, Search, User, Home, Store } from "lucide-react";
+import { ShoppingBag, Menu, X, Search, User, Home, Store, Heart } from "lucide-react";
 import { useCartStore } from "../lib/cartStore";
+import { supabase } from "../lib/supabase";
+
 
 export default function Header() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
-  
+  const [wishlistCount, setWishlistCount] = useState(0);
   const totalItems = useCartStore((state) => state.getTotalItems());
 
   useEffect(() => {
     setMounted(true);
+
+    const fetchWishlistCount = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { count } = await supabase
+          .from('wishlist')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', user.id);
+        
+        setWishlistCount(count || 0);
+      }
+    };
+
+    fetchWishlistCount();
+
   }, []);
 
   const navItems = [
     { name: "Home", href: "/", icon: Home },
     { name: "Shop", href: "/shop", icon: Store },
     { name: "Cart", href: "/cart", icon: ShoppingBag, count: totalItems },
+    { name: "Wishlist", href: "/wishlist", icon: Heart, count: wishlistCount },
     { name: "Profile", href: "/dashboard", icon: User },
   ];
+
 
   return (
     <>
@@ -91,6 +110,17 @@ export default function Header() {
             <button className="text-[#0F2C3E] hover:text-[#db2777] transition-colors p-2 bg-gray-50 rounded-full">
               <Search size={20} />
             </button>
+
+            <Link href="/wishlist" className="hidden lg:flex relative p-3 bg-gray-50 hover:bg-[#fff1f2] rounded-full transition-colors group">
+  <Heart size={20} className="text-[#0F2C3E] group-hover:text-[#db2777] transition-colors" />
+  
+  {/* Ensure you declare a wishlistCount variable, or remove this block if you don't want a number badge on the heart */}
+  {mounted && wishlistCount > 0 && (
+    <span className="absolute -top-1 -right-1 bg-[#db2777] text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center shadow-md border-2 border-white">
+      {wishlistCount}
+    </span>
+  )}
+</Link>
             
             <Link href="/cart" className="hidden lg:flex relative p-3 bg-gray-50 hover:bg-[#fff1f2] rounded-full transition-colors group">
               <ShoppingBag size={20} className="text-[#0F2C3E] group-hover:text-[#db2777] transition-colors" />
@@ -100,6 +130,7 @@ export default function Header() {
                 </span>
               )}
             </Link>
+           
           </div>
         </div>
       </header>

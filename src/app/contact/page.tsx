@@ -28,13 +28,13 @@ export default function ContactPage() {
   return (
     <div className="min-h-screen bg-white">
       {/* 🏛️ Header Section - Tightened Padding */}
-      <section className="relative py-12 md:py-16 overflow-hidden bg-[#fff1f2]">
+      <section className="relative py-5 md:py-5 overflow-hidden bg-[#fff1f2]">
         <div className="container mx-auto px-6 text-center relative z-10">
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
             <span className="text-[#db2777] text-[9px] font-bold tracking-[0.5em] uppercase mb-2 block">
               Support
             </span>
-            <h1 className="text-4xl md:text-6xl font-serif text-[#0F2C3E] mb-4">
+            <h1 className="text-4xl md:text-5xl font-serif text-[#0F2C3E] mb-4">
               How can we <span className="italic font-light text-[#db2777]">help?</span>
             </h1>
             <div className="w-16 h-[1px] bg-[#db2777] mx-auto opacity-20" />
