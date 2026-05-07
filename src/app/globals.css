@@ -1,29 +1,46 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800&family=Poppins:wght@300;400;500;600;700&family=Lato:wght@300;400;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --font-inter: 'Inter', sans-serif;
-  --font-pargrid: 'Pargrid', sans-serif;
+  --font-playfair: 'Playfair Display', serif;
+  --font-poppins: 'Poppins', sans-serif;
+  --font-lato: 'Lato', sans-serif;
+  
+  /* Luxury Color Palette */
+  --color-champagne: #F5E9DC;
+  --color-gold: #D4AF37;
+  --color-blush: #F8C8DC;
+  --color-white: #FFFFFF;
+  --color-ivory: #FFFFF0;
+  --color-dark-brown: #2d2416;
+  --color-blue: #0F5A7E;
 }
 
 body {
-  @apply bg-accent-silk text-accent-charcoal font-sans antialiased;
+  @apply bg-[#F5E9DC] text-[#2d2416] font-sans antialiased;
 }
 
-/* Ensure buttons use the new Pink-500 from the config */
+/* Ensure buttons use the new Blush Pink */
 .btn-primary {
-  @apply bg-primary-500 text-white px-8 py-3 rounded-full font-bold hover:bg-primary-600 transition-all shadow-lg;
-}
-
-@font-face {
-  font-family: 'Pargrid';
-  src: url('/fonts/pargrid.woff2') format('woff2'),
-       url('/fonts/pargrid.ttf') format('truetype');
-  font-weight: normal;
-  font-style: normal;
+  @apply bg-[#F8C8DC] text-[#2d2416] px-8 py-3 rounded-full font-bold hover:bg-[#F3A8C2] transition-all shadow-lg;
 }
 
 .btn-outline {
-  @apply border-2 border-primary-500 text-primary-500 px-8 py-3 rounded-full font-bold hover:bg-primary-50 transition-all;
+  @apply border-2 border-[#F8C8DC] text-[#F8C8DC] px-8 py-3 rounded-full font-bold hover:bg-[#F8C8DC] hover:text-[#2d2416] transition-all;
+}
+
+/* Gold Accent for highlights */
+.gold-accent {
+  @apply text-[#D4AF37];
+}
+
+.gold-border {
+  @apply border-[#D4AF37];
+}
+
+.gold-bg {
+  @apply bg-[#D4AF37];
 }

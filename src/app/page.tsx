@@ -14,6 +14,8 @@ import ProductGrid from '../components/ProductGrid';
 import ArtisanalStack from '../components/ArtisanalStack'
 import ProductVault from '../components/ProductVault'
 import VideoShowcase from '../components/VideoShowcase';
+import HeroSlider from '../components/HeroSlider';
+
 
 
 
@@ -37,6 +39,7 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-[#FAF9F6]">
+      <HeroSlider />
       <ProductSlider products={products.slice(0, 8)} />
       <PublicInstaFeed />
       <CreativeGallery products={products} />

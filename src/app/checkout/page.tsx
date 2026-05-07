@@ -151,16 +151,16 @@ export default function CheckoutPage() {
   if (items.length === 0) return null
 
   return (
-    <div className="min-h-screen bg-white py-12 px-4">
+    <div className="min-h-screen bg-[#F5E9DC] py-12 px-4">
       <div className="container mx-auto max-w-7xl">
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
           
           <div className="flex flex-col md:flex-row justify-between items-center mb-10 gap-6">
-            <Link href="/cart" className="flex items-center text-[10px] font-bold uppercase tracking-widest text-gray-400 hover:text-[#db2777] transition-colors">
+            <Link href="/cart" className="flex items-center text-[10px] font-bold uppercase tracking-widest text-[#D4AF37] hover:text-[#F8C8DC] transition-colors">
               <ArrowLeft size={14} className="mr-2" /> Back to Bag
             </Link>
-            <h1 className="text-4xl font-serif text-[#0F2C3E]">Finalize <span className="italic text-[#db2777]">Order</span></h1>
-            <div className="flex items-center gap-2 text-green-500">
+            <h1 className="text-4xl font-serif text-[#2d2416]">Finalize <span className="italic text-[#D4AF37]">Order</span></h1>
+            <div className="flex items-center gap-2 text-[#0F5A7E]">
               <ShieldCheck size={18} />
               <span className="text-[10px] font-bold uppercase tracking-widest">Verified Checkout</span>
             </div>
@@ -172,36 +172,36 @@ export default function CheckoutPage() {
             <div className="lg:col-span-8">
               <form onSubmit={handleSubmit} className="space-y-6">
                 
-                <div className="bg-white rounded-[2rem] p-8 border border-gray-100 shadow-sm">
-                  <div className="flex items-center gap-4 mb-8 border-b border-gray-50 pb-4">
-                    <Truck size={20} className="text-[#db2777]" />
-                    <h2 className="text-xl font-serif text-[#0F2C3E]">Shipping Address</h2>
+                <div className="bg-[#FFFFFF] rounded-[2rem] p-8 border-2 border-[#D4AF37] shadow-sm">
+                  <div className="flex items-center gap-4 mb-8 border-b-2 border-[#D4AF37] pb-4">
+                    <Truck size={20} className="text-[#D4AF37]" />
+                    <h2 className="text-xl font-serif text-[#2d2416]">Shipping Address</h2>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div className="md:col-span-2 space-y-1">
-                      <label className="text-[10px] font-bold uppercase text-gray-400 ml-4">Full Name</label>
-                      <input type="text" name="fullName" value={formData.fullName} onChange={handleInputChange} required className="w-full bg-[#F9FAFB] border-none rounded-full py-3 px-6 text-sm text-[#0F2C3E] focus:ring-1 focus:ring-[#db2777] outline-none" placeholder="Name of recipient" />
+                      <label className="text-[10px] font-bold uppercase text-[#D4AF37] ml-4 font-sans">Full Name</label>
+                      <input type="text" name="fullName" value={formData.fullName} onChange={handleInputChange} required className="w-full bg-[#F5E9DC] border-2 border-[#D4AF37] rounded-full py-3 px-6 text-sm text-[#2d2416] placeholder-[#5a4a42]/50 focus:ring-2 focus:ring-[#F8C8DC] focus:border-[#F8C8DC] outline-none font-sans" placeholder="Name of recipient" />
                     </div>
 
                     <div className="space-y-1">
-                      <label className="text-[10px] font-bold uppercase text-gray-400 ml-4">Phone</label>
-                      <input type="tel" name="phone" value={formData.phone} onChange={handleInputChange} required className="w-full bg-[#F9FAFB] border-none rounded-full py-3 px-6 text-sm text-[#0F2C3E] focus:ring-1 focus:ring-[#db2777] outline-none" placeholder="Mobile Number" />
+                      <label className="text-[10px] font-bold uppercase text-[#D4AF37] ml-4 font-sans">Phone</label>
+                      <input type="tel" name="phone" value={formData.phone} onChange={handleInputChange} required className="w-full bg-[#F5E9DC] border-2 border-[#D4AF37] rounded-full py-3 px-6 text-sm text-[#2d2416] placeholder-[#5a4a42]/50 focus:ring-2 focus:ring-[#F8C8DC] focus:border-[#F8C8DC] outline-none font-sans" placeholder="Mobile Number" />
                     </div>
 
                     <div className="space-y-1">
-                      <label className="text-[10px] font-bold uppercase text-gray-400 ml-4">Pincode</label>
-                      <input type="text" name="pincode" value={formData.pincode} onChange={handleInputChange} required className="w-full bg-[#F9FAFB] border-none rounded-full py-3 px-6 text-sm text-[#0F2C3E] focus:ring-1 focus:ring-[#db2777] outline-none" placeholder="ZIP/Postal Code" />
+                      <label className="text-[10px] font-bold uppercase text-[#D4AF37] ml-4 font-sans">Pincode</label>
+                      <input type="text" name="pincode" value={formData.pincode} onChange={handleInputChange} required className="w-full bg-[#F5E9DC] border-2 border-[#D4AF37] rounded-full py-3 px-6 text-sm text-[#2d2416] placeholder-[#5a4a42]/50 focus:ring-2 focus:ring-[#F8C8DC] focus:border-[#F8C8DC] outline-none font-sans" placeholder="ZIP/Postal Code" />
                     </div>
 
                     <div className="md:col-span-2 space-y-1">
-                      <label className="text-[10px] font-bold uppercase text-gray-400 ml-4">Full Address</label>
-                      <textarea name="address" value={formData.address} onChange={handleInputChange} required rows={2} className="w-full bg-[#F9FAFB] border-none rounded-[1.5rem] py-4 px-6 text-sm text-[#0F2C3E] focus:ring-1 focus:ring-[#db2777] resize-none outline-none" placeholder="House no, Street, Area..." />
+                      <label className="text-[10px] font-bold uppercase text-[#D4AF37] ml-4 font-sans">Full Address</label>
+                      <textarea name="address" value={formData.address} onChange={handleInputChange} required rows={2} className="w-full bg-[#F5E9DC] border-2 border-[#D4AF37] rounded-[1.5rem] py-4 px-6 text-sm text-[#2d2416] placeholder-[#5a4a42]/50 focus:ring-2 focus:ring-[#F8C8DC] focus:border-[#F8C8DC] resize-none outline-none font-sans" placeholder="House no, Street, Area..." />
                     </div>
 
                     <div className="space-y-1">
-                      <label className="text-[10px] font-bold uppercase text-gray-400 ml-4">Country</label>
-                      <select name="country" value={formData.country} onChange={handleCountryChange} required className="w-full bg-[#F9FAFB] border-none rounded-full py-3 px-6 text-sm text-[#0F2C3E] outline-none focus:ring-1 focus:ring-[#db2777] appearance-none cursor-pointer">
+                      <label className="text-[10px] font-bold uppercase text-[#D4AF37] ml-4 font-sans">Country</label>
+                      <select name="country" value={formData.country} onChange={handleCountryChange} required className="w-full bg-[#F5E9DC] border-2 border-[#D4AF37] rounded-full py-3 px-6 text-sm text-[#2d2416] outline-none focus:ring-2 focus:ring-[#F8C8DC] focus:border-[#F8C8DC] appearance-none cursor-pointer font-sans">
                         <option value="">Select Country</option>
                         {Country.getAllCountries().map((c) => (
                           <option key={c.isoCode} value={c.name}>{c.name}</option>
@@ -210,8 +210,8 @@ export default function CheckoutPage() {
                     </div>
 
                     <div className="space-y-1">
-                      <label className="text-[10px] font-bold uppercase text-gray-400 ml-4">State</label>
-                      <select name="state" value={formData.state} onChange={handleStateChange} required disabled={!formData.country} className="w-full bg-[#F9FAFB] border-none rounded-full py-3 px-6 text-sm text-[#0F2C3E] outline-none focus:ring-1 focus:ring-[#db2777] disabled:opacity-30 cursor-pointer">
+                      <label className="text-[10px] font-bold uppercase text-[#D4AF37] ml-4 font-sans">State</label>
+                      <select name="state" value={formData.state} onChange={handleStateChange} required disabled={!formData.country} className="w-full bg-[#F5E9DC] border-2 border-[#D4AF37] rounded-full py-3 px-6 text-sm text-[#2d2416] outline-none focus:ring-2 focus:ring-[#F8C8DC] focus:border-[#F8C8DC] disabled:opacity-50 cursor-pointer font-sans">
                         <option value="">Select State</option>
                         {State.getStatesOfCountry(formData.countryCode).map((s) => (
                           <option key={s.isoCode} value={s.name}>{s.name}</option>
@@ -220,8 +220,8 @@ export default function CheckoutPage() {
                     </div>
 
                     <div className="space-y-1 md:col-span-2">
-                      <label className="text-[10px] font-bold uppercase text-gray-400 ml-4">City</label>
-                      <select name="city" value={formData.city} onChange={handleInputChange} required disabled={!formData.state} className="w-full bg-[#F9FAFB] border-none rounded-full py-3 px-6 text-sm text-[#0F2C3E] outline-none focus:ring-1 focus:ring-[#db2777] disabled:opacity-30 cursor-pointer">
+                      <label className="text-[10px] font-bold uppercase text-[#D4AF37] ml-4 font-sans">City</label>
+                      <select name="city" value={formData.city} onChange={handleInputChange} required disabled={!formData.state} className="w-full bg-[#F5E9DC] border-2 border-[#D4AF37] rounded-full py-3 px-6 text-sm text-[#2d2416] outline-none focus:ring-2 focus:ring-[#F8C8DC] focus:border-[#F8C8DC] disabled:opacity-50 cursor-pointer font-sans">
                         <option value="">Select City</option>
                         {City.getCitiesOfState(formData.countryCode, formData.stateCode).map((city) => (
                           <option key={city.name} value={city.name}>{city.name}</option>
@@ -231,20 +231,20 @@ export default function CheckoutPage() {
                   </div>
                 </div>
 
-                <div className="bg-white rounded-[2rem] p-8 border border-gray-100 shadow-sm">
-                  <h2 className="text-xl font-serif text-[#0F2C3E] mb-6 flex items-center gap-4">
-                    <CreditCard className="text-[#db2777]" /> Payment Method
+                <div className="bg-[#FFFFFF] rounded-[2rem] p-8 border-2 border-[#D4AF37] shadow-sm">
+                  <h2 className="text-xl font-serif text-[#2d2416] mb-6 flex items-center gap-4">
+                    <CreditCard className="text-[#D4AF37]" /> Payment Method
                   </h2>
-                  <label className="flex items-center p-5 border border-[#db2777]/20 bg-[#fff1f2]/30 rounded-2xl cursor-pointer">
-                    <input type="radio" checked readOnly className="mr-3 accent-[#db2777]" />
+                  <label className="flex items-center p-5 border-2 border-[#D4AF37] bg-[#FFFFF0] rounded-2xl cursor-pointer hover:bg-[#F5E9DC] transition-all">
+                    <input type="radio" checked readOnly className="mr-3 accent-[#D4AF37]" />
                     <div>
-                      <p className="text-xs font-bold uppercase text-[#0F2C3E]">Cash on Delivery</p>
-                      <p className="text-[10px] text-gray-400">Pay upon delivery</p>
+                      <p className="text-xs font-bold uppercase text-[#2d2416] font-sans">Cash on Delivery</p>
+                      <p className="text-[10px] text-[#5a4a42] font-sans">Pay upon delivery</p>
                     </div>
                   </label>
                 </div>
 
-                <button type="submit" disabled={loading} className="w-full bg-[#0F2C3E] text-white py-4 rounded-full flex items-center justify-center gap-3 text-[10px] font-bold uppercase tracking-[0.2em] hover:bg-[#db2777] shadow-lg disabled:opacity-50 transition-all">
+                <button type="submit" disabled={loading} className="w-full bg-[#D4AF37] text-[#2d2416] py-4 rounded-full flex items-center justify-center gap-3 text-[10px] font-bold uppercase tracking-[0.2em] hover:bg-[#F8C8DC] shadow-lg disabled:opacity-50 transition-all font-sans">
                   {loading ? "Confirming..." : <><Lock size={16} /> Place Order Now</>}
                 </button>
               </form>
@@ -252,25 +252,25 @@ export default function CheckoutPage() {
 
             {/* 💰 Summary Sidebar */}
             <div className="lg:col-span-4">
-              <div className="bg-[#FAF9F6] rounded-[2.5rem] p-8 sticky top-24 border border-gray-100">
-                <h2 className="text-xl font-serif mb-6 text-[#db2777]">Summary</h2>
+              <div className="bg-[#FFFFFF] rounded-[2.5rem] p-8 sticky top-24 border-2 border-[#D4AF37] shadow-lg">
+                <h2 className="text-xl font-serif mb-6 text-[#D4AF37]">Summary</h2>
                 
                 {/* --- Coupon Input --- */}
-                <div className="mb-6 p-4 bg-white rounded-2xl border border-gray-100">
-                   <p className="text-[9px] font-bold uppercase tracking-widest text-gray-400 mb-2">Apply Coupon</p>
+                <div className="mb-6 p-4 bg-[#F5E9DC] rounded-2xl border-2 border-[#D4AF37]">
+                   <p className="text-[9px] font-bold uppercase tracking-widest text-[#D4AF37] mb-2 font-sans">Apply Coupon</p>
                    <div className="flex gap-2">
                       <input 
                         type="text" 
                         placeholder="Code"
                         value={couponCode}
                         onChange={(e) => setCouponCode(e.target.value)}
-                        className="flex-1 bg-gray-50 border-none rounded-full px-4 py-2 text-xs text-[#0F2C3E] focus:ring-1 focus:ring-[#db2777] outline-none"
+                        className="flex-1 bg-[#FFFFFF] border-2 border-[#D4AF37] rounded-full px-4 py-2 text-xs text-[#2d2416] placeholder-[#5a4a42]/40 focus:ring-2 focus:ring-[#F8C8DC] focus:border-[#F8C8DC] outline-none font-sans"
                       />
                       <button 
                         type="button"
                         onClick={handleApplyCoupon}
                         disabled={isApplying || !couponCode}
-                        className="bg-[#0F2C3E] text-white px-5 py-2 rounded-full text-[9px] font-bold uppercase transition-all hover:bg-[#db2777] shrink-0"
+                        className="bg-[#D4AF37] text-[#2d2416] px-5 py-2 rounded-full text-[9px] font-bold uppercase transition-all hover:bg-[#F8C8DC] shrink-0 font-sans disabled:opacity-50"
                       >
                         {isApplying ? '...' : 'Apply'}
                       </button>
@@ -279,33 +279,33 @@ export default function CheckoutPage() {
 
                 <div className="space-y-4 mb-8 max-h-[300px] overflow-y-auto no-scrollbar">
                   {items.map((item) => (
-                    <div key={item.product.id} className="flex justify-between items-center text-xs border-b border-gray-100 pb-3">
-                      <p className="font-bold text-[#0F2C3E] truncate max-w-[60%]">{item.product.name}</p>
-                      <p className="text-gray-500">₹{(item.product.price * item.quantity).toLocaleString()}</p>
+                    <div key={item.product.id} className="flex justify-between items-center text-xs border-b border-[#D4AF37]/20 pb-3">
+                      <p className="font-bold text-[#2d2416] truncate max-w-[60%] font-sans">{item.product.name}</p>
+                      <p className="text-[#5a4a42] font-sans">₹{(item.product.price * item.quantity).toLocaleString()}</p>
                     </div>
                   ))}
                 </div>
 
                 <div className="space-y-3 mb-6">
-                  <div className="flex justify-between text-[11px] uppercase tracking-wide opacity-60">
+                  <div className="flex justify-between text-[11px] uppercase tracking-wide text-[#5a4a42] font-sans">
                     <span>Subtotal</span>
                     <span>₹{subtotal.toLocaleString()}</span>
                   </div>
                   {discount > 0 && (
-                    <div className="flex justify-between text-[11px] uppercase tracking-wide text-[#db2777] font-bold">
+                    <div className="flex justify-between text-[11px] uppercase tracking-wide text-[#D4AF37] font-bold font-sans">
                       <span>Discount ({discount}%)</span>
                       <span>- ₹{discountAmount.toLocaleString()}</span>
                     </div>
                   )}
-                  <div className="flex justify-between text-[11px] uppercase tracking-wide">
-                    <span className="opacity-60">Shipping</span>
-                    <span className="text-green-600 font-bold">Free</span>
+                  <div className="flex justify-between text-[11px] uppercase tracking-wide font-sans">
+                    <span className="text-[#5a4a42]">Shipping</span>
+                    <span className="text-[#0F5A7E] font-bold">Free</span>
                   </div>
                 </div>
 
-                <div className="pt-6 border-t border-gray-200 flex justify-between items-end">
-                  <span className="text-[10px] font-bold uppercase opacity-40">Total</span>
-                  <span className="text-3xl font-serif text-[#0F2C3E]">₹{finalTotal.toLocaleString()}</span>
+                <div className="pt-6 border-t-2 border-[#D4AF37] flex justify-between items-end">
+                  <span className="text-[10px] font-bold uppercase text-[#5a4a42] font-sans">Total</span>
+                  <span className="text-3xl font-serif text-[#2d2416]">₹{finalTotal.toLocaleString()}</span>
                 </div>
               </div>
             </div>

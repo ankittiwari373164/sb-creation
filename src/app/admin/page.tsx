@@ -13,6 +13,15 @@ import toast from 'react-hot-toast'
 import Image from 'next/image'
 import Link from 'next/link'
 
+// 🌟 YOUR BRAND CATEGORIES
+const PRODUCT_CATEGORIES = [
+  "Glass Bangles",
+  "Metal Bangles/Kadas",
+  "Bangles box",
+  "Bangle Sets",
+  "Bracelets & Watches"
+]
+
 export default function AdminPage() {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState('products')
@@ -33,8 +42,9 @@ export default function AdminPage() {
   const [searchTerm, setSearchTerm] = useState('')
 
   // --- Form States ---
+  // 💎 Updated default category to match your list
   const [productForm, setProductForm] = useState<any>({
-    name: '', price: '', stock: '', category: 'Glass Bangle',
+    name: '', price: '', stock: '', category: PRODUCT_CATEGORIES[0],
     description: '', image_url: '', gallery: [], colors: [], sizes: ['2.4', '2.6']
   })
 
@@ -110,27 +120,24 @@ export default function AdminPage() {
     setLoading(true);
 
     try {
-      // 1. Generate slug
       const slug = productForm.name
         .toLowerCase()
         .trim()
         .replace(/[^\w ]+/g, '')
         .replace(/ +/g, '-');
 
-      // 2. Generate a unique SKU (This fixes your error!)
-      // It takes 'SBC-' + the last 5 digits of the current time
       const autoSku = productForm.sku || `SBC-${Date.now().toString().slice(-5)}`;
 
-      // 3. Clean payload
       const cleanPayload = {
         name: String(productForm.name).trim(),
         price: parseFloat(productForm.price) || 0,
         stock: parseInt(productForm.stock) || 0,
-        category: String(productForm.category || 'Bangles'),
+        // 💎 Updated fallback category
+        category: String(productForm.category || PRODUCT_CATEGORIES[0]),
         description: String(productForm.description || ''),
         image_url: String(productForm.image_url || ''),
         slug: slug,
-        sku: autoSku, // ⬅️ Adding the SKU here
+        sku: autoSku,
         sizes: Array.isArray(productForm.sizes) ? productForm.sizes : [],
         colors: Array.isArray(productForm.colors) ? productForm.colors : [],
         gallery: Array.isArray(productForm.gallery) ? productForm.gallery : []
@@ -167,7 +174,8 @@ export default function AdminPage() {
   };
 
   const resetProductForm = () => {
-    setProductForm({ name: '', price: '', stock: '', category: 'Bangles', description: '', image_url: '', gallery: [], colors: [], sizes: ['2.4', '2.6'] })
+    // 💎 Reset to default category
+    setProductForm({ name: '', price: '', stock: '', category: PRODUCT_CATEGORIES[0], description: '', image_url: '', gallery: [], colors: [], sizes: ['2.4', '2.6'] })
     setShowProductForm(false)
     setEditingId(null)
   }
@@ -314,6 +322,7 @@ export default function AdminPage() {
                         </div>
                       </div>
                     </div>
+                    
                     <div className="space-y-3">
                       <label className="text-[10px] font-bold uppercase text-gray-400 ml-2">Available Sizes</label>
                       <div className="flex gap-2">
@@ -322,13 +331,44 @@ export default function AdminPage() {
                         ))}
                       </div>
                     </div>
+
+                    {/* NEW: Colors Input Added Here */}
+                    <div className="space-y-3">
+                      <label className="text-[10px] font-bold uppercase text-gray-400 ml-2">Available Colors</label>
+                      <div className="flex flex-wrap gap-2">
+                        {['Red', 'Green', 'Blue', 'Gold', 'Silver', 'Pink', 'Black', 'Multicolor'].map(c => (
+                          <button key={c} type="button" onClick={() => setProductForm({ ...productForm, colors: productForm.colors?.includes(c) ? productForm.colors.filter((z:any)=>z!==c) : [...(productForm.colors || []), c]})} className={`px-5 py-3 rounded-xl text-[10px] font-bold transition-all ${productForm.colors?.includes(c) ? 'bg-[#0F2C3E] text-white shadow-md' : 'bg-gray-100 text-gray-400'}`}>{c}</button>
+                        ))}
+                      </div>
+                    </div>
+
                   </div>
                   <div className="space-y-4">
                     <input value={productForm.name} onChange={e => setProductForm({...productForm, name: e.target.value})} className="w-full bg-[#FAF9F6] p-5 rounded-full outline-none text-sm font-medium" required placeholder="Jewelry Name" />
+                    
                     <div className="grid grid-cols-2 gap-4">
                       <input type="number" value={productForm.price} onChange={e => setProductForm({...productForm, price: e.target.value})} className="w-full bg-[#FAF9F6] p-5 rounded-full outline-none" required placeholder="Price (₹)" />
                       <input type="number" value={productForm.stock} onChange={e => setProductForm({...productForm, stock: e.target.value})} className="w-full bg-[#FAF9F6] p-5 rounded-full outline-none" required placeholder="Stock Count" />
                     </div>
+
+                    {/* 💎 UPDATED CATEGORY DROPDOWN */}
+                    <div className="w-full relative">
+                      <select 
+                        value={productForm.category} 
+                        onChange={e => setProductForm({...productForm, category: e.target.value})} 
+                        className="w-full bg-[#FAF9F6] p-5 rounded-full outline-none text-sm font-medium appearance-none cursor-pointer text-[#0F2C3E]"
+                        required
+                      >
+                        {PRODUCT_CATEGORIES.map(cat => (
+                          <option key={cat} value={cat}>{cat}</option>
+                        ))}
+                      </select>
+                      {/* Custom dropdown arrow to match styling */}
+                      <div className="absolute inset-y-0 right-5 flex items-center pointer-events-none text-gray-400">
+                        ▼
+                      </div>
+                    </div>
+
                     <textarea value={productForm.description} onChange={e => setProductForm({...productForm, description: e.target.value})} className="w-full bg-[#FAF9F6] p-8 rounded-[2rem] outline-none min-h-[150px] resize-none" required placeholder="Describe the craftsmanship..." />
                     <button type="submit" disabled={uploading} className="w-full bg-[#db2777] text-white py-5 rounded-full font-bold uppercase text-xs tracking-widest shadow-xl hover:bg-[#0F2C3E] transition-all disabled:opacity-50">
                       {editingId ? 'Update Masterpiece' : 'Publish to Shop'}
@@ -347,11 +387,14 @@ export default function AdminPage() {
                        <Image src={p.image_url || '/placeholder.jpg'} fill alt="" className="object-cover" />
                     </div>
                     <div>
-                      <h4 className="font-bold text-[#0F2C3E]">{p.name}</h4>
-                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">₹{p.price} • {p.stock} units</p>
+                      <h4 className="font-bold text-[#0F2C3E] line-clamp-1 pr-2">{p.name}</h4>
+                      <div className="flex items-center gap-2 mt-1">
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">₹{p.price} • {p.stock} units</p>
+                        <span className="text-[9px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full uppercase truncate max-w-[80px]">{p.category}</span>
+                      </div>
                     </div>
                   </div>
-                  <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-all">
+                  <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-all shrink-0">
                     <button onClick={() => editProduct(p)} className="p-3 bg-blue-50 text-blue-600 rounded-full hover:bg-blue-100 transition-colors"><Edit size={16}/></button>
                     <button onClick={() => deleteItem('products', p.id)} className="p-3 bg-red-50 text-red-500 rounded-full hover:bg-red-100 transition-colors"><Trash2 size={16}/></button>
                   </div>
@@ -382,7 +425,7 @@ export default function AdminPage() {
                       const { error } = await supabase.from('orders').update({ status: e.target.value }).eq('id', order.id)
                       if (!error) toast.success('Status Updated')
                     }}
-                    className="bg-[#FAF9F6] px-6 py-3 rounded-full text-[10px] font-bold uppercase tracking-widest outline-none border-none"
+                    className="bg-[#FAF9F6] px-6 py-3 rounded-full text-[10px] font-bold uppercase tracking-widest outline-none border-none cursor-pointer"
                    >
                      <option value="pending">Pending</option>
                      <option value="processing">Processing</option>

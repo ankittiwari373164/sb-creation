@@ -38,7 +38,7 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts",
     "next.config.mjs"
-  ],
+, "src/lib/sampleTestimonialsData.js"  ],
   "exclude": [
     "node_modules"
   ]

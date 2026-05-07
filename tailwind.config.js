@@ -9,37 +9,41 @@ module.exports = {
     extend: {
       colors: {
         primary: {
-          50: '#fdf2f8',
-          100: '#fce7f3',
-          200: '#fbcfe8',
-          300: '#f9a8d4',
-          400: '#f472b6',
-          500: '#db2777', // SB Creation Signature Pink
-          600: '#be185d',
-          700: '#9d174d',
-          800: '#831843',
-          900: '#701a3d',
+          50: '#fef5f0',
+          100: '#fde8dd',
+          200: '#f8c8dc', // Blush Pink
+          300: '#f5b8cf',
+          400: '#f3a8c2',
+          500: '#f098b5',
+          600: '#ed88a8',
+          700: '#ea789b',
+          800: '#e7688e',
+          900: '#e45881',
         },
         secondary: {
-          50: '#fffbeb',
-          100: '#fef3c7',
-          200: '#fde68a',
-          300: '#fcd34d',
-          400: '#fbbf24', // Luxury Gold
-          500: '#f59e0b',
-          600: '#d97706',
-          700: '#b45309',
-          800: '#92400e',
-          900: '#78350f',
+          50: '#fefcf7',
+          100: '#fdf8f0',
+          200: '#f5e9dc', // Champagne Beige
+          300: '#ede0ce',
+          400: '#e5d7c0',
+          500: '#dcceb2',
+          600: '#d4c5a4',
+          700: '#ccbc96',
+          800: '#c4b388',
+          900: '#bca97a',
         },
         accent: {
-          silk: '#fffdfa', // Artisan background color
-          charcoal: '#1f2937',
+          gold: '#D4AF37', // Gold
+          ivory: '#FFFFF0', // Ivory
+          charcoal: '#2d2416', // Dark Brown for text
+          silk: '#F5E9DC', // Champagne Beige as base
+          blue: '#0F5A7E', // Logo Blue
+          blush: '#F8C8DC', // Blush Pink
         },
       },
       fontFamily: {
-        serif: ['var(--font-playfair)', 'serif'],
-        sans: ['var(--font-inter)', 'sans-serif'],
+        serif: ['Playfair Display', 'serif'],
+        sans: ['Poppins', 'Lato', 'sans-serif'],
       },
     },
   },
