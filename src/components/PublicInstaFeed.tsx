@@ -20,18 +20,18 @@ const PublicInstaFeed = () => {
   }, []);
 
   return (
-    <section className="bg-white py-16 px-6">
+    <section className="bg-white py-8 md:py-16 px-4 md:px-6">
       <div className="container mx-auto max-w-7xl">
         
         {/* Header */}
-        <div className="text-center mb-12">
-          <span className="text-[#0F5A7E] text-[10px] font-bold tracking-[0.4em] uppercase block mb-3">
+        <div className="text-center mb-8 md:mb-12">
+          <span className="text-[#0F5A7E] text-[8px] md:text-[10px] font-bold tracking-[0.3em] md:tracking-[0.4em] uppercase block mb-2 md:mb-3">
             Follow Us
           </span>
-          <h2 className="text-4xl md:text-5xl font-serif text-[#2d2416] mb-4">
+          <h2 className="text-2xl md:text-4xl lg:text-5xl font-serif text-[#2d2416] mb-2 md:mb-4">
             The <span className="italic text-[#D4AF37]">SB Edit</span>
           </h2>
-          <p className="text-[#2d2416] text-sm opacity-70">
+          <p className="text-[#2d2416] text-xs md:text-sm opacity-70">
             Curated moments from our Instagram feed
           </p>
         </div>
@@ -43,14 +43,14 @@ const PublicInstaFeed = () => {
         ></div>
 
         {/* CTA Button */}
-        <div className="mt-12 flex justify-center">
+        <div className="mt-8 md:mt-12 flex justify-center">
           <Link 
             href="https://instagram.com/_sbcreation" 
             target="_blank" 
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-8 py-3 bg-[#2d2416] text-white rounded-full font-bold uppercase text-[10px] tracking-[0.3em] shadow-lg hover:bg-[#0F5A7E] transition-all"
+            className="inline-flex items-center gap-2 px-6 md:px-8 py-2 md:py-3 bg-[#2d2416] text-white rounded-full font-bold uppercase text-[8px] md:text-[10px] tracking-[0.2em] md:tracking-[0.3em] shadow-lg hover:bg-[#0F5A7E] transition-all"
           >
-            <Instagram size={14} />
+            <Instagram size={12} className="md:w-3.5 md:h-3.5" />
             Follow on Instagram
           </Link>
         </div>

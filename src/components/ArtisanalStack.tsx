@@ -106,8 +106,8 @@ export default function ArtisanalStack() {
   return (
     <>
       {/* ==================== TESTIMONIALS SECTION ==================== */}
-      <section className="bg-[#F5E9DC] py-12 px-6 overflow-hidden min-h-[550px] flex items-center">
-        <div className="container mx-auto max-w-7xl grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
+      <section className="bg-[#F5E9DC] py-8 md:py-12 px-4 md:px-6 overflow-hidden min-h-[550px] flex items-center">
+        <div className="container mx-auto max-w-7xl grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-20 items-center">
           
           {/* 📜 Left Side: Testimonial Content */}
           <div className="order-2 lg:order-1">
@@ -118,20 +118,20 @@ export default function ArtisanalStack() {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 20 }}
                 transition={{ duration: 0.5 }}
-                className="space-y-6"
+                className="space-y-4 md:space-y-6"
               >
                 <div className="flex items-center gap-3">
-                  <span className="text-[#D4AF37] text-[10px] font-bold tracking-[0.5em] uppercase">
+                  <span className="text-[#D4AF37] text-[8px] md:text-[10px] font-bold tracking-[0.4em] md:tracking-[0.5em] uppercase">
                     Testimonials {activeIndex + 1}/{TESTIMONIALS.length}
                   </span>
-                  <div className="h-[1px] w-12 bg-[#F8C8DC]/50" />
+                  <div className="h-[1px] w-8 md:w-12 bg-[#F8C8DC]/50" />
                 </div>
                 
-                <h2 className="text-5xl md:text-7xl font-serif text-[#2d2416] leading-tight">
+                <h2 className="text-3xl md:text-5xl lg:text-7xl font-serif text-[#2d2416] leading-tight">
                   {currentProduct.name}
                 </h2>
                 
-                <p className="text-[#2d2416] text-lg leading-relaxed max-w-md italic opacity-75">
+                <p className="text-[#2d2416] text-sm md:text-lg leading-relaxed max-w-md italic opacity-75">
                   "{currentProduct.description}"
                 </p>
 
@@ -143,7 +143,7 @@ export default function ArtisanalStack() {
           </div>
 
           {/* 🖼️ Right Side: The Interactive Card Stack */}
-          <div className="relative h-[500px] w-full flex items-center justify-center order-1 lg:order-2">
+          <div className="relative h-[350px] md:h-[500px] w-full flex items-center justify-center order-1 lg:order-2">
             {TESTIMONIALS.map((product, index) => {
               const isTop = index === activeIndex
               const position = index - activeIndex
@@ -160,7 +160,7 @@ export default function ArtisanalStack() {
                   }}
                   whileHover={isTop ? { scale: 1.02, rotate: 0 } : {}}
                   onClick={() => { setActiveIndex(index); setReviewIndex(0) }}
-                  className={`absolute cursor-pointer w-[300px] md:w-[380px] aspect-[4/5] rounded-2xl overflow-hidden shadow-lg border-2 bg-white transition-shadow duration-500 ${isTop ? 'border-[#D4AF37] ring-2 ring-[#D4AF37]/30' : 'border-[#F5E9DC] grayscale-[0.3]'}`}
+                  className={`absolute cursor-pointer w-[220px] md:w-[300px] lg:w-[380px] aspect-[4/5] rounded-lg md:rounded-2xl overflow-hidden shadow-lg border-2 bg-white transition-shadow duration-500 ${isTop ? 'border-[#D4AF37] ring-2 ring-[#D4AF37]/30' : 'border-[#F5E9DC] grayscale-[0.3]'}`}
                 >
                   <Image 
                     src={product.image_url || '/placeholder.jpg'} 
@@ -174,9 +174,9 @@ export default function ArtisanalStack() {
                     <motion.div 
                       initial={{ opacity: 0 }} 
                       animate={{ opacity: 1 }} 
-                      className="absolute top-6 right-6"
+                      className="absolute top-3 md:top-6 right-3 md:right-6"
                     >
-                      <Sparkles className="text-white" size={24} />
+                      <Sparkles className="text-white w-5 md:w-6 h-5 md:h-6" size={24} />
                     </motion.div>
                   )}
                 </motion.div>
@@ -187,22 +187,22 @@ export default function ArtisanalStack() {
       </section>
 
       {/* ==================== CUSTOMER REVIEWS SECTION ==================== */}
-      <section className="bg-gradient-to-br from-[#FFFFF0] to-[#F8E8D8] py-20 px-6">
+      <section className="bg-gradient-to-br from-[#FFFFF0] to-[#F8E8D8] py-12 md:py-20 px-4 md:px-6">
         <div className="container mx-auto max-w-5xl">
-          <div className="text-center mb-16">
-            <span className="text-[#D4AF37] text-[10px] font-bold tracking-[0.5em] uppercase block mb-4">
+          <div className="text-center mb-10 md:mb-16">
+            <span className="text-[#D4AF37] text-[8px] md:text-[10px] font-bold tracking-[0.4em] md:tracking-[0.5em] uppercase block mb-2 md:mb-4">
               Loved by Our Customers
             </span>
-            <h2 className="text-4xl md:text-6xl font-serif text-[#2d2416] mb-4">
+            <h2 className="text-2xl md:text-4xl lg:text-6xl font-serif text-[#2d2416] mb-3 md:mb-4">
               Why Our Customers Trust SB Creation?
             </h2>
-            <p className="text-[#2d2416] text-lg opacity-75 max-w-2xl mx-auto">
+            <p className="text-[#2d2416] text-xs md:text-lg opacity-75 max-w-2xl mx-auto">
               We ensure high-quality craftsmanship, durability, and skin-friendly comfort. Shop globally with our fast and secure international shipping services.
             </p>
           </div>
 
           {/* Reviews Carousel */}
-          <div className="relative bg-white rounded-3xl border-2 border-[#D4AF37] p-12 shadow-xl">
+          <div className="relative bg-white rounded-2xl md:rounded-3xl border-2 border-[#D4AF37] p-6 md:p-12 shadow-xl">
             <AnimatePresence mode="wait">
               <motion.div
                 key={`${activeIndex}-${reviewIndex}`}
@@ -210,32 +210,32 @@ export default function ArtisanalStack() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.4 }}
-                className="text-center space-y-6"
+                className="text-center space-y-4 md:space-y-6"
               >
                 {/* Star Rating */}
-                <div className="flex justify-center gap-2">
+                <div className="flex justify-center gap-1 md:gap-2">
                   {[...Array(displayedReview.rating)].map((_, i) => (
-                    <Star key={i} size={24} className="fill-[#D4AF37] text-[#D4AF37]" />
+                    <Star key={i} size={16} className="md:w-6 md:h-6 fill-[#D4AF37] text-[#D4AF37]" />
                   ))}
                   {[...Array(5 - displayedReview.rating)].map((_, i) => (
-                    <Star key={i + displayedReview.rating} size={24} className="text-[#D4AF37]/30" />
+                    <Star key={i + displayedReview.rating} size={16} className="md:w-6 md:h-6 text-[#D4AF37]/30" />
                   ))}
                 </div>
 
                 {/* Review Text */}
-                <blockquote className="text-2xl md:text-3xl font-serif text-[#2d2416] italic leading-relaxed">
+                <blockquote className="text-lg md:text-2xl lg:text-3xl font-serif text-[#2d2416] italic leading-relaxed">
                   "{displayedReview.text}"
                 </blockquote>
 
                 {/* Author & Product Info */}
-                <div className="pt-6 space-y-2">
-                  <p className="text-lg font-bold text-[#2d2416]">
+                <div className="pt-4 md:pt-6 space-y-1 md:space-y-2">
+                  <p className="text-base md:text-lg font-bold text-[#2d2416]">
                     {displayedReview.author}
                   </p>
-                  <p className="text-sm text-[#2d2416] opacity-60">
+                  <p className="text-xs md:text-sm text-[#2d2416] opacity-60">
                     Review for: <span className="font-semibold">{currentProduct.name}</span>
                   </p>
-                  <p className="text-xs text-[#2d2416] opacity-50">
+                  <p className="text-[10px] md:text-xs text-[#2d2416] opacity-50">
                     {new Date(displayedReview.date).toLocaleDateString('en-US', { 
                       year: 'numeric', 
                       month: 'long', 
@@ -247,26 +247,26 @@ export default function ArtisanalStack() {
             </AnimatePresence>
 
             {/* Navigation Buttons */}
-            <div className="flex justify-center gap-6 mt-12">
+            <div className="flex justify-center gap-4 md:gap-6 mt-8 md:mt-12">
               <button
                 onClick={handlePrevReview}
-                className="p-3 rounded-full border-2 border-[#D4AF37] text-[#2d2416] hover:bg-[#D4AF37] hover:text-white transition-all"
+                className="p-2 md:p-3 rounded-full border-2 border-[#D4AF37] text-[#2d2416] hover:bg-[#D4AF37] hover:text-white transition-all"
               >
-                <ChevronLeft size={20} />
+                <ChevronLeft size={16} className="md:w-5 md:h-5" />
               </button>
-              <span className="text-[#2d2416] text-sm font-bold flex items-center">
+              <span className="text-[#2d2416] text-xs md:text-sm font-bold flex items-center">
                 {reviewIndex + 1} / {currentReviews.length}
               </span>
               <button
                 onClick={handleNextReview}
-                className="p-3 rounded-full border-2 border-[#D4AF37] text-[#2d2416] hover:bg-[#D4AF37] hover:text-white transition-all"
+                className="p-2 md:p-3 rounded-full border-2 border-[#D4AF37] text-[#2d2416] hover:bg-[#D4AF37] hover:text-white transition-all"
               >
-                <ChevronRight size={20} />
+                <ChevronRight size={16} className="md:w-5 md:h-5" />
               </button>
             </div>
 
             {/* Product Indicator Dots */}
-            <div className="flex justify-center gap-2 mt-8">
+            <div className="flex justify-center gap-1.5 md:gap-2 mt-6 md:mt-8">
               {TESTIMONIALS.map((_, idx) => (
                 <motion.button
                   key={idx}
@@ -275,7 +275,7 @@ export default function ArtisanalStack() {
                     width: activeIndex === idx ? 32 : 8,
                     backgroundColor: activeIndex === idx ? '#D4AF37' : '#D4AF37/30'
                   }}
-                  className="h-2 rounded-full transition-all"
+                  className="h-1.5 md:h-2 rounded-full transition-all"
                 />
               ))}
             </div>
@@ -288,7 +288,7 @@ export default function ArtisanalStack() {
       {/* --- 📏 Size Selection Popup --- */}
       <AnimatePresence>
         {selectedProduct && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-6">
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -300,25 +300,25 @@ export default function ArtisanalStack() {
               initial={{ scale: 0.9, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              className="relative bg-[#FFFFF0] w-full max-w-sm rounded-2xl p-8 shadow-lg border-2 border-[#D4AF37]"
+              className="relative bg-[#FFFFF0] w-full max-w-sm rounded-xl md:rounded-2xl p-6 md:p-8 shadow-lg border-2 border-[#D4AF37]"
             >
               <button 
                 onClick={() => setSelectedProduct(null)}
-                className="absolute top-6 right-6 text-[#2d2416] opacity-50 hover:text-[#D4AF37] transition-colors"
+                className="absolute top-4 md:top-6 right-4 md:right-6 text-[#2d2416] opacity-50 hover:text-[#D4AF37] transition-colors"
               >
-                <X size={20} />
+                <X size={18} className="md:w-5 md:h-5" />
               </button>
 
-              <div className="text-center space-y-4">
-                <span className="text-[#D4AF37] text-[10px] font-bold uppercase tracking-[0.4em] block">Select Size</span>
-                <h3 className="text-2xl font-serif text-[#2d2416]">{selectedProduct.name}</h3>
+              <div className="text-center space-y-3 md:space-y-4">
+                <span className="text-[#D4AF37] text-[8px] md:text-[10px] font-bold uppercase tracking-[0.3em] md:tracking-[0.4em] block">Select Size</span>
+                <h3 className="text-lg md:text-2xl font-serif text-[#2d2416]">{selectedProduct.name}</h3>
                 
-                <div className="flex justify-center gap-3 py-6">
+                <div className="flex justify-center gap-2 md:gap-3 py-4 md:py-6">
                   {(selectedProduct.sizes?.length > 0 ? selectedProduct.sizes : ['2.2', '2.4', '2.6', '2.8']).map((size: string) => (
                     <button
                       key={size}
                       onClick={() => setTempSize(size)}
-                      className={`w-12 h-12 rounded-full border-2 font-bold text-xs transition-all flex items-center justify-center ${
+                      className={`w-10 h-10 md:w-12 md:h-12 rounded-full border-2 font-bold text-xs transition-all flex items-center justify-center ${
                         tempSize === size 
                         ? 'bg-[#2d2416] text-white border-[#2d2416]' 
                         : 'border-[#D4AF37] text-[#2d2416] hover:bg-[#F8C8DC]/30'
@@ -331,9 +331,9 @@ export default function ArtisanalStack() {
 
                 <button 
                   onClick={confirmAddToCart}
-                  className="w-full bg-[#2d2416] text-white py-4 rounded-full font-bold uppercase text-[10px] tracking-[0.3em] flex items-center justify-center gap-2 hover:bg-[#D4AF37] hover:text-[#2d2416] transition-all"
+                  className="w-full bg-[#2d2416] text-white py-3 md:py-4 rounded-full font-bold uppercase text-[8px] md:text-[10px] tracking-[0.2em] md:tracking-[0.3em] flex items-center justify-center gap-2 hover:bg-[#D4AF37] hover:text-[#2d2416] transition-all"
                 >
-                  <Check size={14} /> Add to Collection
+                  <Check size={12} className="md:w-3.5 md:h-3.5" /> Add to Collection
                 </button>
               </div>
             </motion.div>
