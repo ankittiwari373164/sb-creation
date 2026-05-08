@@ -137,28 +137,28 @@ export default function ProductDetailPage() {
   )
 
   return (
-    <div className="min-h-screen bg-white pb-12">
-      <nav className="container mx-auto px-6 py-4 text-[11px] font-bold uppercase tracking-[0.3em] text-[#2d2416] opacity-60">
+    <div className="min-h-screen bg-white pb-8 md:pb-12">
+      <nav className="container mx-auto px-4 md:px-6 py-2 md:py-4 text-[9px] md:text-[11px] font-bold uppercase tracking-[0.3em] text-[#2d2416] opacity-60">
         <Link href="/" className="hover:text-[#0F5A7E] transition-colors">Home</Link> <span className="mx-1">/</span>
         <Link href="/shop" className="hover:text-[#0F5A7E] transition-colors">Collections</Link> <span className="mx-1">/</span>
         <span className="text-[#2d2416] opacity-40">{product.name}</span>
       </nav>
 
-      <div className="container mx-auto px-6">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+      <div className="container mx-auto px-4 md:px-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-10">
           
-          <div className="lg:col-span-7 flex flex-col md:flex-row-reverse gap-4">
+          <div className="lg:col-span-7 flex flex-col md:flex-row-reverse gap-3 md:gap-4">
             <motion.div 
               key={activeImg}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="relative aspect-[4/5] w-full rounded-[2rem] overflow-hidden shadow-xl border-[8px] border-[#F5E9DC] bg-white"
+              className="relative aspect-[4/5] w-full rounded-xl md:rounded-[2rem] overflow-hidden shadow-xl border-4 md:border-[8px] border-[#F5E9DC] bg-white"
             >
               <button 
                 onClick={toggleWishlist}
-                className="absolute top-4 right-4 z-10 p-3 bg-[#FFFFF0]/95 backdrop-blur-sm rounded-full shadow-md hover:scale-110 transition-transform border border-[#D4AF37]"
+                className="absolute top-3 md:top-4 right-3 md:right-4 z-10 p-2 md:p-3 bg-[#FFFFF0]/95 backdrop-blur-sm rounded-full shadow-md hover:scale-110 transition-transform border border-[#D4AF37]"
               >
-                <Heart size={24} className={isWishlisted ? 'fill-[#F8C8DC] text-[#F8C8DC]' : 'text-[#2d2416] opacity-40'} />
+                <Heart size={18} className="md:w-6 md:h-6" fill={isWishlisted ? '#F8C8DC' : 'none'} className={isWishlisted ? 'fill-[#F8C8DC] text-[#F8C8DC]' : 'text-[#2d2416] opacity-40'} />
               </button>
 
               <Image 
@@ -170,12 +170,12 @@ export default function ProductDetailPage() {
               />
             </motion.div>
             
-            <div className="flex md:flex-col gap-3 overflow-x-auto md:overflow-visible pb-2 md:pb-0 no-scrollbar">
+            <div className="flex md:flex-col gap-2 md:gap-3 overflow-x-auto md:overflow-visible pb-2 md:pb-0 no-scrollbar">
               {productImages.map((img, i) => (
                 <button 
                   key={i} 
                   onClick={() => setActiveImg(i)}
-                  className={`relative w-20 h-24 flex-shrink-0 rounded-xl overflow-hidden border-2 transition-all ${
+                  className={`relative w-16 md:w-20 h-20 md:h-24 flex-shrink-0 rounded-lg md:rounded-xl overflow-hidden border-2 transition-all ${
                     activeImg === i ? 'border-[#0F5A7E] scale-105 shadow-sm' : 'border-transparent opacity-40 hover:opacity-100'
                   }`}
                 >
@@ -185,33 +185,33 @@ export default function ProductDetailPage() {
             </div>
           </div>
 
-          <div className="lg:col-span-5 space-y-8">
-            <div className="space-y-3">
+          <div className="lg:col-span-5 space-y-6 md:space-y-8">
+            <div className="space-y-2 md:space-y-3">
               <div className="flex items-center gap-2">
-                <div className="h-[1px] w-8 bg-[#0F5A7E]" />
-                <span className="text-[#0F5A7E] text-xs font-bold uppercase tracking-[0.4em]">{product.category}</span>
+                <div className="h-[1px] w-6 md:w-8 bg-[#0F5A7E]" />
+                <span className="text-[#0F5A7E] text-[10px] md:text-xs font-bold uppercase tracking-[0.4em]">{product.category}</span>
               </div>
-              <h1 className="text-5xl md:text-7xl font-serif text-[#2d2416] leading-tight">{product.name}</h1>
-              <div className="flex items-center gap-4 text-[#2d2416] opacity-70">
-                <div className="flex">{[...Array(5)].map((_, i) => <Star key={i} size={16} fill="#D4AF37" className="text-[#D4AF37]" />)}</div>
-                <span className="text-xs font-bold uppercase tracking-widest">Handcrafted Heritage</span>
+              <h1 className="text-3xl md:text-5xl lg:text-7xl font-serif text-[#2d2416] leading-tight">{product.name}</h1>
+              <div className="flex items-center gap-3 md:gap-4 text-[#2d2416] opacity-70">
+                <div className="flex">{[...Array(5)].map((_, i) => <Star key={i} size={12} className="md:w-4 md:h-4" fill="#D4AF37" className="text-[#D4AF37]" />)}</div>
+                <span className="text-[9px] md:text-xs font-bold uppercase tracking-widest">Handcrafted Heritage</span>
               </div>
-              <p className="text-4xl md:text-5xl font-serif text-[#D4AF37] pt-2">₹{product.price.toLocaleString()}</p>
+              <p className="text-2xl md:text-4xl lg:text-5xl font-serif text-[#D4AF37] pt-2">₹{product.price.toLocaleString()}</p>
             </div>
 
-            <p className="text-[#2d2416] leading-relaxed font-light text-xl italic border-l-4 border-[#F8C8DC] pl-6 opacity-80">
+            <p className="text-[#2d2416] leading-relaxed font-light text-sm md:text-lg lg:text-xl italic border-l-4 border-[#F8C8DC] pl-4 md:pl-6 opacity-80">
               {product.description}
             </p>
 
-            <div className="space-y-8">
-              <div className="space-y-4">
-                <span className="text-xs font-bold uppercase tracking-widest text-[#2d2416] opacity-60">Select Size</span>
-                <div className="flex flex-wrap gap-3">
+            <div className="space-y-6 md:space-y-8">
+              <div className="space-y-3 md:space-y-4">
+                <span className="text-[8px] md:text-xs font-bold uppercase tracking-widest text-[#2d2416] opacity-60">Select Size</span>
+                <div className="flex flex-wrap gap-2 md:gap-3">
                   {(product.sizes && product.sizes.length > 0 ? product.sizes : ['2.2', '2.4', '2.6', '2.8']).map((size: string) => (
                     <button
                       key={size}
                       onClick={() => setSelectedSize(size)}
-                      className={`w-12 h-12 rounded-full border-2 text-sm font-bold transition-all flex items-center justify-center ${
+                      className={`w-9 md:w-12 h-9 md:h-12 rounded-full border-2 text-xs md:text-sm font-bold transition-all flex items-center justify-center ${
                         selectedSize === size 
                         ? 'bg-[#2d2416] text-white border-[#2d2416] shadow-md' 
                         : 'border-[#D4AF37] text-[#2d2416] hover:border-[#0F5A7E] hover:text-[#0F5A7E]'
@@ -224,14 +224,14 @@ export default function ProductDetailPage() {
               </div>
 
               {product.colors && product.colors.length > 0 && (
-                <div className="space-y-4">
-                  <span className="text-xs font-bold uppercase tracking-widest text-[#2d2416] opacity-60">Colour Palette</span>
-                  <div className="flex gap-4">
+                <div className="space-y-3 md:space-y-4">
+                  <span className="text-[8px] md:text-xs font-bold uppercase tracking-widest text-[#2d2416] opacity-60">Colour Palette</span>
+                  <div className="flex gap-2 md:gap-4">
                     {product.colors.map((color: string) => (
                       <button
                         key={color}
                         onClick={() => setSelectedColor(color)}
-                        className={`group relative w-9 h-9 rounded-full border-2 transition-all p-0.5 ${
+                        className={`group relative w-7 md:w-9 h-7 md:h-9 rounded-full border-2 transition-all p-0.5 ${
                           selectedColor === color ? 'border-[#0F5A7E]' : 'border-transparent'
                         }`}
                       >
@@ -246,48 +246,48 @@ export default function ProductDetailPage() {
               )}
             </div>
 
-            <div className="grid grid-cols-2 gap-6 py-6 border-y border-[#D4AF37]/20">
-              <div className="flex items-center gap-3">
-                <ShieldCheck className="text-[#0F5A7E]" size={20} />
-                <span className="text-[10px] font-bold uppercase tracking-widest text-[#2d2416] opacity-70">Authentic Glass</span>
+            <div className="grid grid-cols-2 gap-3 md:gap-6 py-4 md:py-6 border-y border-[#D4AF37]/20">
+              <div className="flex items-center gap-2 md:gap-3">
+                <ShieldCheck className="text-[#0F5A7E]" size={16} className="md:w-5 md:h-5" />
+                <span className="text-[8px] md:text-[10px] font-bold uppercase tracking-widest text-[#2d2416] opacity-70">Authentic Glass</span>
               </div>
-              <div className="flex items-center gap-3">
-                <Truck className="text-[#0F5A7E]" size={20} />
-                <span className="text-[10px] font-bold uppercase tracking-widest text-[#2d2416] opacity-70">Secure Delivery</span>
+              <div className="flex items-center gap-2 md:gap-3">
+                <Truck className="text-[#0F5A7E]" size={16} className="md:w-5 md:h-5" />
+                <span className="text-[8px] md:text-[10px] font-bold uppercase tracking-widest text-[#2d2416] opacity-70">Secure Delivery</span>
               </div>
             </div>
 
-            <div className="flex flex-col gap-6">
-              <div className="flex items-center bg-[#F5E9DC] w-fit rounded-full p-2 border-2 border-[#D4AF37]">
-                <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="p-3 text-[#2d2416] opacity-60 hover:text-[#0F5A7E]"><Minus size={18} /></button>
-                <span className="px-6 font-serif text-3xl min-w-[3rem] text-center text-[#2d2416]">{quantity}</span>
+            <div className="flex flex-col gap-4 md:gap-6">
+              <div className="flex items-center bg-[#F5E9DC] w-fit rounded-full p-1 md:p-2 border-2 border-[#D4AF37]">
+                <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="p-2 md:p-3 text-[#2d2416] opacity-60 hover:text-[#0F5A7E]"><Minus size={14} className="md:w-[18px] md:h-[18px]" /></button>
+                <span className="px-3 md:px-6 font-serif text-xl md:text-3xl min-w-[2.5rem] md:min-w-[3rem] text-center text-[#2d2416]">{quantity}</span>
                 <button 
                   onClick={() => setQuantity(Math.min(product.stock || 99, quantity + 1))} 
-                  className="p-3 text-[#2d2416] opacity-60 hover:text-[#0F5A7E]"
+                  className="p-2 md:p-3 text-[#2d2416] opacity-60 hover:text-[#0F5A7E]"
                 >
-                  <Plus size={18} />
+                  <Plus size={14} className="md:w-[18px] md:h-[18px]" />
                 </button>
               </div>
 
               <button 
                 onClick={handleAddToCart}
                 disabled={product.stock === 0}
-                className="w-full bg-[#2d2416] text-white py-5 rounded-full flex items-center justify-center gap-4 text-sm font-bold uppercase tracking-[0.3em] hover:bg-[#0F5A7E] transition-all shadow-lg group disabled:opacity-30"
+                className="w-full bg-[#2d2416] text-white py-3 md:py-5 rounded-full flex items-center justify-center gap-2 md:gap-4 text-[9px] md:text-sm font-bold uppercase tracking-[0.3em] hover:bg-[#0F5A7E] transition-all shadow-lg group disabled:opacity-30"
               >
-                <ShoppingBag size={22} /> 
+                <ShoppingBag size={16} className="md:w-[22px] md:h-[22px]" /> 
                 {product.stock === 0 ? 'Unavailable' : 'Add to Collection'} 
-                <ArrowRight size={22} className="group-hover:translate-x-2 transition-transform" />
+                <ArrowRight size={16} className="md:w-[22px] md:h-[22px] group-hover:translate-x-2 transition-transform" />
               </button>
             </div>
           </div>
         </div>
 
-        <div className="mt-24 pt-16 border-t border-[#D4AF37]/20">
-            <div className="flex justify-between items-end mb-12">
-              <h2 className="text-4xl font-serif text-[#2d2416]">Patron <span className="italic font-light text-[#D4AF37]">Notes</span></h2>
+        <div className="mt-16 md:mt-24 pt-12 md:pt-16 border-t border-[#D4AF37]/20">
+            <div className="flex justify-between items-end mb-8 md:mb-12">
+              <h2 className="text-2xl md:text-4xl font-serif text-[#2d2416]">Patron <span className="italic font-light text-[#D4AF37]">Notes</span></h2>
               <button 
                 onClick={() => setIsWritingReview(!isWritingReview)} 
-                className="text-xs font-bold uppercase tracking-[0.2em] text-[#2d2416] opacity-60 border-b-2 border-[#D4AF37] pb-1 hover:text-[#0F5A7E] hover:border-[#0F5A7E] transition-all"
+                className="text-[8px] md:text-xs font-bold uppercase tracking-[0.2em] text-[#2d2416] opacity-60 border-b-2 border-[#D4AF37] pb-1 hover:text-[#0F5A7E] hover:border-[#0F5A7E] transition-all"
               >
                 {isWritingReview ? 'Close' : 'Share Narrative'}
               </button>
@@ -301,34 +301,34 @@ export default function ProductDetailPage() {
                   exit={{ height: 0, opacity: 0 }}
                   className="overflow-hidden"
                  >
-                  <form className="bg-[#F5E9DC] p-10 rounded-[3rem] mb-12 grid grid-cols-1 md:grid-cols-2 gap-6 border-2 border-[#D4AF37]">
-                     <input placeholder="Name" className="bg-white rounded-full py-4 px-8 text-base border-none outline-none focus:ring-2 focus:ring-[#0F5A7E]" />
-                     <div className="flex items-center gap-4 px-8">
-                        <span className="text-xs font-bold uppercase tracking-widest text-[#2d2416] opacity-60">Rating:</span>
-                        <div className="flex text-[#D4AF37] gap-1"><Star size={18} fill="currentColor" /><Star size={18} fill="currentColor" /><Star size={18} fill="currentColor" /><Star size={18} fill="currentColor" /><Star size={18} fill="currentColor" /></div>
+                  <form className="bg-[#F5E9DC] p-6 md:p-10 rounded-2xl md:rounded-[3rem] mb-8 md:mb-12 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 border-2 border-[#D4AF37]">
+                     <input placeholder="Name" className="bg-white rounded-full py-2 md:py-4 px-4 md:px-8 text-sm md:text-base border-none outline-none focus:ring-2 focus:ring-[#0F5A7E]" />
+                     <div className="flex items-center gap-3 md:gap-4 px-4 md:px-8">
+                        <span className="text-[8px] md:text-xs font-bold uppercase tracking-widest text-[#2d2416] opacity-60">Rating:</span>
+                        <div className="flex text-[#D4AF37] gap-1"><Star size={14} className="md:w-[18px] md:h-[18px]" fill="currentColor" /><Star size={14} className="md:w-[18px] md:h-[18px]" fill="currentColor" /><Star size={14} className="md:w-[18px] md:h-[18px]" fill="currentColor" /><Star size={14} className="md:w-[18px] md:h-[18px]" fill="currentColor" /><Star size={14} className="md:w-[18px] md:h-[18px]" fill="currentColor" /></div>
                      </div>
-                     <textarea placeholder="Your experience..." className="md:col-span-2 bg-white rounded-[2rem] p-8 text-base border-none outline-none focus:ring-2 focus:ring-[#0F5A7E] resize-none" rows={4} />
-                     <button className="md:col-span-1 bg-[#2d2416] text-white py-4 rounded-full text-xs font-bold uppercase tracking-[0.2em] hover:bg-[#0F5A7E] transition-all">Submit Review</button>
+                     <textarea placeholder="Your experience..." className="md:col-span-2 bg-white rounded-lg md:rounded-[2rem] p-4 md:p-8 text-sm md:text-base border-none outline-none focus:ring-2 focus:ring-[#0F5A7E] resize-none" rows={4} />
+                     <button className="md:col-span-1 bg-[#2d2416] text-white py-3 md:py-4 rounded-full text-[8px] md:text-xs font-bold uppercase tracking-[0.2em] hover:bg-[#0F5A7E] transition-all">Submit Review</button>
                   </form>
                 </motion.div>
               )}
             </AnimatePresence>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8">
               {[1, 2, 3].map(i => (
-                <div key={i} className="bg-white p-10 rounded-[2.5rem] border-2 border-[#D4AF37] group hover:border-[#F8C8DC] transition-all shadow-sm">
-                  <div className="flex text-[#D4AF37] mb-6"><Star size={14} fill="currentColor" /><Star size={14} fill="currentColor" /><Star size={14} fill="currentColor" /><Star size={14} fill="currentColor" /><Star size={14} fill="currentColor" /></div>
-                  <p className="font-light text-[#2d2416] text-lg leading-relaxed italic opacity-80">&quot;A timeless piece from Firozabad. The craftsmanship is evident in the subtle details.&quot;</p>
-                  <p className="mt-8 text-xs font-bold uppercase tracking-[0.2em] text-[#2d2416]">Verified Patron</p>
+                <div key={i} className="bg-white p-6 md:p-10 rounded-xl md:rounded-[2.5rem] border-2 border-[#D4AF37] group hover:border-[#F8C8DC] transition-all shadow-sm">
+                  <div className="flex text-[#D4AF37] mb-4 md:mb-6"><Star size={11} className="md:w-[14px] md:h-[14px]" fill="currentColor" /><Star size={11} className="md:w-[14px] md:h-[14px]" fill="currentColor" /><Star size={11} className="md:w-[14px] md:h-[14px]" fill="currentColor" /><Star size={11} className="md:w-[14px] md:h-[14px]" fill="currentColor" /><Star size={11} className="md:w-[14px] md:h-[14px]" fill="currentColor" /></div>
+                  <p className="font-light text-[#2d2416] text-sm md:text-lg leading-relaxed italic opacity-80">&quot;A timeless piece from Firozabad. The craftsmanship is evident in the subtle details.&quot;</p>
+                  <p className="mt-6 md:mt-8 text-[8px] md:text-xs font-bold uppercase tracking-[0.2em] text-[#2d2416]">Verified Patron</p>
                 </div>
               ))}
             </div>
         </div>
 
         {similarProducts.length > 0 && (
-          <section className="mt-24">
-            <h2 className="text-4xl font-serif text-[#2d2416] mb-10">Related <span className="italic font-light text-[#D4AF37]">Heritage</span></h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+          <section className="mt-16 md:mt-24">
+            <h2 className="text-2xl md:text-4xl font-serif text-[#2d2416] mb-8 md:mb-10">Related <span className="italic font-light text-[#D4AF37]">Heritage</span></h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
               {similarProducts.map(p => <ProductCard key={p.id} product={p} />)}
             </div>
           </section>

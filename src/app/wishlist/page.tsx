@@ -84,15 +84,15 @@ export default function WishlistPage() {
 
   if (wishlistItems.length === 0) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center p-6">
+      <div className="min-h-screen bg-white flex items-center justify-center p-4 md:p-6">
         <div className="text-center">
-          <div className="w-24 h-24 bg-[#fff1f2] rounded-full flex items-center justify-center mx-auto mb-6">
-            <Heart size={40} className="text-[#db2777]" fill="#db2777" />
+          <div className="w-20 md:w-24 h-20 md:h-24 bg-[#fff1f2] rounded-full flex items-center justify-center mx-auto mb-4 md:mb-6">
+            <Heart size={32} className="md:w-10 md:h-10 text-[#db2777]" fill="#db2777" />
           </div>
-          <h2 className="text-4xl font-serif text-[#0F2C3E] mb-4">Your Wishlist is Empty</h2>
-          <p className="text-gray-400 text-lg mb-10">Sign in to add to wishlist.</p>
+          <h2 className="text-2xl md:text-4xl font-serif text-[#0F2C3E] mb-2 md:mb-4">Your Wishlist is Empty</h2>
+          <p className="text-gray-400 text-sm md:text-lg mb-6 md:mb-10">Sign in to add to wishlist.</p>
           <Link href="/shop">
-            <button className="bg-[#0F2C3E] text-white px-12 py-4 rounded-full text-sm font-bold uppercase tracking-widest hover:bg-[#db2777] transition-all shadow-lg">
+            <button className="bg-[#0F2C3E] text-white px-8 md:px-12 py-3 md:py-4 rounded-full text-xs md:text-sm font-bold uppercase tracking-widest hover:bg-[#db2777] transition-all shadow-lg">
               Go Shopping
             </button>
           </Link>
@@ -102,22 +102,22 @@ export default function WishlistPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white py-4 px-6"> {/* Removed top spacing */}
+    <div className="min-h-screen bg-white py-4 px-4 md:px-6">
       <div className="container mx-auto max-w-7xl">
         
         {/* Header */}
-        <div className="mb-10 border-b border-gray-100 pb-6 flex justify-between items-end">
+        <div className="mb-8 md:mb-10 border-b border-gray-100 pb-4 md:pb-6 flex justify-between items-end gap-4">
           <div>
-            <h1 className="text-5xl font-serif text-[#0F2C3E]">My <span className="italic font-light text-[#db2777]">Favorites</span></h1>
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-[0.3em] mt-2">The Collection</p>
+            <h1 className="text-3xl md:text-5xl font-serif text-[#0F2C3E]">My <span className="italic font-light text-[#db2777]">Favorites</span></h1>
+            <p className="text-[8px] md:text-xs font-bold text-gray-400 uppercase tracking-[0.3em] mt-1 md:mt-2">The Collection</p>
           </div>
-          <p className="text-sm text-gray-300 font-bold uppercase tracking-widest">
+          <p className="text-[10px] md:text-sm text-gray-300 font-bold uppercase tracking-widest">
             {wishlistItems.length} Artifacts
           </p>
         </div>
 
         {/* Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-10">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-6 lg:gap-10">
           <AnimatePresence>
             {wishlistItems.map((item) => (
               <motion.div
@@ -126,14 +126,14 @@ export default function WishlistPage() {
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
-                className="group bg-white rounded-[2.5rem] overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-500 relative flex flex-col"
+                className="group bg-white rounded-lg md:rounded-[2.5rem] overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-500 relative flex flex-col"
               >
                 {/* Remove Icon */}
                 <button 
                   onClick={() => removeFromWishlist(item.id)}
-                  className="absolute top-4 right-4 z-10 p-2.5 bg-white/90 backdrop-blur-md rounded-full text-gray-300 hover:text-red-500 shadow-sm transition-colors"
+                  className="absolute top-2 md:top-4 right-2 md:right-4 z-10 p-1.5 md:p-2.5 bg-white/90 backdrop-blur-md rounded-full text-gray-300 hover:text-red-500 shadow-sm transition-colors"
                 >
-                  <Trash2 size={18} />
+                  <Trash2 size={14} className="md:w-[18px] md:h-[18px]" />
                 </button>
 
                 {/* Image Section */}
@@ -147,17 +147,17 @@ export default function WishlistPage() {
                 </Link>
 
                 {/* Details Section */}
-                <div className="p-6 flex flex-col flex-1 text-center bg-white">
-                  <h3 className="text-[#0F2C3E] font-bold text-base md:text-lg uppercase mb-1 truncate">
+                <div className="p-3 md:p-6 flex flex-col flex-1 text-center bg-white">
+                  <h3 className="text-[#0F2C3E] font-bold text-xs md:text-base lg:text-lg uppercase mb-1 truncate">
                     {item.product.name}
                   </h3>
-                  <p className="text-[#db2777] font-serif text-xl md:text-2xl mb-6">₹{item.product.price.toLocaleString()}</p>
+                  <p className="text-[#db2777] font-serif text-lg md:text-xl lg:text-2xl mb-3 md:mb-6">₹{item.product.price.toLocaleString()}</p>
                   
                   <button 
                     onClick={() => moveToCart(item)}
-                    className="mt-auto w-full bg-[#0F2C3E] text-white py-4 rounded-full text-[10px] font-bold uppercase tracking-[0.3em] flex items-center justify-center gap-3 hover:bg-[#db2777] transition-all shadow-md"
+                    className="mt-auto w-full bg-[#0F2C3E] text-white py-2 md:py-4 rounded-full text-[8px] md:text-[10px] font-bold uppercase tracking-[0.3em] flex items-center justify-center gap-2 md:gap-3 hover:bg-[#db2777] transition-all shadow-md"
                   >
-                    Move to Bag <ShoppingBag size={16} />
+                    Move to Bag <ShoppingBag size={12} className="md:w-4 md:h-4" />
                   </button>
                 </div>
               </motion.div>
