@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Filter, Search, X, SlidersHorizontal, Sparkles, Check } from 'lucide-react'
-import { supabase } from '../../../lib/supabase' 
+import { supabase } from '../../../lib/supabase'
 import ProductCard from '../../../components/ProductCard'
 import Link from 'next/link'
 
@@ -54,11 +54,11 @@ const sortOptions = [
 
 export default function CategoryPage({ params }: { params: { slug: string } }) {
   const categoryName = getCategoryName(params.slug)
-  
+
   const [products, setProducts] = useState<any[]>([])
   const [filteredProducts, setFilteredProducts] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  
+
   // Filter States
   const [selectedPriceRange, setSelectedPriceRange] = useState(priceRanges[0])
   const [selectedSizes, setSelectedSizes] = useState<string[]>([])
@@ -95,7 +95,7 @@ export default function CategoryPage({ params }: { params: { slug: string } }) {
 
   const filterAndSortProducts = () => {
     let filtered = [...products]
-    
+
     // Price Filter
     filtered = filtered.filter((p) => p.price >= selectedPriceRange.min && p.price <= selectedPriceRange.max)
 
@@ -148,7 +148,7 @@ export default function CategoryPage({ params }: { params: { slug: string } }) {
           <div className="text-center py-24 bg-gray-50 rounded-3xl border border-gray-100 max-w-3xl mx-auto">
             <h3 className="text-2xl font-serif text-[#0F2C3E] mb-4">No products found in this category yet.</h3>
             <p className="text-gray-500 mb-8">Our artisans are currently crafting new pieces. Check back soon!</p>
-            <Link 
+            <Link
               href="/shop"
               className="inline-block bg-[#0F2C3E] text-white px-8 py-3 rounded-full text-xs font-bold uppercase tracking-widest hover:bg-[#db2777] transition-all shadow-lg"
             >
@@ -157,11 +157,11 @@ export default function CategoryPage({ params }: { params: { slug: string } }) {
           </div>
         ) : (
           <div className="flex flex-col lg:flex-row gap-10">
-            
+
             {/* 📍 Sidebar: Creative & Visual Filters */}
             <aside className={`lg:w-64 shrink-0 ${showFilters ? 'fixed inset-0 z-50 bg-white p-8 overflow-y-auto' : 'hidden lg:block'}`}>
               <div className="sticky top-28 space-y-10">
-                
+
                 <div className="flex items-center justify-between border-b-2 border-[#D4AF37] pb-4">
                   <div className="flex items-center gap-2">
                     <Filter size={16} className="text-[#D4AF37]" />
@@ -178,13 +178,11 @@ export default function CategoryPage({ params }: { params: { slug: string } }) {
                       <button
                         key={range.label}
                         onClick={() => { setSelectedPriceRange(range); setShowFilters(false); }}
-                        className={`w-full flex items-center gap-3 py-2 text-xs transition-all duration-300 group ${
-                          selectedPriceRange.label === range.label ? 'text-[#0F5A7E] font-bold' : 'text-[#2d2416] hover:text-[#D4AF37]'
-                        }`}
+                        className={`w-full flex items-center gap-3 py-2 text-xs transition-all duration-300 group ${selectedPriceRange.label === range.label ? 'text-[#0F5A7E] font-bold' : 'text-[#2d2416] hover:text-[#D4AF37]'
+                          }`}
                       >
-                        <div className={`w-3 h-3 rounded-full border flex items-center justify-center transition-all ${
-                          selectedPriceRange.label === range.label ? 'border-[#0F5A7E]' : 'border-gray-300 group-hover:border-[#D4AF37]'
-                        }`}>
+                        <div className={`w-3 h-3 rounded-full border flex items-center justify-center transition-all ${selectedPriceRange.label === range.label ? 'border-[#0F5A7E]' : 'border-gray-300 group-hover:border-[#D4AF37]'
+                          }`}>
                           {selectedPriceRange.label === range.label && <div className="w-1.5 h-1.5 bg-[#0F5A7E] rounded-full" />}
                         </div>
                         {range.label}
@@ -207,15 +205,14 @@ export default function CategoryPage({ params }: { params: { slug: string } }) {
                           key={color}
                           title={color}
                           onClick={() => setSelectedColors(prev => isSelected ? prev.filter(c => c !== color) : [...prev, color])}
-                          className={`relative aspect-square rounded-full transition-all duration-300 shadow-sm ${getColorStyle(color)} ${
-                            isSelected ? 'ring-2 ring-offset-2 ring-[#0F5A7E] scale-95' : 'hover:scale-110 hover:shadow-md'
-                          }`}
+                          className={`relative aspect-square rounded-full transition-all duration-300 shadow-sm ${getColorStyle(color)} ${isSelected ? 'ring-2 ring-offset-2 ring-[#0F5A7E] scale-95' : 'hover:scale-110 hover:shadow-md'
+                            }`}
                         >
                           {isSelected && (
-                            <Check 
-                              size={14} 
-                              strokeWidth={3} 
-                              className={`absolute inset-0 m-auto ${color === 'Silver' ? 'text-black' : 'text-white drop-shadow-md'}`} 
+                            <Check
+                              size={14}
+                              strokeWidth={3}
+                              className={`absolute inset-0 m-auto ${color === 'Silver' ? 'text-black' : 'text-white drop-shadow-md'}`}
                             />
                           )}
                         </button>
@@ -237,11 +234,10 @@ export default function CategoryPage({ params }: { params: { slug: string } }) {
                         <button
                           key={size}
                           onClick={() => setSelectedSizes(prev => isSelected ? prev.filter(s => s !== size) : [...prev, size])}
-                          className={`py-2 px-1 text-center text-[10px] font-bold border rounded-lg transition-all duration-300 ${
-                            isSelected 
-                              ? 'bg-[#0F5A7E] text-white border-[#0F5A7E] shadow-inner' 
+                          className={`py-2 px-1 text-center text-[10px] font-bold border rounded-lg transition-all duration-300 ${isSelected
+                              ? 'bg-[#0F5A7E] text-white border-[#0F5A7E] shadow-inner'
                               : 'bg-gray-50 border-gray-100 text-[#2d2416] hover:border-[#D4AF37] hover:bg-white hover:shadow-sm'
-                          }`}
+                            }`}
                         >
                           {size}
                         </button>
@@ -252,17 +248,17 @@ export default function CategoryPage({ params }: { params: { slug: string } }) {
 
                 {/* 🔄 Reset Filters */}
                 <div className="pt-8">
-                    <button 
-                     onClick={() => { 
-                       setSelectedPriceRange(priceRanges[0]); 
-                       setSelectedSizes([]); 
-                       setSelectedColors([]); 
-                       setSearchQuery(''); 
-                     }}
-                     className="w-full py-3 bg-[#F5E9DC] text-[#2d2416] text-[9px] font-bold uppercase tracking-widest rounded-full hover:bg-[#D4AF37] hover:text-white transition-all"
-                    >
-                      Clear All Filters
-                    </button>
+                  <button
+                    onClick={() => {
+                      setSelectedPriceRange(priceRanges[0]);
+                      setSelectedSizes([]);
+                      setSelectedColors([]);
+                      setSearchQuery('');
+                    }}
+                    className="w-full py-3 bg-[#F5E9DC] text-[#2d2416] text-[9px] font-bold uppercase tracking-widest rounded-full hover:bg-[#D4AF37] hover:text-white transition-all"
+                  >
+                    Clear All Filters
+                  </button>
                 </div>
               </div>
             </aside>
@@ -290,8 +286,8 @@ export default function CategoryPage({ params }: { params: { slug: string } }) {
                   >
                     {sortOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                   </select>
-                  
-                  <button 
+
+                  <button
                     onClick={() => setShowFilters(true)}
                     className="lg:hidden p-3 bg-[#2d2416] text-white rounded-full shadow-md hover:bg-[#0F5A7E] transition-all"
                   >
@@ -302,38 +298,32 @@ export default function CategoryPage({ params }: { params: { slug: string } }) {
 
               {/* Catalog Info */}
               <div className="flex items-center gap-3 mb-6 px-2">
-                 <Sparkles size={14} className="text-[#0F5A7E]" />
-                 <p className="text-[9px] font-bold uppercase tracking-widest text-[#2d2416] opacity-60">
-                   Revealing {filteredProducts.length} Pieces
-                 </p>
+                <Sparkles size={14} className="text-[#0F5A7E]" />
+                <p className="text-[9px] font-bold uppercase tracking-widest text-[#2d2416] opacity-60">
+                  Revealing {filteredProducts.length} Pieces
+                </p>
               </div>
 
               {/* Grid */}
               <AnimatePresence mode="wait">
                 {loading ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                  <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-4 lg:gap-6">
                     {[...Array(6)].map((_, i) => (
-                      <div key={i} className="aspect-[3/4] bg-[#F5E9DC] animate-pulse rounded-[2rem]" />
+                      <div key={i} className="aspect-square md:aspect-[3/4] bg-[#F5E9DC] animate-pulse rounded-lg md:rounded-[2rem]" />
                     ))}
                   </div>
                 ) : filteredProducts.length > 0 ? (
-                  <motion.div 
+                  <motion.div
                     layout
-                    className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"
+                    className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-4 lg:gap-6"
                   >
                     {filteredProducts.map((product) => (
                       <ProductCard key={product.id} product={product} />
                     ))}
                   </motion.div>
                 ) : (
-                  <div className="text-center py-24 bg-gray-50 rounded-[3rem] border border-gray-100 mt-4">
-                    <h3 className="text-2xl font-serif text-[#2d2416] opacity-40">No pieces match your filters.</h3>
-                    <button 
-                      onClick={() => { setSelectedPriceRange(priceRanges[0]); setSelectedSizes([]); setSelectedColors([]); setSearchQuery(''); }}
-                      className="mt-4 text-[#db2777] font-bold uppercase text-xs tracking-widest hover:underline"
-                    >
-                      Clear Filters
-                    </button>
+                  <div className="text-center py-16 md:py-24 bg-gray-50 rounded-2xl md:rounded-[3rem] border border-gray-100 mt-4 col-span-2 md:col-span-2 lg:col-span-3">
+                    <h3 className="text-xl md:text-2xl font-serif text-[#2d2416] opacity-40">The collection is currently empty</h3>
                   </div>
                 )}
               </AnimatePresence>
