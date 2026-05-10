@@ -20,12 +20,7 @@ const banners = [
     alt: 'SB Creation Glass Bangles', 
     link: '/shop' 
   },
-  { 
-    id: 3, 
-    src: '/banners/banner-3.jpg', 
-    alt: 'SB Creation 20% Off Sale', 
-    link: '/shop' 
-  },
+  
 ]
 
 export default function HeroSlider() {
