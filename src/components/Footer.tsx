@@ -21,7 +21,7 @@ const Footer = () => {
                   className="object-contain drop-shadow-sm"
                 />
               </div>
-              <div className="flex items-baseline gap-2 whitespace-nowrap">
+              {/* <div className="flex items-baseline gap-2 whitespace-nowrap">
                 <span 
                   className="text-3xl md:text-3xl text-[#0F5A7E] italic font-bold"
                   style={{ 
@@ -41,7 +41,7 @@ const Footer = () => {
                 >
                   CREATION
                 </span>
-              </div>
+              </div> */}
             </Link>
             
             <p className="text-sm leading-relaxed text-[#5a4a42] max-w-xs font-sans">
