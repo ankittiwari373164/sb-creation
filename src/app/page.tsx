@@ -15,7 +15,7 @@ import ArtisanalStack from '../components/ArtisanalStack'
 import ProductVault from '../components/ProductVault'
 import VideoShowcase from '../components/VideoShowcase';
 import HeroSlider from '../components/HeroSlider';
-import Product from '@/components/Product';
+import Product from '../components/Product';
 
 
 
