@@ -75,101 +75,119 @@ export default function Header() {
           </Link>
 
           {/* Desktop Navigation Links */}
-          <div className="hidden lg:flex items-center gap-8 font-poppins text-[13px] font-semibold uppercase tracking-[0.15em] text-[#4A4A4A]">
-            <Link 
-              href="/" 
-              className={`transition-all duration-300 pb-2 border-b-2 relative group ${
-                pathname === '/' 
-                  ? 'text-[#F8C8DC] border-b-[#F8C8DC]' 
-                  : 'border-b-transparent hover:text-[#D4AF37]'
-              }`}
-            >
-              Home
-              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-[#D4AF37] to-[#F8C8DC] group-hover:w-full transition-all duration-300"></span>
-            </Link>
+<div className="hidden lg:flex items-center gap-8 font-poppins text-[13px] font-bold uppercase tracking-[0.18em] text-[#d92b7a]">
 
-            {/* Shop Dropdown */}
-            <div className="relative group">
-              <Link 
-                href="/shop" 
-                className={`transition-all duration-300 pb-2 border-b-2 flex items-center gap-2 ${
-                  pathname.startsWith('/shop') 
-                    ? 'text-[#F8C8DC] border-b-[#F8C8DC]' 
-                    : 'border-b-transparent hover:text-[#D4AF37]'
-                }`}
-              >
-                Shop
-                <svg className="w-3 h-3 group-hover:rotate-180 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-                </svg>
-              </Link>
-              
-              {/* Dropdown Menu - Luxury Style */}
-              <div className="absolute left-0 mt-0 w-56 bg-white rounded-xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 py-3 z-50 border-t-4 border-[#D4AF37]">
-                <Link 
-                  href="/category/glass-bangles" 
-                  className="block px-6 py-3 text-[12px] font-semibold text-[#4A4A4A] hover:text-[#F8C8DC] hover:bg-[#F5E9DC] transition-all duration-200 border-l-3 border-transparent hover:border-l-[#D4AF37]"
-                >
-                  Glass Bangles
-                </Link>
-                <Link 
-                  href="/category/metal-bangles-kadas" 
-                  className="block px-6 py-3 text-[12px] font-semibold text-[#4A4A4A] hover:text-[#F8C8DC] hover:bg-[#F5E9DC] transition-all duration-200 border-l-3 border-transparent hover:border-l-[#D4AF37]"
-                >
-                  Metal Bangles/Kadas
-                </Link>
-                <Link 
-                  href="/category/bangles-box" 
-                  className="block px-6 py-3 text-[12px] font-semibold text-[#4A4A4A] hover:text-[#F8C8DC] hover:bg-[#F5E9DC] transition-all duration-200 border-l-3 border-transparent hover:border-l-[#D4AF37]"
-                >
-                  Bangles Box
-                </Link>
-                <Link 
-                  href="/category/bangle-sets" 
-                  className="block px-6 py-3 text-[12px] font-semibold text-[#4A4A4A] hover:text-[#F8C8DC] hover:bg-[#F5E9DC] transition-all duration-200 border-l-3 border-transparent hover:border-l-[#D4AF37]"
-                >
-                  Bangle Sets
-                </Link>
-                <Link 
-                  href="/category/bracelets-watches" 
-                  className="block px-6 py-3 text-[12px] font-semibold text-[#4A4A4A] hover:text-[#F8C8DC] hover:bg-[#F5E9DC] transition-all duration-200 border-l-3 border-transparent hover:border-l-[#D4AF37]"
-                >
-                  Bracelets & Watches
-                </Link>
-              </div>
-            </div>
+  {/* Home */}
+  <Link
+    href="/"
+    className={`transition-all duration-300 pb-2 border-b-2 relative group font-bold ${
+      pathname === '/'
+        ? 'text-[#d92b7a] border-b-[#d92b7a]'
+        : 'border-b-transparent hover:text-[#8f124b]'
+    }`}
+  >
+    Home
+    <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-[#d92b7a] to-[#8f124b] group-hover:w-full transition-all duration-300"></span>
+  </Link>
 
-            {/* Customize */}
-            <button 
-              onClick={() => setShowWhatsAppModal(true)} 
-              className="transition-all duration-300 pb-2 border-b-2 border-transparent hover:text-[#D4AF37] hover:border-b-[#F8C8DC] font-poppins text-[13px] font-semibold uppercase tracking-[0.15em] text-[#4A4A4A]"
-            >
-              Customize
-            </button>
+  {/* Shop Dropdown */}
+  <div className="relative group">
+    <Link
+      href="/shop"
+      className={`transition-all duration-300 pb-2 border-b-2 flex items-center gap-2 font-bold ${
+        pathname.startsWith('/shop')
+          ? 'text-[#d92b7a] border-b-[#d92b7a]'
+          : 'border-b-transparent hover:text-[#8f124b]'
+      }`}
+    >
+      Shop
+      <svg
+        className="w-3 h-3 group-hover:rotate-180 transition-transform duration-300"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M19 14l-7 7m0 0l-7-7m7 7V3"
+        />
+      </svg>
+    </Link>
 
-            {/* Size Guide */}
-            <Link 
-              href="/size-guide" 
-              className={`transition-all duration-300 pb-2 border-b-2 ${
-                pathname === '/size-guide' 
-                  ? 'text-[#F8C8DC] border-b-[#F8C8DC]' 
-                  : 'border-b-transparent hover:text-[#D4AF37] hover:border-b-[#F8C8DC]'
-              }`}
-            >
-              Size Guide
-            </Link>
+    {/* Dropdown Menu */}
+    <div className="absolute left-0 mt-0 w-56 bg-white rounded-xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 py-3 z-50 border-t-4 border-[#d92b7a]">
 
-            <Link 
-              href="/contact" 
-              className={`transition-all duration-300 pb-2 border-b-2 ${
-                pathname === '/contact' 
-                  ? 'text-[#F8C8DC] border-b-[#F8C8DC]' 
-                  : 'border-b-transparent hover:text-[#D4AF37] hover:border-b-[#F8C8DC]'
-              }`}
-            >
-              Contact
-            </Link>
-          </div>
+      <Link
+        href="/category/glass-bangles"
+        className="block px-6 py-3 text-[12px] font-bold text-[#d92b7a] hover:text-[#8f124b] hover:bg-[#F5E9DC] transition-all duration-200 border-l-3 border-transparent hover:border-l-[#d92b7a]"
+      >
+        Glass Bangles
+      </Link>
+
+      <Link
+        href="/category/metal-bangles-kadas"
+        className="block px-6 py-3 text-[12px] font-bold text-[#d92b7a] hover:text-[#8f124b] hover:bg-[#F5E9DC] transition-all duration-200 border-l-3 border-transparent hover:border-l-[#d92b7a]"
+      >
+        Metal Bangles/Kadas
+      </Link>
+
+      <Link
+        href="/category/bangles-box"
+        className="block px-6 py-3 text-[12px] font-bold text-[#d92b7a] hover:text-[#8f124b] hover:bg-[#F5E9DC] transition-all duration-200 border-l-3 border-transparent hover:border-l-[#d92b7a]"
+      >
+        Bangles Box
+      </Link>
+
+      <Link
+        href="/category/bangle-sets"
+        className="block px-6 py-3 text-[12px] font-bold text-[#d92b7a] hover:text-[#8f124b] hover:bg-[#F5E9DC] transition-all duration-200 border-l-3 border-transparent hover:border-l-[#d92b7a]"
+      >
+        Bangle Sets
+      </Link>
+
+      <Link
+        href="/category/bracelets-watches"
+        className="block px-6 py-3 text-[12px] font-bold text-[#d92b7a] hover:text-[#8f124b] hover:bg-[#F5E9DC] transition-all duration-200 border-l-3 border-transparent hover:border-l-[#d92b7a]"
+      >
+        Bracelets & Watches
+      </Link>
+    </div>
+  </div>
+
+  {/* Customize */}
+  <button
+    onClick={() => setShowWhatsAppModal(true)}
+    className="transition-all duration-300 pb-2 border-b-2 border-transparent hover:text-[#8f124b] hover:border-b-[#d92b7a] font-poppins text-[13px] font-bold uppercase tracking-[0.18em] text-[#d92b7a]"
+  >
+    Customize
+  </button>
+
+  {/* Size Guide */}
+  <Link
+    href="/size-guide"
+    className={`transition-all duration-300 pb-2 border-b-2 font-bold ${
+      pathname === '/size-guide'
+        ? 'text-[#d92b7a] border-b-[#d92b7a]'
+        : 'border-b-transparent hover:text-[#8f124b] hover:border-b-[#d92b7a]'
+    }`}
+  >
+    Size Guide
+  </Link>
+
+  {/* Contact */}
+  <Link
+    href="/contact"
+    className={`transition-all duration-300 pb-2 border-b-2 font-bold ${
+      pathname === '/contact'
+        ? 'text-[#d92b7a] border-b-[#d92b7a]'
+        : 'border-b-transparent hover:text-[#8f124b] hover:border-b-[#d92b7a]'
+    }`}
+  >
+    Contact
+  </Link>
+</div>
 
           {/* Desktop Actions (Search & Cart) */}
           <div className="flex items-center gap-4 lg:gap-6">

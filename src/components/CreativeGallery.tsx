@@ -15,7 +15,7 @@ const SAMPLE_CATEGORIES = [
     name: 'Glass Bangles',
     slug: 'glass-bangles',
     href: '/category/glass-bangles',
-    image: '/bangles.jpeg',    // ← add your image
+    image: '/bangles.jpeg',
     tagline: 'Vibrant & Colourful',
   },
   {
@@ -23,7 +23,7 @@ const SAMPLE_CATEGORIES = [
     name: 'Metal Bangles/Kadas',
     slug: 'metal-bangles-kadas',
     href: '/category/metal-bangles-kadas',
-    image: '/bangles1.jpeg',    // ← add your image
+    image: '/bangles1.jpeg',
     tagline: 'Bold & Timeless',
   },
   {
@@ -31,7 +31,7 @@ const SAMPLE_CATEGORIES = [
     name: 'Bangle Sets',
     slug: 'bangle-sets',
     href: '/category/bangle-sets',
-    image: '/bangles2.jpeg',      // ← add your image
+    image: '/bangles2.jpeg',
     tagline: 'Stack in Style',
   },
   // ── SIDE GRID (next 2 shown in the right column) ──
@@ -40,7 +40,7 @@ const SAMPLE_CATEGORIES = [
     name: 'Bangles Box',
     slug: 'bangles-box',
     href: '/category/bangles-box',
-    image: '/bangles3.jpeg',      // ← add your image
+    image: '/bangles3.jpeg',
     tagline: 'Gift & Storage',
   },
   {
@@ -48,7 +48,7 @@ const SAMPLE_CATEGORIES = [
     name: 'Bracelets & Watches',
     slug: 'bracelets-watches',
     href: '/category/bracelets-watches',
-    image: '/bangle2.pngs',// ← add your image
+    image: '/bangle2.png',
     tagline: 'Everyday Elegance',
   },
 ];
@@ -70,7 +70,7 @@ const CreativeGallery = ({ categories }: { categories?: Category[] }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
 
   const carouselCategories = allCategories.slice(0, 3);
-  const sideCategories     = allCategories.slice(3, 5);
+  const sideCategories = allCategories.slice(3, 5);
 
   useEffect(() => {
     if (carouselCategories.length === 0) return;
@@ -81,18 +81,18 @@ const CreativeGallery = ({ categories }: { categories?: Category[] }) => {
   }, [carouselCategories.length]);
 
   return (
-    <section className="bg-[#FFFFF0] py-8 md:py-12 px-3 md:px-10">
-      <div className="container mx-auto max-w-7xl">
+    <section className="bg-[#FFFFF0] py-6 md:py-8 px-3 md:px-8">
+      <div className="container mx-auto max-w-6xl">
 
         {/* Creative Header */}
-        <div className="mb-8 md:mb-12 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+        <div className="mb-6 md:mb-8 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
           <div className="text-left">
             <span className="text-[#0F5A7E] text-[8px] md:text-[10px] font-bold tracking-[0.3em] md:tracking-[0.4em] uppercase mb-1 md:mb-2 block">
               explore by category
             </span>
-            <h2 className="text-2xl md:text-3xl lg:text-5xl font-serif text-[#2d2416] uppercase tracking-tighter leading-tight">
+            <h2 className="text-2xl md:text-3xl lg:text-4xl font-serif text-[#2d2416] uppercase tracking-tighter leading-tight">
               Shop by{' '}
-              <span className="italic font-light lowercase text-[#D4AF37]">
+              <span className="italic font-semibold text-[#d92b7a]">
                 Collection
               </span>
             </h2>
@@ -105,7 +105,7 @@ const CreativeGallery = ({ categories }: { categories?: Category[] }) => {
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6 min-h-[400px] md:min-h-[600px]">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-5 min-h-[320px] md:min-h-[480px]">
 
           {/* LEFT: Main Carousel */}
           <div className="lg:col-span-8 relative group overflow-hidden rounded-lg md:rounded-2xl bg-white shadow-md border-2 border-[#D4AF37]">
@@ -116,7 +116,7 @@ const CreativeGallery = ({ categories }: { categories?: Category[] }) => {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.8 }}
-                className="relative w-full h-[300px] md:h-[400px] lg:h-full"
+                className="relative w-full h-[240px] md:h-[320px] lg:h-[480px]"
               >
                 {carouselCategories[currentIndex] && (
                   <>
@@ -127,12 +127,12 @@ const CreativeGallery = ({ categories }: { categories?: Category[] }) => {
                       className="object-cover"
                     />
 
-                    <div className="absolute inset-0 bg-gradient-to-r from-[#2d2416]/70 via-[#2d2416]/30 to-transparent flex items-center p-4 md:p-8 lg:p-16">
+                    <div className="absolute inset-0 bg-gradient-to-r from-[#2d2416]/70 via-[#2d2416]/30 to-transparent flex items-center p-4 md:p-6 lg:p-10">
                       <div className="max-w-md">
                         <motion.p
                           initial={{ y: 20, opacity: 0 }}
                           animate={{ y: 0, opacity: 1 }}
-                          className="text-[#D4AF37] text-[8px] md:text-xs font-bold tracking-widest uppercase mb-2 md:mb-4"
+                          className="text-[#D4AF37] text-[8px] md:text-xs font-bold tracking-widest uppercase mb-2 md:mb-3"
                         >
                           {carouselCategories[currentIndex].tagline ?? 'Explore Category'}
                         </motion.p>
@@ -140,7 +140,7 @@ const CreativeGallery = ({ categories }: { categories?: Category[] }) => {
                           initial={{ y: 20, opacity: 0 }}
                           animate={{ y: 0, opacity: 1 }}
                           transition={{ delay: 0.1 }}
-                          className="text-white text-2xl md:text-4xl lg:text-6xl font-serif mb-4 md:mb-8 leading-[1.1]"
+                          className="text-white text-xl md:text-3xl lg:text-5xl font-serif mb-4 md:mb-6 leading-[1.1]"
                         >
                           {carouselCategories[currentIndex].name}
                         </motion.h3>
@@ -151,7 +151,7 @@ const CreativeGallery = ({ categories }: { categories?: Category[] }) => {
                         >
                           <Link
                             href={carouselCategories[currentIndex].href}
-                            className="bg-white text-[#2d2416] px-5 md:px-8 py-2 md:py-4 rounded-full font-bold text-xs md:text-sm hover:bg-[#D4AF37] hover:text-white transition-all inline-flex items-center gap-2 shadow-lg"
+                            className="bg-white text-[#2d2416] px-4 md:px-6 py-2 md:py-3 rounded-full font-bold text-xs md:text-sm hover:bg-[#D4AF37] hover:text-white transition-all inline-flex items-center gap-2 shadow-lg"
                           >
                             Shop Now <ChevronRight size={16} className="md:w-[18px] md:h-[18px]" />
                           </Link>
@@ -164,7 +164,7 @@ const CreativeGallery = ({ categories }: { categories?: Category[] }) => {
             </AnimatePresence>
 
             {/* Carousel Nav Dots */}
-            <div className="absolute bottom-4 md:bottom-8 right-4 md:right-8 flex gap-2 md:gap-3 z-30">
+            <div className="absolute bottom-4 md:bottom-6 right-4 md:right-6 flex gap-2 md:gap-3 z-30">
               {carouselCategories.map((_, i) => (
                 <button
                   key={i}
@@ -178,12 +178,12 @@ const CreativeGallery = ({ categories }: { categories?: Category[] }) => {
           </div>
 
           {/* RIGHT: Side Grid */}
-          <div className="lg:col-span-4 flex flex-col gap-4 md:gap-6">
+          <div className="lg:col-span-4 flex flex-col gap-4 md:gap-5">
             {sideCategories.map((category) => (
               <motion.div
                 key={category.id}
                 whileHover={{ y: -5 }}
-                className="relative flex-1 group overflow-hidden rounded-lg md:rounded-2xl bg-white shadow-md border-2 border-[#D4AF37] min-h-[200px] md:min-h-[280px]"
+                className="relative flex-1 group overflow-hidden rounded-lg md:rounded-2xl bg-white shadow-md border-2 border-[#D4AF37] min-h-[160px] md:min-h-[220px]"
               >
                 <Link href={category.href}>
                   <Image
@@ -192,12 +192,12 @@ const CreativeGallery = ({ categories }: { categories?: Category[] }) => {
                     fill
                     className="object-cover transition-transform duration-700 group-hover:scale-110"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#2d2416]/85 via-transparent to-transparent flex items-end p-4 md:p-8">
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#2d2416]/85 via-transparent to-transparent flex items-end p-4 md:p-6">
                     <div className="text-white translate-y-2 group-hover:translate-y-0 transition-all duration-500">
                       <p className="text-[#D4AF37] text-[8px] md:text-[10px] font-bold tracking-[0.2em] md:tracking-[0.3em] uppercase mb-0.5 md:mb-1">
                         {category.tagline ?? 'Category'}
                       </p>
-                      <h4 className="text-lg md:text-2xl font-serif leading-tight">{category.name}</h4>
+                      <h4 className="text-base md:text-xl font-serif leading-tight">{category.name}</h4>
                     </div>
                   </div>
                 </Link>

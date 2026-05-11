@@ -76,7 +76,7 @@ export default function CartPage() {
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
           
           <div className="mb-6 md:mb-8 border-b-2 border-[#D4AF37] pb-3 md:pb-4">
-            <h1 className="text-3xl md:text-5xl font-serif text-[#2d2416]">Your <span className="italic font-light text-[#D4AF37]">Bag</span></h1>
+            <h1 className="text-3xl md:text-5xl font-serif text-[#2d2416]">Your <span className="italic font-semibold text-[#d92b7a]">Bag</span></h1>
             <p className="text-[#D4AF37] text-[10px] md:text-sm font-bold uppercase tracking-widest mt-2 font-sans">
               {getTotalItems()} Items Selected
             </p>

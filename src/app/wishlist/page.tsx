@@ -108,7 +108,7 @@ export default function WishlistPage() {
         {/* Header */}
         <div className="mb-8 md:mb-10 border-b border-gray-100 pb-4 md:pb-6 flex justify-between items-end gap-4">
           <div>
-            <h1 className="text-3xl md:text-5xl font-serif text-[#0F2C3E]">My <span className="italic font-light text-[#db2777]">Favorites</span></h1>
+            <h1 className="text-3xl md:text-5xl font-serif text-[#0F2C3E]">My <span className="italic font-semibold text-[#d92b7a]">Favorites</span></h1>
             <p className="text-[8px] md:text-xs font-bold text-gray-400 uppercase tracking-[0.3em] mt-1 md:mt-2">The Collection</p>
           </div>
           <p className="text-[10px] md:text-sm text-gray-300 font-bold uppercase tracking-widest">

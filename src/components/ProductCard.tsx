@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
 import Link from 'next/link'
-import { ShoppingCart, Star, Heart, X, Check } from 'lucide-react'
+import { ShoppingCart, Heart, X, Check, Eye } from 'lucide-react'
 import { Product, supabase } from '../lib/supabase'
 import { useCartStore } from '../lib/cartStore'
 import toast from 'react-hot-toast'
@@ -16,7 +16,7 @@ interface ProductCardProps {
 export default function ProductCard({ product }: ProductCardProps) {
   const addItem = useCartStore((state) => state.addItem)
   const [isWishlisted, setIsWishlisted] = useState(false)
-  
+
   // Size Popup States
   const [showSizePopup, setShowSizePopup] = useState(false)
   const [tempSize, setTempSize] = useState<string>('')
@@ -24,7 +24,10 @@ export default function ProductCard({ product }: ProductCardProps) {
   // Check if item is already in wishlist on load
   useEffect(() => {
     const checkWishlist = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
+      const {
+        data: { user }
+      } = await supabase.auth.getUser()
+
       if (user) {
         const { data } = await supabase
           .from('wishlist')
@@ -32,9 +35,11 @@ export default function ProductCard({ product }: ProductCardProps) {
           .eq('user_id', user.id)
           .eq('product_id', product.id)
           .single()
+
         if (data) setIsWishlisted(true)
       }
     }
+
     checkWishlist()
   }, [product.id])
 
@@ -42,7 +47,10 @@ export default function ProductCard({ product }: ProductCardProps) {
     e.preventDefault()
     e.stopPropagation()
 
-    const { data: { user } } = await supabase.auth.getUser()
+    const {
+      data: { user }
+    } = await supabase.auth.getUser()
+
     if (!user) {
       toast.error('Please login to save favorites')
       return
@@ -80,110 +88,112 @@ export default function ProductCard({ product }: ProductCardProps) {
 
   const confirmAddToCart = () => {
     addItem({ ...product, selectedSize: tempSize } as any)
+
     toast.success(`${product.name} (${tempSize}) added!`, {
       icon: '💍',
-      style: { background: '#2d2416', color: '#fff', borderRadius: '50px' }
+      style: {
+        background: '#2d2416',
+        color: '#fff',
+        borderRadius: '50px'
+      }
     })
+
     setShowSizePopup(false)
   }
 
+  const originalPrice = (product as any).original_price || Math.round(product.price * 1.3)
+  const discount = Math.round(((originalPrice - product.price) / originalPrice) * 100)
+
   return (
     <>
-      <motion.div
-        whileHover={{ y: -5 }}
-        transition={{ duration: 0.3 }}
-        className="h-full"
-      >
-        <Link href={`/product/${product.slug}`} className="h-full block">
-          <div className="card group cursor-pointer h-full relative flex flex-col">
-            
-            {/* ❤️ Wishlist Heart Icon */}
-            <button 
-              onClick={toggleWishlist}
-              className="absolute top-2 md:top-4 left-2 md:left-4 z-10 p-1.5 md:p-2 bg-[#FFFFF0]/90 backdrop-blur-md rounded-full shadow-md hover:scale-110 transition-transform border border-[#D4AF37]"
-            >
-              <Heart 
-                size={14} 
-                className={`md:w-4.5 md:h-4.5 ${isWishlisted ? 'fill-[#F8C8DC] text-[#F8C8DC]' : 'text-[#2d2416] opacity-40'}`}
-              />
-            </button>
+      <motion.div whileHover={{ y: -4 }} transition={{ duration: 0.3 }} className="h-full">
+        <Link href={`/product/${product.slug}`} className="block h-full">
+          <div className="group relative h-full bg-white rounded-[14px] overflow-hidden">
+            <div className="relative overflow-hidden rounded-[14px] bg-[#f4f4f4] aspect-[0.9]">
+              {/* Discount Badge */}
+              <div className="absolute top-4 left-4 z-20 bg-[#e4572e] text-white text-sm font-semibold px-4 py-1 rounded-full shadow-md">
+                -{discount}%
+              </div>
 
-            <div className="relative aspect-square md:h-64 overflow-hidden rounded-lg md:rounded-2xl border-2 border-[#D4AF37]">
+              {/* Product Image */}
               <Image
                 src={product.image_url || '/placeholder-product.jpg'}
                 alt={product.name}
                 fill
-                className="object-cover group-hover:scale-110 transition-transform duration-500"
+                className="object-cover transition-transform duration-500 group-hover:scale-105"
               />
-              {product.stock < 10 && product.stock > 0 && (
-                <div className="absolute top-2 md:top-4 right-2 md:right-4 bg-[#F8C8DC] text-[#2d2416] px-2 md:px-3 py-0.5 md:py-1 rounded-full text-xs md:text-sm font-semibold">
-                  Only {product.stock} left
+
+              {/* Hover Action Buttons */}
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-3 opacity-0 group-hover:opacity-100 transition-all duration-300 z-20">
+                <button
+                  onClick={handleAddToCartInitiate}
+                  className="w-12 h-12 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center shadow-lg hover:scale-105 transition-all"
+                >
+                  <ShoppingCart size={18} className="text-[#5a4634]" />
+                </button>
+
+                <button
+                  onClick={toggleWishlist}
+                  className="w-12 h-12 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center shadow-lg hover:scale-105 transition-all"
+                >
+                  <Heart
+                    size={18}
+                    className={`${isWishlisted ? 'fill-red-500 text-red-500' : 'text-[#5a4634]'}`}
+                  />
+                </button>
+
+                <div className="w-12 h-12 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center shadow-lg hover:scale-105 transition-all">
+                  <Eye size={18} className="text-[#5a4634]" />
                 </div>
-              )}
+              </div>
+
+              {/* Stock Overlay */}
               {product.stock === 0 && (
-                <div className="absolute inset-0 bg-[#2d2416] bg-opacity-60 flex items-center justify-center">
-                  <span className="text-white text-lg md:text-xl font-bold">Out of Stock</span>
+                <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-30">
+                  <span className="text-white text-lg font-semibold">Out of Stock</span>
                 </div>
               )}
             </div>
 
-            <div className="p-2 md:p-6 flex flex-col flex-1">
-              <div className="flex items-center mb-1 md:mb-2">
-                <Star className="text-[#D4AF37] fill-current w-2.5 md:w-4 h-2.5 md:h-4" size={16} />
-                <Star className="text-[#D4AF37] fill-current w-2.5 md:w-4 h-2.5 md:h-4" size={16} />
-                <Star className="text-[#D4AF37] fill-current w-2.5 md:w-4 h-2.5 md:h-4" size={16} />
-                <Star className="text-[#D4AF37] fill-current w-2.5 md:w-4 h-2.5 md:h-4" size={16} />
-                <Star className="text-[#D4AF37] fill-current w-2.5 md:w-4 h-2.5 md:h-4" size={16} />
-                <span className="text-[10px] md:text-sm text-[#2d2416] opacity-60 ml-1 md:ml-2">(5.0)</span>
-              </div>
-
-              <h3 className="text-xs md:text-xl font-bold mb-1 md:mb-2 text-[#2d2416] group-hover:text-[#0F5A7E] transition-colors line-clamp-2">
+            {/* Product Details */}
+            <div className="pt-4 px-1 pb-2">
+              <h3 className="text-[18px] leading-[1.4] font-medium text-[#2b2b2b] line-clamp-2">
                 {product.name}
               </h3>
 
-              <p className="text-[#2d2416] opacity-70 mb-2 md:mb-4 line-clamp-1 md:line-clamp-2 text-[10px] md:text-base flex-1">
-                {product.description}
-              </p>
+              <div className="mt-2 flex items-center gap-2 flex-wrap">
+                <span className="text-[18px] font-bold text-[#d14b3f]">
+                  Rs. {product.price.toFixed(2)}
+                </span>
 
-              <div className="flex items-center justify-between gap-1 md:gap-2 mt-auto">
-                <div>
-                  <span className="text-base md:text-2xl font-bold text-[#D4AF37]">
-                    ₹{product.price}
-                  </span>
-                </div>
-
-                <button
-                  onClick={handleAddToCartInitiate}
-                  disabled={product.stock === 0}
-                  className="bg-[#2d2416] hover:bg-[#0F5A7E] text-white py-1 md:py-2 px-1.5 md:px-4 rounded-full flex items-center gap-0.5 md:gap-2 font-bold uppercase text-[7px] md:text-[10px] tracking-[0.05em] md:tracking-[0.2em] transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-xl"
-                >
-                  <ShoppingCart size={12} className="md:w-[18px] md:h-[18px]" />
-                  <span className="hidden sm:inline">Add</span>
-                </button>
+                <span className="text-[16px] text-gray-500 line-through">
+                  Rs. {originalPrice.toFixed(2)}
+                </span>
               </div>
             </div>
           </div>
         </Link>
       </motion.div>
 
-      {/* --- 📏 Size Selection Popup --- */}
+      {/* --- Size Selection Popup --- */}
       <AnimatePresence>
         {showSizePopup && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-6">
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setShowSizePopup(false)}
               className="absolute inset-0 bg-[#2d2416]/40 backdrop-blur-sm"
             />
-            <motion.div 
+
+            <motion.div
               initial={{ scale: 0.9, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.9, opacity: 0, y: 20 }}
               className="relative bg-[#FFFFF0] w-full max-w-sm rounded-2xl md:rounded-[2.5rem] p-6 md:p-8 shadow-2xl border-2 border-[#D4AF37]"
             >
-              <button 
+              <button
                 onClick={() => setShowSizePopup(false)}
                 className="absolute top-4 md:top-6 right-4 md:right-6 text-[#2d2416] opacity-50 hover:text-[#0F5A7E] transition-colors bg-[#F5E9DC] p-1.5 md:p-2 rounded-full"
               >
@@ -191,18 +201,26 @@ export default function ProductCard({ product }: ProductCardProps) {
               </button>
 
               <div className="text-center space-y-3 md:space-y-4">
-                <span className="text-[#0F5A7E] text-[8px] md:text-[10px] font-bold uppercase tracking-[0.3em] md:tracking-[0.4em] block">Select Bangle Size</span>
-                <h3 className="text-lg md:text-2xl font-bold text-[#2d2416]">{product.name}</h3>
-                
-                <div className="flex justify-center gap-2 md:gap-3 py-4 md:py-6">
-                  {((product as any).sizes?.length > 0 ? (product as any).sizes : ['2.2', '2.4', '2.6', '2.8']).map((size: string) => (
+                <span className="text-[#0F5A7E] text-[8px] md:text-[10px] font-bold uppercase tracking-[0.3em] md:tracking-[0.4em] block">
+                  Select Bangle Size
+                </span>
+
+                <h3 className="text-lg md:text-2xl font-bold text-[#2d2416]">
+                  {product.name}
+                </h3>
+
+                <div className="flex justify-center gap-2 md:gap-3 py-4 md:py-6 flex-wrap">
+                  {((product as any).sizes?.length > 0
+                    ? (product as any).sizes
+                    : ['2.2', '2.4', '2.6', '2.8']
+                  ).map((size: string) => (
                     <button
                       key={size}
                       onClick={() => setTempSize(size)}
                       className={`w-10 h-10 md:w-12 md:h-12 rounded-full border-2 font-bold text-xs transition-all flex items-center justify-center ${
-                        tempSize === size 
-                        ? 'bg-[#2d2416] text-white border-[#2d2416] shadow-lg' 
-                        : 'border-[#D4AF37] text-[#2d2416] hover:bg-[#F8C8DC]/30 hover:border-[#0F5A7E]'
+                        tempSize === size
+                          ? 'bg-[#2d2416] text-white border-[#2d2416] shadow-lg'
+                          : 'border-[#D4AF37] text-[#2d2416] hover:bg-[#F8C8DC]/30 hover:border-[#0F5A7E]'
                       }`}
                     >
                       {size}
@@ -210,7 +228,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                   ))}
                 </div>
 
-                <button 
+                <button
                   onClick={confirmAddToCart}
                   className="w-full bg-[#2d2416] text-white py-3 md:py-4 rounded-full font-bold uppercase text-[8px] md:text-[10px] tracking-[0.2em] md:tracking-[0.3em] flex items-center justify-center gap-2 hover:bg-[#0F5A7E] transition-all shadow-xl hover:shadow-2xl"
                 >

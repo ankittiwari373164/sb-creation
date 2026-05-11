@@ -63,7 +63,7 @@ export default function AboutPage() {
               animate={{ opacity: 1, y: 0 }}
               className="text-5xl md:text-6xl font-playfair text-[#2C2C2C] leading-[1.1] mb-4"
             >
-              Crafted with Love, <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D4AF37] to-[#F8C8DC] italic">Worn with Pride.</span>
+              Crafted with Love, <span className="text-[#D4AF37] italic">Worn with Pride.</span>
             </motion.h1>
 
             <motion.p 

@@ -81,19 +81,19 @@ const ProductSlider = ({ products }: { products: any[] }) => {
           The Eternal Collection
         </span>
         <h2 className="text-3xl md:text-5xl font-serif text-[#2d2416] mb-2">
-          Bangles For Every<span className="italic font-light text-[#D4AF37]"> Mood</span>
+          Bangles For Every<span className="italic font-semibold text-[#d92b7a]"> Mood</span>
         </h2>
       </div>
 
       <div className="relative flex group/marquee">
-        <div className="flex animate-marquee group-hover/marquee:pause-marquee gap-4 md:gap-10 py-5">
+        <div className="flex animate-marquee group-hover/marquee:pause-marquee gap-4 md:gap-8 py-5">
           {infiniteProducts.map((product, index) => {
             const primaryImage = product.gallery?.[0] || product.image_url || '/placeholder.jpg'
             const secondaryImage = product.gallery?.[1] || product.image_url || primaryImage
             const isLiked = wishlistIds.includes(product.id)
 
             return (
-              <div key={`${product.id}-${index}`} className="min-w-[240px] md:min-w-[320px] lg:min-w-[400px]">
+              <div key={`${product.id}-${index}`} className="min-w-[180px] md:min-w-[250px] lg:min-w-[300px]">
                 
                 <Link href={`/product/${product.slug}`} className="block group">
                   <div className="relative aspect-[4/5] rounded-lg md:rounded-2xl overflow-hidden bg-white shadow-lg border-2 border-[#D4AF37] hover:shadow-2xl hover:border-[#0F5A7E] transition-all duration-300">
@@ -104,29 +104,29 @@ const ProductSlider = ({ products }: { products: any[] }) => {
                     {/* Gradient Overlay */}
                     <div className="absolute inset-0 bg-gradient-to-t from-[#2d2416]/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
-                    <div className="absolute inset-x-0 bottom-4 md:bottom-8 flex justify-center gap-2 md:gap-3 z-30">
+                    <div className="absolute inset-x-0 bottom-4 md:bottom-6 flex justify-center gap-2 md:gap-3 z-30">
                         <button 
                          onClick={(e) => handleAddToCartInitiate(e, product)}
-                         className="p-2 md:p-4 bg-[#2d2416] text-white rounded-full shadow-lg hover:bg-[#0F5A7E] transition-all transform active:scale-95 hover:shadow-xl hover:scale-110"
+                         className="p-2 md:p-3 bg-[#2d2416] text-white rounded-full shadow-lg hover:bg-[#0F5A7E] transition-all transform active:scale-95 hover:shadow-xl hover:scale-110"
                         >
-                          <ShoppingBag size={16} strokeWidth={2.5} className="md:w-5 md:h-5" />
+                          <ShoppingBag size={14} strokeWidth={2.5} className="md:w-4 md:h-4" />
                         </button>
                         
-                        <div className="p-2 md:p-4 bg-[#FFFFF0]/95 backdrop-blur-sm text-[#2d2416] rounded-full shadow-lg border-2 border-[#D4AF37] hover:border-[#0F5A7E] hover:text-[#0F5A7E] transition-all transform active:scale-95 cursor-pointer hover:shadow-xl hover:scale-110">
-                          <Eye size={16} strokeWidth={2.5} className="md:w-5 md:h-5" />
+                        <div className="p-2 md:p-3 bg-[#FFFFF0]/95 backdrop-blur-sm text-[#2d2416] rounded-full shadow-lg border-2 border-[#D4AF37] hover:border-[#0F5A7E] hover:text-[#0F5A7E] transition-all transform active:scale-95 cursor-pointer hover:shadow-xl hover:scale-110">
+                          <Eye size={14} strokeWidth={2.5} className="md:w-4 md:h-4" />
                         </div>
 
                         <button 
                          onClick={(e) => handleWishlist(e, product.id)}
-                         className="p-2 md:p-4 bg-[#FFFFF0]/95 backdrop-blur-sm rounded-full shadow-lg border-2 border-[#F8C8DC] hover:border-[#D4AF37] transition-all transform active:scale-95 hover:shadow-xl hover:scale-110"
+                         className="p-2 md:p-3 bg-[#FFFFF0]/95 backdrop-blur-sm rounded-full shadow-lg border-2 border-[#F8C8DC] hover:border-[#D4AF37] transition-all transform active:scale-95 hover:shadow-xl hover:scale-110"
                         >
-                          <Heart size={16} strokeWidth={2.5} className={`md:w-5 md:h-5 ${isLiked ? "fill-[#F8C8DC] text-[#F8C8DC]" : "text-[#2d2416]"}`} />
+                          <Heart size={14} strokeWidth={2.5} className={`md:w-4 md:h-4 ${isLiked ? "fill-[#F8C8DC] text-[#F8C8DC]" : "text-[#2d2416]"}`} />
                         </button>
                     </div>
                   </div>
 
-                  <div className="mt-3 md:mt-6 text-center">
-                    <h4 className="font-serif text-sm md:text-lg text-[#2d2416] group-hover:text-[#0F5A7E] transition-colors uppercase tracking-tight">
+                  <div className="mt-3 md:mt-5 text-center">
+                    <h4 className="font-serif text-sm md:text-base text-[#2d2416] group-hover:text-[#0F5A7E] transition-colors uppercase tracking-tight">
                       {product.name}
                     </h4>
                     <p className="text-[#D4AF37] font-bold tracking-widest text-xs md:text-sm mt-1">

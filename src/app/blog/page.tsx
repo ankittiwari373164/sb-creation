@@ -36,7 +36,7 @@ export default function JournalPage() {
               The Journal
             </span>
             <h1 className="text-5xl md:text-7xl font-serif text-[#0F2C3E] mb-6">
-              Our <span className="italic font-light text-[#db2777]">Stories</span>
+              Our <span className="italic font-semibold text-[#d92b7a]">Stories</span>
             </h1>
             <p className="text-gray-500 max-w-xl mx-auto font-light leading-relaxed text-base md:text-lg">
               Explore the heritage of Firozabad glass, styling narratives, and the artisanal journey behind our collections.

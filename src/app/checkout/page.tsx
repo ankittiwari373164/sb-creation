@@ -159,7 +159,7 @@ export default function CheckoutPage() {
             <Link href="/cart" className="flex items-center text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-[#D4AF37] hover:text-[#F8C8DC] transition-colors">
               <ArrowLeft size={12} className="md:w-[14px] md:h-[14px] mr-2" /> Back to Bag
             </Link>
-            <h1 className="text-2xl md:text-4xl font-serif text-[#2d2416]">Finalize <span className="italic text-[#D4AF37]">Order</span></h1>
+            <h1 className="text-2xl md:text-4xl font-serif text-[#2d2416]">Finalize <span className="italic font-semibold text-[#d92b7a]">Order</span></h1>
             <div className="flex items-center gap-2 text-[#0F5A7E]">
               <ShieldCheck size={14} className="md:w-[18px] md:h-[18px]" />
               <span className="text-[9px] md:text-[10px] font-bold uppercase tracking-widest">Verified Checkout</span>

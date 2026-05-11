@@ -29,7 +29,7 @@ const PublicInstaFeed = () => {
             Follow Us
           </span>
           <h2 className="text-2xl md:text-4xl lg:text-5xl font-serif text-[#2d2416] mb-2 md:mb-4">
-            The <span className="italic text-[#D4AF37]">SB Edit</span>
+            The <span className="italic font-semibold text-[#d92b7a]">SB Edit</span>
           </h2>
           <p className="text-[#2d2416] text-xs md:text-sm opacity-70">
             Curated moments from our Instagram feed
@@ -73,7 +73,22 @@ const PublicInstaFeed = () => {
           box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
           transition: all 0.3s ease !important;
         }
+.sk_instagram_feed_item {
+  border-radius: 1.25rem !important;
+  overflow: hidden !important;
+  border: 1px solid #f0f0f0 !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+  transition: all 0.3s ease !important;
 
+  max-width: 260px !important;   /* added */
+  margin: 0 auto !important;     /* added */
+}
+
+.sk_instagram_feed_item img {
+  height: 300px !important;      /* added */
+  object-fit: cover !important;
+  transition: transform 0.3s ease !important;
+}
         .sk_instagram_feed_item:hover {
           box-shadow: 0 8px 24px rgba(15, 90, 126, 0.12) !important;
           transform: translateY(-4px) !important;

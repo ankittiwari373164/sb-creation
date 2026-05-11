@@ -35,7 +35,7 @@ export default function ContactPage() {
               Support
             </span>
             <h1 className="text-4xl md:text-5xl font-serif text-[#2d2416] mb-4">
-              How can we <span className="italic font-light text-[#D4AF37]">help?</span>
+              How can we <span className="italic font-semibold text-[#d92b7a]">help?</span>
             </h1>
             <div className="w-16 h-[1px] bg-[#D4AF37] mx-auto opacity-40" />
           </motion.div>

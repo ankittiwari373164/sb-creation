@@ -121,7 +121,7 @@ export default function ShopPage() {
               Firozabad Heritage
             </span>
             <h1 className="text-2xl md:text-4xl lg:text-5xl font-serif text-[#2d2416] mb-2 md:mb-4">
-              The <span className="italic font-light text-[#D4AF37]">Boutique</span> Gallery
+              The <span className="italic font-semibold text-[#d92b7a]">Boutique</span> Gallery
             </h1>
           </motion.div>
         </div>
