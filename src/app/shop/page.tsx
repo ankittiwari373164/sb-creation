@@ -36,9 +36,8 @@ const getColorStyle = (color: string) => {
 
 const sortOptions = [
   { value: 'newest', label: 'Latest Arrivals' },
-  { value: 'price-low', label: 'Valuation: Low to High' },
-  { value: 'price-high', label: 'Valuation: High to Low' },
-  { value: 'name', label: 'Alphabetical' },
+  { value: 'price-low', label: 'Price: Low to High' },
+  { value: 'price-high', label: 'Price: High to Low' },
 ]
 
 export default function ShopPage() {
@@ -105,7 +104,6 @@ export default function ShopPage() {
     switch (sortBy) {
       case 'price-low': filtered.sort((a, b) => a.price - b.price); break
       case 'price-high': filtered.sort((a, b) => b.price - a.price); break
-      case 'name': filtered.sort((a, b) => a.name.localeCompare(b.name)); break
       default: filtered.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
     }
     setFilteredProducts(filtered)
@@ -129,7 +127,7 @@ export default function ShopPage() {
       </section>
 
       {/* 🛠️ Shop Interface */}
-      <div className="container mx-auto px-4 md:px-6 py-6 md:py-10 lg:py-14">
+      <div className="container mx-auto px-4 md:px-6 py-6 md:py-10 lg:py-5">
         <div className="flex flex-col lg:flex-row gap-6 md:gap-10">
           
           {/* 📍 Sidebar: Creative & Visual Filters */}
@@ -146,7 +144,7 @@ export default function ShopPage() {
 
               {/* 💵 Price Filter */}
               <div className="space-y-2 md:space-y-3">
-                <h3 className="text-[8px] md:text-[10px] font-bold uppercase tracking-[0.2em] md:tracking-[0.3em] text-[#2d2416] opacity-60">Valuation</h3>
+                <h3 className="text-[8px] md:text-[10px] font-bold uppercase tracking-[0.2em] md:tracking-[0.3em] text-[#2d2416] opacity-60">Price</h3>
                 <div className="space-y-0.5 md:space-y-1">
                   {priceRanges.map((range) => (
                     <button

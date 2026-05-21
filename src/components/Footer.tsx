@@ -28,7 +28,7 @@ const Footer = () => {
               Bringing traditional glass art to the modern world, one piece at a time.
             </p>
 
-            <div className="flex space-x-6">
+            <div className="flex space-x-0">
               <a
                 href="https://instagram.com/_sbcreation"
                 target="_blank"
@@ -66,7 +66,7 @@ const Footer = () => {
                 ["Wishlist", "/wishlist"],
                 ["Blogs", "/blog"],
                 ["About Us", "/about"],
-                ["Dashboard", "/dashboard"],
+                ["Sign In", "/dashboard"],
               ].map(([label, href]) => (
                 <li key={label}>
                   <Link

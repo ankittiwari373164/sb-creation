@@ -96,7 +96,7 @@ const ProductSlider = ({ products }: { products: any[] }) => {
               <div key={`${product.id}-${index}`} className="min-w-[180px] md:min-w-[250px] lg:min-w-[300px]">
                 
                 <Link href={`/product/${product.slug}`} className="block group">
-                  <div className="relative aspect-[4/5] rounded-lg md:rounded-2xl overflow-hidden bg-white shadow-lg border-2 border-[#D4AF37] hover:shadow-2xl hover:border-[#0F5A7E] transition-all duration-300">
+                  <div className="relative aspect-[5/5] rounded-lg md:rounded-2xl overflow-hidden bg-white shadow-lg border-2 border-[#D4AF37] hover:shadow-2xl hover:border-[#0F5A7E] transition-all duration-300">
                     
                     <Image src={primaryImage} alt={product.name} fill className="object-cover transition-all duration-1000 group-hover:scale-110 group-hover:opacity-0" />
                     <Image src={secondaryImage} alt="Detail" fill className="object-cover opacity-0 scale-125 transition-all duration-1000 group-hover:opacity-100 group-hover:scale-105" />

@@ -186,11 +186,11 @@ export default function ArtisanalStack() {
       <section className="bg-gradient-to-br from-[#FFFFF0] to-[#F8E8D8] py-8 md:py-12 px-3 md:px-4">
         <div className="container mx-auto max-w-4xl">
           <div className="text-center mb-8 md:mb-10">
-            <span className="text-[#D4AF37] text-[7px] md:text-[9px] font-bold tracking-[0.3em] md:tracking-[0.4em] uppercase block mb-2 md:mb-3">
+            <span className="text-[#d92b7a] text-[7px] md:text-[9px] font-bold tracking-[0.3em] md:tracking-[0.4em] uppercase block mb-2 md:mb-3">
               Loved by Our Customers
             </span>
             <h2 className="text-xl md:text-3xl lg:text-5xl font-serif text-[#2d2416] mb-2 md:mb-3">
-              Why Our Customers Trust SB Creation?
+              Why Our Customers <span  className="italic font-semibold text-[#d92b7a]">Trust SB Creation</span>?
             </h2>
             <p className="text-[#2d2416] text-[11px] md:text-base opacity-75 max-w-xl mx-auto">
               We ensure high-quality craftsmanship, durability, and skin-friendly comfort. Shop globally with our fast and secure international shipping services.
@@ -198,7 +198,7 @@ export default function ArtisanalStack() {
           </div>
 
           {/* Reviews Carousel */}
-          <div className="relative bg-white rounded-xl md:rounded-2xl border-2 border-[#D4AF37] p-4 md:p-8 shadow-lg">
+          <div className="relative bg-white rounded-xl md:rounded-2xl border-2 border-[#D4AF37] p-4 md:p-5 shadow-lg">
             <AnimatePresence mode="wait">
               <motion.div
                 key={`${activeIndex}-${reviewIndex}`}
@@ -206,20 +206,20 @@ export default function ArtisanalStack() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.4 }}
-                className="text-center space-y-3 md:space-y-4"
+                className="text-center space-y-3 md:space-y-3"
               >
                 {/* Star Rating */}
                 <div className="flex justify-center gap-1">
                   {[...Array(displayedReview.rating)].map((_, i) => (
-                    <Star key={i} size={14} className="md:w-5 md:h-5 fill-[#D4AF37] text-[#D4AF37]" />
+                    <Star key={i} size={14} className="md:w-5 md:h-5 fill-[#d92b7a] text-[#d92b7a]" />
                   ))}
                   {[...Array(5 - displayedReview.rating)].map((_, i) => (
-                    <Star key={i + displayedReview.rating} size={14} className="md:w-5 md:h-5 text-[#D4AF37]/30" />
+                    <Star key={i + displayedReview.rating} size={14} className="md:w-5 md:h-5 text-[#d92b7a]/30" />
                   ))}
                 </div>
 
                 {/* Review Text */}
-                <blockquote className="text-base md:text-xl lg:text-2xl font-serif text-[#2d2416] italic leading-relaxed">
+                <blockquote className="text-base md:text-xl lg:text-xl font-serif text-[#2d2416] italic leading-relaxed">
                   "{displayedReview.text}"
                 </blockquote>
 
@@ -246,7 +246,7 @@ export default function ArtisanalStack() {
             <div className="flex justify-center gap-3 md:gap-4 mt-6 md:mt-8">
               <button
                 onClick={handlePrevReview}
-                className="p-2 rounded-full border-2 border-[#D4AF37] text-[#2d2416] hover:bg-[#D4AF37] hover:text-white transition-all"
+                className="p-2 rounded-full border-2 border-[#d92b7a] text-[#d92b7a] hover:bg-[#d92b7a] hover:text-white transition-all"
               >
                 <ChevronLeft size={14} className="md:w-4 md:h-4" />
               </button>
@@ -255,7 +255,7 @@ export default function ArtisanalStack() {
               </span>
               <button
                 onClick={handleNextReview}
-                className="p-2 rounded-full border-2 border-[#D4AF37] text-[#2d2416] hover:bg-[#D4AF37] hover:text-white transition-all"
+                className="p-2 rounded-full border-2 border-[#d92b7a] text-[#d92b7a] hover:bg-[#d92b7a] hover:text-white transition-all"
               >
                 <ChevronRight size={14} className="md:w-4 md:h-4" />
               </button>

@@ -5,54 +5,13 @@ import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronRight } from 'lucide-react';
 
-// ─── CATEGORIES — add your image paths below ──────────────────────────────────
-// URL matches your navbar exactly: /category/<slug>
-// Just fill in the image paths — names & slugs are already correct.
 const SAMPLE_CATEGORIES = [
-  // ── CAROUSEL (first 3 shown in the big left panel) ──
-  {
-    id: 1,
-    name: 'Glass Bangles',
-    slug: 'glass-bangles',
-    href: '/category/glass-bangles',
-    image: '/bangles.jpeg',
-    tagline: 'Vibrant & Colourful',
-  },
-  {
-    id: 2,
-    name: 'Metal Bangles/Kadas',
-    slug: 'metal-bangles-kadas',
-    href: '/category/metal-bangles-kadas',
-    image: '/bangles1.jpeg',
-    tagline: 'Bold & Timeless',
-  },
-  {
-    id: 3,
-    name: 'Bangle Sets',
-    slug: 'bangle-sets',
-    href: '/category/bangle-sets',
-    image: '/bangles2.jpeg',
-    tagline: 'Stack in Style',
-  },
-  // ── SIDE GRID (next 2 shown in the right column) ──
-  {
-    id: 4,
-    name: 'Bangles Box',
-    slug: 'bangles-box',
-    href: '/category/bangles-box',
-    image: '/bangles3.jpeg',
-    tagline: 'Gift & Storage',
-  },
-  {
-    id: 5,
-    name: 'Bracelets & Watches',
-    slug: 'bracelets-watches',
-    href: '/category/bracelets-watches',
-    image: '/bangle2.png',
-    tagline: 'Everyday Elegance',
-  },
+  { id: 1, name: 'Glass Bangles', slug: 'glass-bangles', href: '/category/glass-bangles', image: '/bangles.jpeg', tagline: 'Vibrant & Colourful' },
+  { id: 2, name: 'Metal Bangles/Kadas', slug: 'metal-bangles-kadas', href: '/category/metal-bangles-kadas', image: '/bangles1.jpeg', tagline: 'Bold & Timeless' },
+  { id: 3, name: 'Bangle Sets', slug: 'bangle-sets', href: '/category/bangle-sets', image: '/bangles2.jpeg', tagline: 'Stack in Style' },
+  { id: 4, name: 'Bangles Box', slug: 'bangles-box', href: '/category/bangles-box', image: '/bangles3.jpeg', tagline: 'Gift & Storage' },
+  { id: 5, name: 'Bracelets & Watches', slug: 'bracelets-watches', href: '/category/bracelets-watches', image: '/bangle2.png', tagline: 'Everyday Elegance' },
 ];
-// ─────────────────────────────────────────────────────────────────────────────
 
 interface Category {
   id: number;
@@ -64,11 +23,8 @@ interface Category {
 }
 
 const CreativeGallery = ({ categories }: { categories?: Category[] }) => {
-  // Fall back to sample data if no categories are passed in
   const allCategories = categories && categories.length > 0 ? categories : SAMPLE_CATEGORIES;
-
   const [currentIndex, setCurrentIndex] = useState(0);
-
   const carouselCategories = allCategories.slice(0, 3);
   const sideCategories = allCategories.slice(3, 5);
 
@@ -81,34 +37,28 @@ const CreativeGallery = ({ categories }: { categories?: Category[] }) => {
   }, [carouselCategories.length]);
 
   return (
-    <section className="bg-[#FFFFF0] py-6 md:py-8 px-3 md:px-8">
+    <section className="bg-[#FFFFF0] py-4 md:py-5 px-3 md:px-8">
       <div className="container mx-auto max-w-6xl">
 
-        {/* Creative Header */}
-        <div className="mb-6 md:mb-8 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-          <div className="text-left">
-            <span className="text-[#0F5A7E] text-[8px] md:text-[10px] font-bold tracking-[0.3em] md:tracking-[0.4em] uppercase mb-1 md:mb-2 block">
+        {/* Header */}
+        <div className="mb-3 md:mb-4 flex flex-col md:flex-row md:items-end md:justify-between gap-1">
+          <div>
+            <span className="text-[#0F5A7E] text-[8px] md:text-[10px] font-bold tracking-[0.3em] uppercase mb-1 block">
               explore by category
             </span>
-            <h2 className="text-2xl md:text-3xl lg:text-4xl font-serif text-[#2d2416] uppercase tracking-tighter leading-tight">
-              Shop by{' '}
-              <span className="italic font-semibold text-[#d92b7a]">
-                Collection
-              </span>
+            <h2 className="text-lg md:text-2xl lg:text-[26px] font-serif text-[#2d2416] uppercase tracking-tighter leading-tight">
+              Shop by <span className="italic font-semibold text-[#d92b7a]">Collection</span>
             </h2>
           </div>
-          <Link
-            href="/shop"
-            className="text-[9px] md:text-[11px] font-bold tracking-widest uppercase border-b border-[#2d2416] pb-1 hover:text-[#0F5A7E] hover:border-[#0F5A7E] transition-all whitespace-nowrap"
-          >
+          <Link href="/shop" className="text-[9px] md:text-[11px] font-bold tracking-widest uppercase border-b border-[#2d2416] pb-0.5 hover:text-[#0F5A7E] hover:border-[#0F5A7E] transition-all whitespace-nowrap">
             View All
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-5 min-h-[320px] md:min-h-[480px]">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-2.5 md:gap-3.5">
 
           {/* LEFT: Main Carousel */}
-          <div className="lg:col-span-8 relative group overflow-hidden rounded-lg md:rounded-2xl bg-white shadow-md border-2 border-[#D4AF37]">
+          <div className="lg:col-span-8 relative overflow-hidden rounded-lg md:rounded-2xl bg-white shadow-md border-2 border-[#D4AF37]">
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentIndex}
@@ -116,7 +66,7 @@ const CreativeGallery = ({ categories }: { categories?: Category[] }) => {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.8 }}
-                className="relative w-full h-[240px] md:h-[320px] lg:h-[480px]"
+                className="relative w-full h-[180px] md:h-[230px] lg:h-[300px]"
               >
                 {carouselCategories[currentIndex] && (
                   <>
@@ -126,34 +76,33 @@ const CreativeGallery = ({ categories }: { categories?: Category[] }) => {
                       fill
                       className="object-cover"
                     />
-
-                    <div className="absolute inset-0 bg-gradient-to-r from-[#2d2416]/70 via-[#2d2416]/30 to-transparent flex items-center p-4 md:p-6 lg:p-10">
-                      <div className="max-w-md">
+                    <div className="absolute inset-0 bg-gradient-to-r from-[#2d2416]/70 via-[#2d2416]/30 to-transparent flex items-center p-4 md:p-6 lg:p-8">
+                      <div>
                         <motion.p
-                          initial={{ y: 20, opacity: 0 }}
+                          initial={{ y: 15, opacity: 0 }}
                           animate={{ y: 0, opacity: 1 }}
-                          className="text-[#D4AF37] text-[8px] md:text-xs font-bold tracking-widest uppercase mb-2 md:mb-3"
+                          className="text-[#D4AF37] text-[8px] md:text-[10px] font-bold tracking-widest uppercase mb-1.5"
                         >
-                          {carouselCategories[currentIndex].tagline ?? 'Explore Category'}
+                          {carouselCategories[currentIndex].tagline ?? 'Explore'}
                         </motion.p>
                         <motion.h3
-                          initial={{ y: 20, opacity: 0 }}
+                          initial={{ y: 15, opacity: 0 }}
                           animate={{ y: 0, opacity: 1 }}
                           transition={{ delay: 0.1 }}
-                          className="text-white text-xl md:text-3xl lg:text-5xl font-serif mb-4 md:mb-6 leading-[1.1]"
+                          className="text-white text-lg md:text-2xl lg:text-[34px] font-serif mb-3 leading-[1.1]"
                         >
                           {carouselCategories[currentIndex].name}
                         </motion.h3>
                         <motion.div
-                          initial={{ y: 20, opacity: 0 }}
+                          initial={{ y: 15, opacity: 0 }}
                           animate={{ y: 0, opacity: 1 }}
                           transition={{ delay: 0.2 }}
                         >
                           <Link
                             href={carouselCategories[currentIndex].href}
-                            className="bg-white text-[#2d2416] px-4 md:px-6 py-2 md:py-3 rounded-full font-bold text-xs md:text-sm hover:bg-[#D4AF37] hover:text-white transition-all inline-flex items-center gap-2 shadow-lg"
+                            className="bg-white text-[#2d2416] px-3.5 md:px-5 py-1.5 md:py-2 rounded-full font-bold text-[10px] md:text-xs hover:bg-[#D4AF37] hover:text-white transition-all inline-flex items-center gap-1.5 shadow-lg"
                           >
-                            Shop Now <ChevronRight size={16} className="md:w-[18px] md:h-[18px]" />
+                            Shop Now <ChevronRight size={13} />
                           </Link>
                         </motion.div>
                       </div>
@@ -163,27 +112,25 @@ const CreativeGallery = ({ categories }: { categories?: Category[] }) => {
               </motion.div>
             </AnimatePresence>
 
-            {/* Carousel Nav Dots */}
-            <div className="absolute bottom-4 md:bottom-6 right-4 md:right-6 flex gap-2 md:gap-3 z-30">
+            {/* Dots */}
+            <div className="absolute bottom-2.5 right-4 flex gap-2 z-30">
               {carouselCategories.map((_, i) => (
                 <button
                   key={i}
                   onClick={() => setCurrentIndex(i)}
-                  className={`h-1.5 transition-all rounded-full ${
-                    i === currentIndex ? 'w-6 md:w-8 bg-[#D4AF37]' : 'w-2 bg-white/50'
-                  }`}
+                  className={`h-1.5 transition-all rounded-full ${i === currentIndex ? 'w-6 bg-[#D4AF37]' : 'w-2 bg-white/50'}`}
                 />
               ))}
             </div>
           </div>
 
           {/* RIGHT: Side Grid */}
-          <div className="lg:col-span-4 flex flex-col gap-4 md:gap-5">
+          <div className="lg:col-span-4 flex flex-col gap-2.5 md:gap-3.5">
             {sideCategories.map((category) => (
               <motion.div
                 key={category.id}
-                whileHover={{ y: -5 }}
-                className="relative flex-1 group overflow-hidden rounded-lg md:rounded-2xl bg-white shadow-md border-2 border-[#D4AF37] min-h-[160px] md:min-h-[220px]"
+                whileHover={{ y: -4 }}
+                className="relative flex-1 group overflow-hidden rounded-lg md:rounded-2xl bg-white shadow-md border-2 border-[#D4AF37] min-h-[110px] md:min-h-[135px]"
               >
                 <Link href={category.href}>
                   <Image
@@ -192,18 +139,19 @@ const CreativeGallery = ({ categories }: { categories?: Category[] }) => {
                     fill
                     className="object-cover transition-transform duration-700 group-hover:scale-110"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#2d2416]/85 via-transparent to-transparent flex items-end p-4 md:p-6">
-                    <div className="text-white translate-y-2 group-hover:translate-y-0 transition-all duration-500">
-                      <p className="text-[#D4AF37] text-[8px] md:text-[10px] font-bold tracking-[0.2em] md:tracking-[0.3em] uppercase mb-0.5 md:mb-1">
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#2d2416]/85 via-transparent to-transparent flex items-end p-3 md:p-4">
+                    <div className="text-white">
+                      <p className="text-[#D4AF37] text-[8px] md:text-[10px] font-bold tracking-[0.2em] uppercase mb-0.5">
                         {category.tagline ?? 'Category'}
                       </p>
-                      <h4 className="text-base md:text-xl font-serif leading-tight">{category.name}</h4>
+                      <h4 className="text-xs md:text-[15px] font-serif leading-tight">{category.name}</h4>
                     </div>
                   </div>
                 </Link>
               </motion.div>
             ))}
           </div>
+
         </div>
       </div>
     </section>

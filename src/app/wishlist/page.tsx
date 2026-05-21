@@ -90,7 +90,7 @@ export default function WishlistPage() {
             <Heart size={32} className="md:w-10 md:h-10 text-[#db2777]" fill="#db2777" />
           </div>
           <h2 className="text-2xl md:text-4xl font-serif text-[#0F2C3E] mb-2 md:mb-4">Your Wishlist is Empty</h2>
-          <p className="text-gray-400 text-sm md:text-lg mb-6 md:mb-10">Sign in to add to wishlist.</p>
+          <p className="text-[#d92b7a] text-sm md:text-lg mb-6 md:mb-10">Sign in to add to wishlist.</p>
           <Link href="/shop">
             <button className="bg-[#0F2C3E] text-white px-8 md:px-12 py-3 md:py-4 rounded-full text-xs md:text-sm font-bold uppercase tracking-widest hover:bg-[#db2777] transition-all shadow-lg">
               Go Shopping
@@ -106,7 +106,7 @@ export default function WishlistPage() {
       <div className="container mx-auto max-w-7xl">
         
         {/* Header */}
-        <div className="mb-8 md:mb-10 border-b border-gray-100 pb-4 md:pb-6 flex justify-between items-end gap-4">
+        <div className="mb-8 md:mb-10 border-b border-gray-100 pb-4 md:pb-4 flex justify-between items-end gap-2">
           <div>
             <h1 className="text-3xl md:text-5xl font-serif text-[#0F2C3E]">My <span className="italic font-semibold text-[#d92b7a]">Favorites</span></h1>
             <p className="text-[8px] md:text-xs font-bold text-gray-400 uppercase tracking-[0.3em] mt-1 md:mt-2">The Collection</p>
@@ -148,10 +148,12 @@ export default function WishlistPage() {
 
                 {/* Details Section */}
                 <div className="p-3 md:p-6 flex flex-col flex-1 text-center bg-white">
-                  <h3 className="text-[#0F2C3E] font-bold text-xs md:text-base lg:text-lg uppercase mb-1 truncate">
-                    {item.product.name}
-                  </h3>
-                  <p className="text-[#db2777] font-serif text-lg md:text-xl lg:text-2xl mb-3 md:mb-6">₹{item.product.price.toLocaleString()}</p>
+                  <div className="flex items-center justify-between gap-1 mb-3 md:mb-2">
+                    <h3 className="text-[#0F2C3E] font-bold text-xs md:text-base lg:text-lg uppercase truncate">
+                      {item.product.name}
+                    </h3>
+                    <p className="text-[#db2777] font-serif text-lg md:text-xl lg:text-2xl shrink-0">₹{item.product.price.toLocaleString()}</p>
+                  </div>
                   
                   <button 
                     onClick={() => moveToCart(item)}

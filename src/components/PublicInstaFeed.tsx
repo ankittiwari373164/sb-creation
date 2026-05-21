@@ -1,114 +1,402 @@
 "use client";
-import React, { useEffect } from 'react';
-import { Instagram } from 'lucide-react';
+import React, { useEffect, useState, useCallback } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
+import { Instagram, Heart, MessageCircle, Play, X, ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react';
+import type { InstagramPost, InstagramProfile } from '@/app/api/instagram/route';
 
-const PublicInstaFeed = () => {
+const INSTAGRAM_URL = 'https://www.instagram.com/_sbcreation';
+
+function formatCount(n: number): string {
+  if (n >= 1000000) return `${(n / 1000000).toFixed(1)}M`
+  if (n >= 1000) return `${(n / 1000).toFixed(1)}K`
+  return String(n)
+}
+
+function formatDate(iso: string): string {
+  if (!iso) return ''
+  return new Date(iso).toLocaleDateString('en-IN', {
+    day: 'numeric', month: 'long', year: 'numeric',
+  })
+}
+
+// ─── Post Popup ────────────────────────────────────────────────────────────────
+function PostPopup({
+  post,
+  posts,
+  profile,
+  onClose,
+}: {
+  post: InstagramPost
+  posts: InstagramPost[]
+  profile: InstagramProfile | null
+  onClose: () => void
+}) {
+  const [current, setCurrent] = useState(post)
+  const idx = posts.findIndex((p) => p.id === current.id)
+
+  const prev = useCallback(() => {
+    if (idx > 0) setCurrent(posts[idx - 1])
+  }, [idx, posts])
+
+  const next = useCallback(() => {
+    if (idx < posts.length - 1) setCurrent(posts[idx + 1])
+  }, [idx, posts])
+
+  // Keyboard nav + close
   useEffect(() => {
-    // Load the main SociableKIT widget loader
-    const script = document.createElement("script");
-    script.src = "https://widgets.sociablekit.com/instagram-feed/widget.js";
-    script.async = true;
-    script.defer = true;
-    document.body.appendChild(script);
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+      if (e.key === 'ArrowLeft') prev()
+      if (e.key === 'ArrowRight') next()
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [onClose, prev, next])
 
-    return () => {
-      if (document.body.contains(script)) {
-        document.body.removeChild(script);
-      }
-    };
-  }, []);
+  // Lock body scroll
+  useEffect(() => {
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = '' }
+  }, [])
 
   return (
-    <section className="bg-white py-8 md:py-16 px-4 md:px-6">
-      <div className="container mx-auto max-w-7xl">
-        
-        {/* Header */}
-        <div className="text-center mb-8 md:mb-12">
-          <span className="text-[#0F5A7E] text-[8px] md:text-[10px] font-bold tracking-[0.3em] md:tracking-[0.4em] uppercase block mb-2 md:mb-3">
-            Follow Us
-          </span>
-          <h2 className="text-2xl md:text-4xl lg:text-5xl font-serif text-[#2d2416] mb-2 md:mb-4">
-            The <span className="italic font-semibold text-[#d92b7a]">SB Edit</span>
-          </h2>
-          <p className="text-[#2d2416] text-xs md:text-sm opacity-70">
-            Curated moments from our Instagram feed
-          </p>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4"
+      onClick={onClose}
+    >
+      {/* Modal */}
+      <div
+        className="relative bg-white rounded-2xl overflow-hidden flex flex-col md:flex-row w-full max-w-3xl max-h-[90vh] shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Close */}
+        <button
+          onClick={onClose}
+          className="absolute top-3 right-3 z-20 w-8 h-8 bg-white/90 rounded-full flex items-center justify-center shadow hover:bg-gray-100 transition"
+        >
+          <X size={16} className="text-[#2d2416]" />
+        </button>
+
+        {/* Image side */}
+        <div className="relative w-full md:w-[55%] aspect-square md:aspect-auto md:min-h-[420px] bg-black flex-shrink-0">
+          <Image
+            src={current.image_url}
+            alt={current.caption?.slice(0, 60) || 'Instagram post'}
+            fill
+            className="object-cover"
+          />
+          {current.is_video && (
+            <div className="absolute top-3 left-3 bg-black/50 rounded-full p-1.5">
+              <Play size={12} className="text-white fill-white" />
+            </div>
+          )}
+
+          {/* Prev / Next arrows */}
+          {idx > 0 && (
+            <button
+              onClick={prev}
+              className="absolute left-2 top-1/2 -translate-y-1/2 w-9 h-9 bg-white/80 rounded-full flex items-center justify-center shadow hover:bg-white transition"
+            >
+              <ChevronLeft size={18} className="text-[#2d2416]" />
+            </button>
+          )}
+          {idx < posts.length - 1 && (
+            <button
+              onClick={next}
+              className="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 bg-white/80 rounded-full flex items-center justify-center shadow hover:bg-white transition"
+            >
+              <ChevronRight size={18} className="text-[#2d2416]" />
+            </button>
+          )}
         </div>
 
-        {/* Widget Container */}
-        <div 
-          className="sk-instagram-feed" 
-          data-embed-id="25679703"
-        ></div>
+        {/* Info side */}
+        <div className="flex flex-col flex-1 overflow-hidden">
 
-        {/* CTA Button */}
-        <div className="mt-8 md:mt-12 flex justify-center">
-          <Link 
-            href="https://instagram.com/_sbcreation" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-6 md:px-8 py-2 md:py-3 bg-[#2d2416] text-white rounded-full font-bold uppercase text-[8px] md:text-[10px] tracking-[0.2em] md:tracking-[0.3em] shadow-lg hover:bg-[#0F5A7E] transition-all"
-          >
-            <Instagram size={12} className="md:w-3.5 md:h-3.5" />
-            Follow on Instagram
-          </Link>
+          {/* Profile header */}
+          <div className="flex items-center gap-2.5 px-4 py-3 border-b border-[#efefef]">
+            <div className="relative w-9 h-9 flex-shrink-0">
+              <div className="w-full h-full rounded-full bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] p-[2px]">
+                <div className="w-full h-full rounded-full bg-white p-[1.5px] overflow-hidden relative">
+                  {profile?.profile_pic_url ? (
+                    <Image src={profile.profile_pic_url} alt="Profile" fill className="object-cover rounded-full" />
+                  ) : (
+                    <Image src="/logo.png" alt="SB Creation" fill className="object-cover rounded-full" />
+                  )}
+                </div>
+              </div>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-[#2d2416] text-[13px]">@_sbcreation</p>
+              {current.timestamp && (
+                <p className="text-[10px] text-[#6b6b6b]">{formatDate(current.timestamp)}</p>
+              )}
+            </div>
+            <Link
+              href={current.post_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1 text-[11px] text-[#0F5A7E] font-medium hover:text-[#d92b7a] transition"
+            >
+              <ExternalLink size={12} />
+              Open
+            </Link>
+          </div>
+
+          {/* Caption */}
+          <div className="flex-1 overflow-y-auto px-4 py-3">
+            {current.caption ? (
+              <p className="text-[13px] text-[#2d2416] leading-[1.6] whitespace-pre-line">
+                <span className="font-semibold mr-1.5">@_sbcreation</span>
+                {current.caption}
+              </p>
+            ) : (
+              <p className="text-[13px] text-[#9b9b9b] italic">No caption</p>
+            )}
+          </div>
+
+          {/* Likes + Comments */}
+          <div className="px-4 py-3 border-t border-[#efefef] flex items-center gap-4">
+            <span className="flex items-center gap-1.5 text-[13px] text-[#2d2416] font-semibold">
+              <Heart size={15} className="text-[#e44b2f] fill-[#e44b2f]" />
+              {formatCount(current.likes)}
+              <span className="font-normal text-[#6b6b6b] text-[12px]">likes</span>
+            </span>
+            <span className="flex items-center gap-1.5 text-[13px] text-[#2d2416] font-semibold">
+              <MessageCircle size={15} className="text-[#0F5A7E]" />
+              {formatCount(current.comments)}
+              <span className="font-normal text-[#6b6b6b] text-[12px]">comments</span>
+            </span>
+          </div>
+
+          {/* View on Instagram CTA */}
+          <div className="px-4 pb-4">
+            <Link
+              href={current.post_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2 w-full py-2.5 bg-[#2d2416] text-white rounded-full text-[11px] font-bold uppercase tracking-widest hover:bg-[#d92b7a] transition-all"
+            >
+              <Instagram size={12} />
+              View on Instagram
+            </Link>
+          </div>
         </div>
       </div>
-
-      {/* Styling */}
-      <style jsx global>{`
-        /* Hide widget header */
-        .sk_instagram_feed_header, 
-        .sk-ww-instagram-profile-follow-btn-container,
-        .sk_instagram_feed_info {
-          display: none !important;
-        }
-
-        /* Feed items */
-        .sk_instagram_feed_item {
-          border-radius: 1.25rem !important;
-          overflow: hidden !important;
-          border: 1px solid #f0f0f0 !important;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
-          transition: all 0.3s ease !important;
-        }
-.sk_instagram_feed_item {
-  border-radius: 1.25rem !important;
-  overflow: hidden !important;
-  border: 1px solid #f0f0f0 !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
-  transition: all 0.3s ease !important;
-
-  max-width: 260px !important;   /* added */
-  margin: 0 auto !important;     /* added */
+    </div>
+  )
 }
 
-.sk_instagram_feed_item img {
-  height: 300px !important;      /* added */
-  object-fit: cover !important;
-  transition: transform 0.3s ease !important;
+// ─── Post Card ─────────────────────────────────────────────────────────────────
+function PostCard({
+  post,
+  onClick,
+}: {
+  post: InstagramPost
+  onClick: () => void
+}) {
+  const [hovered, setHovered] = useState(false)
+
+  return (
+    <button
+      onClick={onClick}
+      className="block w-full group relative rounded-[10px] overflow-hidden bg-[#f3ede8] cursor-pointer"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      <div className="relative aspect-square w-full">
+        <Image
+          src={post.image_url}
+          alt={post.caption?.slice(0, 60) || 'Instagram post'}
+          fill
+          sizes="33vw"
+          className="object-cover transition-transform duration-500 group-hover:scale-105"
+        />
+        {post.is_video && (
+          <div className="absolute top-2 right-2 z-10 bg-black/50 rounded-full p-1">
+            <Play size={9} className="text-white fill-white" />
+          </div>
+        )}
+        <div
+          className={`absolute inset-0 bg-black/40 flex flex-col items-center justify-center gap-1.5 transition-opacity duration-300 ${
+            hovered ? 'opacity-100' : 'opacity-0'
+          }`}
+        >
+          <div className="flex items-center gap-4">
+            <span className="flex items-center gap-1 text-white text-[12px] font-bold drop-shadow">
+              <Heart size={13} className="fill-white text-white" />
+              {formatCount(post.likes)}
+            </span>
+            <span className="flex items-center gap-1 text-white text-[12px] font-bold drop-shadow">
+              <MessageCircle size={13} className="fill-white text-white" />
+              {formatCount(post.comments)}
+            </span>
+          </div>
+        </div>
+      </div>
+    </button>
+  )
 }
-        .sk_instagram_feed_item:hover {
-          box-shadow: 0 8px 24px rgba(15, 90, 126, 0.12) !important;
-          transform: translateY(-4px) !important;
-        }
 
-        .sk-instagram-feed {
-          padding: 0 !important;
-          margin: 0 !important;
-        }
+// ─── Skeleton ──────────────────────────────────────────────────────────────────
+function Skeleton({ className }: { className?: string }) {
+  return <div className={`animate-pulse bg-[#f0ebe6] rounded ${className}`} />
+}
 
-        .sk_instagram_feed_item img {
-          transition: transform 0.3s ease !important;
-        }
+// ─── Main Component ────────────────────────────────────────────────────────────
+export default function PublicInstaFeed() {
+  const [posts, setPosts] = useState<InstagramPost[]>([])
+  const [profile, setProfile] = useState<InstagramProfile | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
+  const [activePost, setActivePost] = useState<InstagramPost | null>(null)
 
-        .sk_instagram_feed_item:hover img {
-          transform: scale(1.05) !important;
-        }
-      `}</style>
-    </section>
-  );
-};
+  useEffect(() => {
+    fetch('/api/instagram')
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.posts?.length) setPosts(data.posts)
+        else setError(true)
+        if (data.profile) setProfile(data.profile)
+      })
+      .catch(() => setError(true))
+      .finally(() => setLoading(false))
+  }, [])
 
-export default PublicInstaFeed;
+  return (
+    <>
+      {/* Popup */}
+      {activePost && (
+        <PostPopup
+          post={activePost}
+          posts={posts}
+          profile={profile}
+          onClose={() => setActivePost(null)}
+        />
+      )}
+
+      <section className="bg-white py-6 md:py-10 px-4 md:px-6">
+        <div className="container mx-auto max-w-3xl">
+
+          {/* Header */}
+          <div className="text-center mb-6 md:mb-8">
+            <span className="text-[#0F5A7E] text-[8px] md:text-[10px] font-bold tracking-[0.3em] md:tracking-[0.4em] uppercase block mb-1.5 md:mb-2">
+              Follow Us
+            </span>
+            <h2 className="text-xl md:text-3xl lg:text-4xl font-serif text-[#2d2416] mb-1.5 md:mb-3">
+              The <span className="italic font-semibold text-[#d92b7a]">SB Edit</span>
+            </h2>
+            <p className="text-[#2d2416] text-xs md:text-sm opacity-70">
+              Curated moments from our Instagram feed
+            </p>
+          </div>
+
+          {/* Profile Card */}
+          <div className="border border-[#efefef] rounded-2xl p-4 md:p-5 mb-3 md:mb-4 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3 md:gap-4">
+
+              {/* Avatar */}
+              <div className="relative w-14 h-14 md:w-16 md:h-16 flex-shrink-0">
+                <div className="w-full h-full rounded-full bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] p-[2.5px]">
+                  <div className="w-full h-full rounded-full bg-white p-[2px] overflow-hidden relative">
+                    {loading ? (
+                      <Skeleton className="w-full h-full rounded-full" />
+                    ) : profile?.profile_pic_url ? (
+                      <Image src={profile.profile_pic_url} alt="Profile" fill className="object-cover rounded-full" />
+                    ) : (
+                      <Image src="/logo.png" alt="SB Creation" fill className="object-cover rounded-full" />
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Stats */}
+              <div>
+                <p className="font-semibold text-[#2d2416] text-[14px] md:text-[15px]">
+                  {profile?.username ? `@${profile.username}` : '@_sbcreation'}
+                </p>
+                <div className="flex items-center gap-3 md:gap-4 mt-1.5">
+                  {loading ? (
+                    <>
+                      <Skeleton className="w-12 h-8" />
+                      <Skeleton className="w-12 h-8" />
+                      <Skeleton className="w-12 h-8" />
+                    </>
+                  ) : (
+                    <>
+                      {[
+                        { label: 'Posts', value: profile?.posts_count ?? 0 },
+                        { label: 'Followers', value: profile?.followers ?? 0 },
+                        { label: 'Following', value: profile?.following ?? 0 },
+                      ].map((stat, i, arr) => (
+                        <React.Fragment key={stat.label}>
+                          <div className="text-center">
+                            <p className="text-[13px] md:text-[14px] font-bold text-[#2d2416] leading-none">
+                              {formatCount(stat.value)}
+                            </p>
+                            <p className="text-[10px] md:text-[11px] text-[#6b6b6b] mt-0.5">{stat.label}</p>
+                          </div>
+                          {i < arr.length - 1 && <div className="w-px h-6 bg-[#efefef]" />}
+                        </React.Fragment>
+                      ))}
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Follow Button */}
+            <Link
+              href={INSTAGRAM_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-shrink-0 inline-flex items-center gap-1.5 px-4 md:px-5 py-2 md:py-2.5 bg-[#2d2416] text-white rounded-full text-[11px] md:text-[12px] font-semibold hover:bg-[#d92b7a] transition-all"
+            >
+              <Instagram size={13} />
+              Follow
+            </Link>
+          </div>
+
+          {/* 3-col Grid */}
+          {error ? (
+            <div className="text-center py-10 text-[#6b6b6b] text-sm">
+              Could not load posts.{' '}
+              <Link href={INSTAGRAM_URL} target="_blank" className="text-[#d92b7a] underline">
+                Visit our Instagram
+              </Link>
+            </div>
+          ) : (
+            <div className="grid grid-cols-3 gap-1 md:gap-1.5">
+              {loading
+                ? Array.from({ length: 9 }).map((_, i) => (
+                    <Skeleton key={i} className="aspect-square w-full rounded-[10px]" />
+                  ))
+                : posts.slice(0, 9).map((post) => (
+                    <PostCard
+                      key={post.id}
+                      post={post}
+                      onClick={() => setActivePost(post)}
+                    />
+                  ))}
+            </div>
+          )}
+
+          {/* CTA */}
+          <div className="mt-5 md:mt-6 flex justify-center">
+            <Link
+              href={INSTAGRAM_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-5 md:px-7 py-2 md:py-2.5 bg-[#2d2416] text-white rounded-full font-bold uppercase text-[8px] md:text-[10px] tracking-[0.2em] md:tracking-[0.3em] shadow-lg hover:bg-[#0F5A7E] transition-all"
+            >
+              <Instagram size={11} />
+              View all on Instagram
+            </Link>
+          </div>
+
+        </div>
+      </section>
+    </>
+  )
+}

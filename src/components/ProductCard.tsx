@@ -109,9 +109,9 @@ export default function ProductCard({ product }: ProductCardProps) {
       <motion.div whileHover={{ y: -4 }} transition={{ duration: 0.3 }} className="h-full">
         <Link href={`/product/${product.slug}`} className="block h-full">
           <div className="group relative h-full bg-white rounded-[14px] overflow-hidden">
-            <div className="relative overflow-hidden rounded-[14px] bg-[#f4f4f4] aspect-[0.9]">
+            <div className="relative overflow-hidden rounded-[14px] bg-[#f4f4f4] aspect-[1.5]">
               {/* Discount Badge */}
-              <div className="absolute top-4 left-4 z-20 bg-[#e4572e] text-white text-sm font-semibold px-4 py-1 rounded-full shadow-md">
+              <div className="absolute top-3 left-3 z-20 bg-[#e4572e] text-white text-xs font-semibold px-3 py-0.5 rounded-full shadow-md">
                 -{discount}%
               </div>
 
@@ -124,26 +124,26 @@ export default function ProductCard({ product }: ProductCardProps) {
               />
 
               {/* Hover Action Buttons */}
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-3 opacity-0 group-hover:opacity-100 transition-all duration-300 z-20">
+              <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 z-20">
                 <button
                   onClick={handleAddToCartInitiate}
-                  className="w-12 h-12 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center shadow-lg hover:scale-105 transition-all"
+                  className="w-10 h-10 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center shadow-lg hover:scale-105 transition-all"
                 >
-                  <ShoppingCart size={18} className="text-[#5a4634]" />
+                  <ShoppingCart size={16} className="text-[#5a4634]" />
                 </button>
 
                 <button
                   onClick={toggleWishlist}
-                  className="w-12 h-12 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center shadow-lg hover:scale-105 transition-all"
+                  className="w-10 h-10 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center shadow-lg hover:scale-105 transition-all"
                 >
                   <Heart
-                    size={18}
+                    size={16}
                     className={`${isWishlisted ? 'fill-red-500 text-red-500' : 'text-[#5a4634]'}`}
                   />
                 </button>
 
-                <div className="w-12 h-12 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center shadow-lg hover:scale-105 transition-all">
-                  <Eye size={18} className="text-[#5a4634]" />
+                <div className="w-10 h-10 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center shadow-lg hover:scale-105 transition-all">
+                  <Eye size={16} className="text-[#5a4634]" />
                 </div>
               </div>
 
@@ -155,18 +155,18 @@ export default function ProductCard({ product }: ProductCardProps) {
               )}
             </div>
 
-            {/* Product Details */}
-            <div className="pt-4 px-1 pb-2">
-              <h3 className="text-[18px] leading-[1.4] font-medium text-[#2b2b2b] line-clamp-2">
+            {/* ─── Product Details: tighter padding ─── */}
+            <div className="pt-2 px-1 pb-1">
+              <h3 className="text-[15px] leading-[1.3] font-medium text-[#2b2b2b] line-clamp-2">
                 {product.name}
               </h3>
 
-              <div className="mt-2 flex items-center gap-2 flex-wrap">
-                <span className="text-[18px] font-bold text-[#d14b3f]">
+              <div className="mt-1 flex items-center gap-2 flex-wrap">
+                <span className="text-[15px] font-bold text-[#d14b3f]">
                   Rs. {product.price.toFixed(2)}
                 </span>
 
-                <span className="text-[16px] text-gray-500 line-through">
+                <span className="text-[13px] text-gray-500 line-through">
                   Rs. {originalPrice.toFixed(2)}
                 </span>
               </div>
