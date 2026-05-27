@@ -32,18 +32,15 @@ export default function AboutPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-[#FFF0F5] selection:bg-[#F8C8DC]/20">
+    <div className="min-h-screen bg-[#FFF0F5] selection:bg-[#F8C8DC]/20 overflow-x-hidden">
       
       {/* Hero */}
       <section className="relative py-10 md:py-14 overflow-hidden">
         <div className="absolute top-[-10%] left-[-5%] w-[40%] h-[60%] bg-[#F8C8DC]/50 rounded-full blur-[120px] -z-10 animate-pulse" />
         <div className="absolute bottom-[10%] right-[-5%] w-[30%] h-[50%] bg-white/80 rounded-full blur-[100px] -z-10" />
         
-        <div className="container mx-auto px-6 relative z-10">
+        <div className="container mx-auto px-4 md:px-6 relative z-10">
           <div className="flex flex-col items-center text-center">
-            {/* CHANGE 1: Removed Firozabad badge entirely */}
-
-            {/* CHANGE 8, 9, 10: "Crafted with Love" in blue, smaller; "Worn with Pride" in pink, bigger */}
             <motion.h1 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -53,12 +50,12 @@ export default function AboutPage() {
               <span className="text-5xl md:text-6xl text-[#db2777] italic block">Worn with Pride.</span>
             </motion.h1>
 
-            {/* CHANGE 3: Description in one line */}
+            {/* FIX 1: Removed whitespace-nowrap, added text-center and horizontal padding so tagline wraps on mobile */}
             <motion.p 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.3 }}
-              className="text-[#4A4A4A] text-sm font-poppins font-light whitespace-nowrap"
+              className="text-[#4A4A4A] text-sm font-poppins font-light text-center px-4"
             >
               The story of SB Creation is written in fire and glass — the timeless soul of India's Glass City.
             </motion.p>
@@ -66,15 +63,15 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Story Section — CHANGE 2: Removed "The Legacy" label */}
+      {/* Story Section */}
       <section className="py-8 md:py-10 relative bg-white">
-        <div className="container mx-auto px-6">
+        <div className="container mx-auto px-4 md:px-6">
           <div className="max-w-4xl mx-auto">
             <div className="mb-6">
-              {/* CHANGE 11: "From the Furnace of" smaller in blue, "Sitaram Bhagwandas" bigger in pink */}
+              {/* FIX 2: Reduced font size on mobile for "Sitaram Bhagwandas" to prevent overflow */}
               <h3 className="font-playfair mb-4 leading-tight">
                 <span className="text-xl md:text-2xl text-[#0F2C3E] font-semibold block">From the Furnace of</span>
-                <span className="text-4xl md:text-5xl italic text-[#db2777] block">Sitaram Bhagwandas</span>
+                <span className="text-3xl md:text-5xl italic text-[#db2777] block">Sitaram Bhagwandas</span>
               </h3>
             </div>
 
@@ -87,19 +84,19 @@ export default function AboutPage() {
                 Born from a strong foundation in bangle manufacturing, where Sitaram Bhagwandas & Co. have been a trusted name among wholesalers across India, strengthened by sister companies—Pankaj & Co., S. Deepak Bangle Store, and SB & Co.—SB Creation marks our evolution into the retail space—bringing our finest creations worldwide directly to you.
               </p>
 
-              {/* CHANGE 12 & 13: Partition lines all in pink (matches the dominant accent colour) */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 mt-4 border-t-2 border-[#db2777]/20">
-                <div className="border-l-4 border-[#db2777] pl-4 py-2">
-                  <p className="text-[#0F2C3E] font-playfair font-bold text-sm">Sitaram Bhagwandas & Co.</p>
+              {/* FIX 3: Stack to 2-col on mobile instead of 4 to avoid cramping */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 pt-4 mt-4 border-t-2 border-[#db2777]/20">
+                <div className="border-l-4 border-[#db2777] pl-3 py-2">
+                  <p className="text-[#0F2C3E] font-playfair font-bold text-xs md:text-sm">Sitaram Bhagwandas & Co.</p>
                 </div>
-                <div className="border-l-4 border-[#db2777] pl-4 py-2">
-                  <p className="text-[#0F2C3E] font-playfair font-bold text-sm">Pankaj & Co.</p>
+                <div className="border-l-4 border-[#db2777] pl-3 py-2">
+                  <p className="text-[#0F2C3E] font-playfair font-bold text-xs md:text-sm">Pankaj & Co.</p>
                 </div>
-                <div className="border-l-4 border-[#db2777] pl-4 py-2">
-                  <p className="text-[#0F2C3E] font-playfair font-bold text-sm">S. Deepak Bangle</p>
+                <div className="border-l-4 border-[#db2777] pl-3 py-2">
+                  <p className="text-[#0F2C3E] font-playfair font-bold text-xs md:text-sm">S. Deepak Bangle</p>
                 </div>
-                <div className="border-l-4 border-[#db2777] pl-4 py-2">
-                  <p className="text-[#0F2C3E] font-playfair font-bold text-sm">SB & Co.</p>
+                <div className="border-l-4 border-[#db2777] pl-3 py-2">
+                  <p className="text-[#0F2C3E] font-playfair font-bold text-xs md:text-sm">SB & Co.</p>
                 </div>
               </div>
             </div>
@@ -108,9 +105,9 @@ export default function AboutPage() {
       </section>
 
 
-      {/* Visionaries — CHANGE 4: No images, text only */}
+      {/* Visionaries */}
       <section className="py-8 md:py-10 bg-[#FFF0F5] relative">
-        <div className="container mx-auto px-6">
+        <div className="container mx-auto px-4 md:px-6">
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-8">
               <h2 className="text-3xl md:text-4xl font-playfair text-[#0F2C3E] mb-1">The Visionaries</h2>
@@ -131,7 +128,6 @@ export default function AboutPage() {
                   transition={{ delay: idx * 0.2 }}
                   className="text-center bg-white rounded-2xl p-6 shadow-sm border border-[#F8C8DC]"
                 >
-                  {/* No image — CHANGE 4 */}
                   <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[#0F2C3E] to-[#db2777] flex items-center justify-center mx-auto mb-4 shadow-md">
                     <span className="text-white font-playfair font-bold text-xl">{founder.name[0]}</span>
                   </div>
@@ -159,7 +155,7 @@ export default function AboutPage() {
 
       {/* The Alchemy Section */}
       <section className="py-8 md:py-10 bg-white relative">
-        <div className="container mx-auto px-6">
+        <div className="container mx-auto px-4 md:px-6">
           <div className="mb-8 text-center">
             <h2 className="text-3xl md:text-4xl font-playfair text-[#0F2C3E] mb-1">The Alchemy</h2>
             <p className="text-[#db2777] text-[9px] tracking-[0.4em] font-bold uppercase font-poppins">How We Craft Perfection</p>
@@ -176,7 +172,7 @@ export default function AboutPage() {
                 transition={{ delay: i * 0.2 }}
                 className={`relative p-6 rounded-2xl transition-all duration-300 group hover:shadow-xl ${
                   i === 1 
-                    ? 'bg-[#FFF0F5] shadow-lg border-2 border-[#db2777] z-10 scale-105' 
+                    ? 'bg-[#FFF0F5] shadow-lg border-2 border-[#db2777] z-10 md:scale-105' 
                     : 'bg-white/80 border-2 border-[#F8C8DC] hover:border-[#db2777]'
                 }`}
               >
@@ -229,12 +225,12 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* CTA Section — CHANGE 14: "History" in solid pink, not faded gradient */}
+      {/* CTA Section */}
       <section className="py-12 md:py-16 bg-[#FFF0F5] relative text-center overflow-hidden">
         <div className="absolute top-10 right-10 w-24 h-24 bg-[#db2777]/10 rounded-full blur-2xl" />
         <div className="absolute bottom-10 left-10 w-24 h-24 bg-[#0F2C3E]/10 rounded-full blur-2xl" />
 
-        <div className="container mx-auto px-6 relative z-10">
+        <div className="container mx-auto px-4 md:px-6 relative z-10">
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
