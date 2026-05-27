@@ -33,7 +33,15 @@ export default function ProductVault({ products }: { products: any[] }) {
   }
 
   return (
-    <section className="relative py-8 md:py-12 lg:py-20 px-3 md:px-4 lg:px-0 overflow-hidden bg-gradient-to-tr from-[#F5E9DC] via-[#FFFFF0] to-[#F5E9DC]">
+    <section
+      className="relative py-8 md:py-12 lg:py-20 px-3 md:px-4 lg:px-0 overflow-hidden"
+      style={{
+        backgroundImage: "url('/bg-floral.png')",
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+      }}
+    >
       
 
       <div className="container mx-auto relative z-10">

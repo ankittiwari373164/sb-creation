@@ -17,7 +17,6 @@ const ProductSlider = ({ products }: { products: any[] }) => {
   
   const infiniteProducts = [...products, ...products]
 
-  // --- 🔄 Sync Wishlist on Load ---
   useEffect(() => {
     const fetchWishlist = async () => {
       const { data: { user } } = await supabase.auth.getUser()
@@ -29,38 +28,24 @@ const ProductSlider = ({ products }: { products: any[] }) => {
     fetchWishlist()
   }, [])
 
-  // --- ❤️ Wishlist Toggle Logic ---
   const handleWishlist = async (e: React.MouseEvent, productId: string) => {
     e.preventDefault()
     e.stopPropagation()
-
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) {
-      toast.error('Please login to save favorites')
-      return
-    }
-
+    if (!user) { toast.error('Please login to save favorites'); return }
     if (wishlistIds.includes(productId)) {
       const { error } = await supabase.from('wishlist').delete().eq('user_id', user.id).eq('product_id', productId)
-      if (!error) {
-        setWishlistIds(prev => prev.filter(id => id !== productId))
-        toast.success('Removed from favorites')
-      }
+      if (!error) { setWishlistIds(prev => prev.filter(id => id !== productId)); toast.success('Removed from favorites') }
     } else {
       const { error } = await supabase.from('wishlist').insert({ user_id: user.id, product_id: productId })
-      if (!error) {
-        setWishlistIds(prev => [...prev, productId])
-        toast.success('Saved to favorites ❤️')
-      }
+      if (!error) { setWishlistIds(prev => [...prev, productId]); toast.success('Saved to favorites ❤️') }
     }
   }
 
-  // --- 🛒 Add to Cart with Size Flow ---
   const handleAddToCartInitiate = (e: React.MouseEvent, product: any) => {
-    e.preventDefault(); 
-    e.stopPropagation(); 
+    e.preventDefault()
+    e.stopPropagation()
     setSelectedProduct(product)
-    // Default to the first available size or standard 2.4
     setTempSize(product.sizes?.[0] || '2.4')
   }
 
@@ -75,61 +60,62 @@ const ProductSlider = ({ products }: { products: any[] }) => {
   }
 
   return (
-    <section className="bg-[#F5E9DC] py-8 overflow-hidden">
-      <div className="container mx-auto px-0 mb-10 text-center">
-        <span className="text-[10px] md:text-[10px] font-bold tracking-[0.5em] uppercase mb-3 block text-[#0F5A7E]">
+    <section className="bg-[#FFF0F5] py-6 overflow-hidden">
+      <div className="container mx-auto px-0 mb-6 text-center">
+        <span className="text-[10px] font-bold tracking-[0.5em] uppercase mb-2 block text-[#0F5A7E]">
           The Eternal Collection
         </span>
-        <h2 className="text-3xl md:text-5xl font-serif text-[#2d2416] mb-2">
-          Bangles For Every<span className="italic font-semibold text-[#d92b7a]"> Mood</span>
+        <h2 className="text-2xl md:text-3xl font-serif text-[#0F2C3E] mb-1">
+          Bangles For Every<span className="italic font-semibold text-[#db2777]"> Mood</span>
         </h2>
       </div>
 
       <div className="relative flex group/marquee">
-        <div className="flex animate-marquee group-hover/marquee:pause-marquee gap-4 md:gap-8 py-5">
+        <div className="flex animate-marquee group-hover/marquee:pause-marquee gap-3 md:gap-5 py-3">
           {infiniteProducts.map((product, index) => {
             const primaryImage = product.gallery?.[0] || product.image_url || '/placeholder.jpg'
             const secondaryImage = product.gallery?.[1] || product.image_url || primaryImage
             const isLiked = wishlistIds.includes(product.id)
 
             return (
-              <div key={`${product.id}-${index}`} className="min-w-[180px] md:min-w-[250px] lg:min-w-[300px]">
-                
+              // ↓ Reduced card width significantly
+              <div key={`${product.id}-${index}`} className="min-w-[180px] md:min-w-[230px] lg:min-w-[270px]">
                 <Link href={`/product/${product.slug}`} className="block group">
-                  <div className="relative aspect-[5/5] rounded-lg md:rounded-2xl overflow-hidden bg-white shadow-lg border-2 border-[#D4AF37] hover:shadow-2xl hover:border-[#0F5A7E] transition-all duration-300">
+                  
+                  {/* ↓ Reduced image height — square but smaller */}
+                  <div className="relative w-full aspect-square rounded-xl overflow-hidden bg-white shadow-md border border-[#F8C8DC] hover:shadow-lg hover:border-[#db2777] transition-all duration-300">
                     
                     <Image src={primaryImage} alt={product.name} fill className="object-cover transition-all duration-1000 group-hover:scale-110 group-hover:opacity-0" />
                     <Image src={secondaryImage} alt="Detail" fill className="object-cover opacity-0 scale-125 transition-all duration-1000 group-hover:opacity-100 group-hover:scale-105" />
 
-                    {/* Gradient Overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#2d2416]/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#0F2C3E]/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
-                    <div className="absolute inset-x-0 bottom-4 md:bottom-6 flex justify-center gap-2 md:gap-3 z-30">
-                        <button 
-                         onClick={(e) => handleAddToCartInitiate(e, product)}
-                         className="p-2 md:p-3 bg-[#2d2416] text-white rounded-full shadow-lg hover:bg-[#0F5A7E] transition-all transform active:scale-95 hover:shadow-xl hover:scale-110"
-                        >
-                          <ShoppingBag size={14} strokeWidth={2.5} className="md:w-4 md:h-4" />
-                        </button>
-                        
-                        <div className="p-2 md:p-3 bg-[#FFFFF0]/95 backdrop-blur-sm text-[#2d2416] rounded-full shadow-lg border-2 border-[#D4AF37] hover:border-[#0F5A7E] hover:text-[#0F5A7E] transition-all transform active:scale-95 cursor-pointer hover:shadow-xl hover:scale-110">
-                          <Eye size={14} strokeWidth={2.5} className="md:w-4 md:h-4" />
-                        </div>
-
-                        <button 
-                         onClick={(e) => handleWishlist(e, product.id)}
-                         className="p-2 md:p-3 bg-[#FFFFF0]/95 backdrop-blur-sm rounded-full shadow-lg border-2 border-[#F8C8DC] hover:border-[#D4AF37] transition-all transform active:scale-95 hover:shadow-xl hover:scale-110"
-                        >
-                          <Heart size={14} strokeWidth={2.5} className={`md:w-4 md:h-4 ${isLiked ? "fill-[#F8C8DC] text-[#F8C8DC]" : "text-[#2d2416]"}`} />
-                        </button>
+                    {/* Action buttons — smaller */}
+                    <div className="absolute inset-x-0 bottom-2 flex justify-center gap-1.5 z-30">
+                      <button
+                        onClick={(e) => handleAddToCartInitiate(e, product)}
+                        className="p-1.5 bg-[#0F2C3E] text-white rounded-full shadow hover:bg-[#db2777] transition-all active:scale-95"
+                      >
+                        <ShoppingBag size={11} strokeWidth={2.5} />
+                      </button>
+                      <div className="p-1.5 bg-white/95 text-[#0F2C3E] rounded-full shadow border border-[#F8C8DC] hover:border-[#db2777] transition-all cursor-pointer active:scale-95">
+                        <Eye size={11} strokeWidth={2.5} />
+                      </div>
+                      <button
+                        onClick={(e) => handleWishlist(e, product.id)}
+                        className="p-1.5 bg-white/95 rounded-full shadow border border-[#F8C8DC] hover:border-[#db2777] transition-all active:scale-95"
+                      >
+                        <Heart size={11} strokeWidth={2.5} className={isLiked ? 'fill-[#db2777] text-[#db2777]' : 'text-[#0F2C3E]'} />
+                      </button>
                     </div>
                   </div>
 
-                  <div className="mt-3 md:mt-5 text-center">
-                    <h4 className="font-serif text-sm md:text-base text-[#2d2416] group-hover:text-[#0F5A7E] transition-colors uppercase tracking-tight">
+                  {/* ↓ Name + price always visible below the card */}
+                  <div className="mt-2 text-center">
+                    <h4 className="font-serif text-base md:text-lg text-[#0F2C3E] group-hover:text-[#db2777] transition-colors uppercase tracking-tight leading-tight line-clamp-1">
                       {product.name}
                     </h4>
-                    <p className="text-[#D4AF37] font-bold tracking-widest text-xs md:text-sm mt-1">
+                    <p className="text-[#db2777] font-bold text-base md:text-lg mt-1">
                       ₹{product.price.toLocaleString()}
                     </p>
                   </div>
@@ -140,55 +126,47 @@ const ProductSlider = ({ products }: { products: any[] }) => {
         </div>
       </div>
 
-      {/* --- 📏 Size Selection Popup --- */}
+      {/* Size Selection Popup */}
       <AnimatePresence>
         {selectedProduct && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-6">
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               onClick={() => setSelectedProduct(null)}
-              className="absolute inset-0 bg-[#2d2416]/40 backdrop-blur-sm"
+              className="absolute inset-0 bg-[#0F2C3E]/40 backdrop-blur-sm"
             />
-            <motion.div 
+            <motion.div
               initial={{ scale: 0.9, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              className="relative bg-gradient-to-br from-[#FFFFF0] to-[#F5E9DC] w-full max-w-sm rounded-xl md:rounded-2xl p-6 md:p-8 shadow-2xl border-2 border-[#D4AF37]"
+              className="relative bg-white w-full max-w-sm rounded-2xl p-6 shadow-2xl border-2 border-[#F8C8DC]"
             >
-              <button 
-                onClick={() => setSelectedProduct(null)}
-                className="absolute top-4 md:top-6 right-4 md:right-6 text-[#2d2416] opacity-60 hover:text-[#0F5A7E] transition-colors"
-              >
-                <X size={18} className="md:w-5 md:h-5" />
+              <button onClick={() => setSelectedProduct(null)} className="absolute top-4 right-4 text-[#0F2C3E] opacity-60 hover:text-[#db2777] transition-colors">
+                <X size={18} />
               </button>
-
-              <div className="text-center space-y-3 md:space-y-4">
-                <span className="text-[8px] md:text-[10px] font-bold uppercase tracking-[0.3em] md:tracking-[0.4em] block text-[#0F5A7E]">Select Size</span>
-                <h3 className="text-lg md:text-2xl font-serif text-[#2d2416]">{selectedProduct.name}</h3>
-                
-                <div className="flex justify-center gap-2 md:gap-3 py-4 md:py-6">
+              <div className="text-center space-y-3">
+                <span className="text-[10px] font-bold uppercase tracking-[0.4em] block text-[#0F5A7E]">Select Size</span>
+                <h3 className="text-xl font-serif text-[#0F2C3E]">{selectedProduct.name}</h3>
+                <div className="flex justify-center gap-2 py-4">
                   {(selectedProduct.sizes?.length > 0 ? selectedProduct.sizes : ['2.2', '2.4', '2.6', '2.8']).map((size: string) => (
                     <button
                       key={size}
                       onClick={() => setTempSize(size)}
-                      className={`w-10 h-10 md:w-12 md:h-12 rounded-full border-2 font-bold text-xs transition-all flex items-center justify-center ${
-                        tempSize === size 
-                        ? 'bg-[#2d2416] text-white border-[#2d2416]' 
-                        : 'border-[#D4AF37] text-[#2d2416] hover:bg-[#F8C8DC]/40 hover:border-[#0F5A7E]'
+                      className={`w-11 h-11 rounded-full border-2 font-bold text-xs transition-all ${
+                        tempSize === size
+                          ? 'bg-[#0F2C3E] text-white border-[#0F2C3E]'
+                          : 'border-[#F8C8DC] text-[#0F2C3E] hover:border-[#db2777]'
                       }`}
                     >
                       {size}
                     </button>
                   ))}
                 </div>
-
-                <button 
+                <button
                   onClick={confirmAddToCart}
-                  className="w-full bg-[#2d2416] text-white py-3 md:py-4 rounded-full font-bold uppercase text-[8px] md:text-[10px] tracking-[0.2em] md:tracking-[0.3em] flex items-center justify-center gap-2 hover:bg-[#0F5A7E] transition-all shadow-lg hover:shadow-xl"
+                  className="w-full bg-[#0F2C3E] text-white py-3 rounded-full font-bold uppercase text-[10px] tracking-[0.3em] flex items-center justify-center gap-2 hover:bg-[#db2777] transition-all shadow-lg"
                 >
-                  <Check size={12} className="md:w-3.5 md:h-3.5" /> Add to Collection
+                  <Check size={13} /> Add to Collection
                 </button>
               </div>
             </motion.div>
@@ -214,4 +192,4 @@ const ProductSlider = ({ products }: { products: any[] }) => {
   )
 }
 
-export default ProductSlider;
+export default ProductSlider

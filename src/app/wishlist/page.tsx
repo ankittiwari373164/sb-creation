@@ -90,12 +90,12 @@ export default function WishlistPage() {
             <Heart size={32} className="md:w-10 md:h-10 text-[#db2777]" fill="#db2777" />
           </div>
           <h2 className="text-2xl md:text-4xl font-serif text-[#0F2C3E] mb-2 md:mb-4">Your Wishlist is Empty</h2>
-          <p className="text-[#d92b7a] text-sm md:text-lg mb-6 md:mb-10">Sign in to add to wishlist.</p>
-          <Link href="/shop">
-            <button className="bg-[#0F2C3E] text-white px-8 md:px-12 py-3 md:py-4 rounded-full text-xs md:text-sm font-bold uppercase tracking-widest hover:bg-[#db2777] transition-all shadow-lg">
-              Go Shopping
-            </button>
-          </Link>
+          <p className="text-sm md:text-lg mb-6 md:mb-10">
+            <Link href="/sign-in" className="text-[#db2777] font-extrabold hover:underline">
+              Sign in
+            </Link>
+            {' '}to add to wishlist.
+          </p>
         </div>
       </div>
     )

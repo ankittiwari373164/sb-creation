@@ -20,6 +20,11 @@ function formatDate(iso: string): string {
   })
 }
 
+function getShortcode(postUrl: string): string {
+  const match = postUrl.match(/\/p\/([^/]+)/)
+  return match ? match[1] : ''
+}
+
 // ─── Post Popup ────────────────────────────────────────────────────────────────
 function PostPopup({
   post,
@@ -43,7 +48,6 @@ function PostPopup({
     if (idx < posts.length - 1) setCurrent(posts[idx + 1])
   }, [idx, posts])
 
-  // Keyboard nav + close
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose()
@@ -54,18 +58,18 @@ function PostPopup({
     return () => window.removeEventListener('keydown', handler)
   }, [onClose, prev, next])
 
-  // Lock body scroll
   useEffect(() => {
     document.body.style.overflow = 'hidden'
     return () => { document.body.style.overflow = '' }
   }, [])
+
+  const shortcode = getShortcode(current.post_url)
 
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4"
       onClick={onClose}
     >
-      {/* Modal */}
       <div
         className="relative bg-white rounded-2xl overflow-hidden flex flex-col md:flex-row w-full max-w-3xl max-h-[90vh] shadow-2xl"
         onClick={(e) => e.stopPropagation()}
@@ -78,25 +82,33 @@ function PostPopup({
           <X size={16} className="text-[#2d2416]" />
         </button>
 
-        {/* Image side */}
-        <div className="relative w-full md:w-[55%] aspect-square md:aspect-auto md:min-h-[420px] bg-black flex-shrink-0">
-          <Image
-            src={current.image_url}
-            alt={current.caption?.slice(0, 60) || 'Instagram post'}
-            fill
-            className="object-cover"
-          />
-          {current.is_video && (
-            <div className="absolute top-3 left-3 bg-black/50 rounded-full p-1.5">
-              <Play size={12} className="text-white fill-white" />
+        {/* Media side */}
+        <div className="relative w-full md:w-[55%] bg-black flex-shrink-0 min-h-[300px] md:min-h-[420px]">
+          {current.is_video && shortcode ? (
+            <iframe
+              key={current.id}
+              src={`https://www.instagram.com/p/${shortcode}/embed/`}
+              className="w-full"
+              style={{ border: 'none', minHeight: '420px', width: '100%' }}
+              scrolling="no"
+              allowFullScreen
+            />
+          ) : (
+            <div className="relative w-full h-full min-h-[300px] md:min-h-[420px]">
+              <Image
+                src={current.image_url}
+                alt={current.caption?.slice(0, 60) || 'Instagram post'}
+                fill
+                className="object-cover"
+              />
             </div>
           )}
 
-          {/* Prev / Next arrows */}
+          {/* Prev / Next */}
           {idx > 0 && (
             <button
               onClick={prev}
-              className="absolute left-2 top-1/2 -translate-y-1/2 w-9 h-9 bg-white/80 rounded-full flex items-center justify-center shadow hover:bg-white transition"
+              className="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-9 h-9 bg-white/80 rounded-full flex items-center justify-center shadow hover:bg-white transition"
             >
               <ChevronLeft size={18} className="text-[#2d2416]" />
             </button>
@@ -104,7 +116,7 @@ function PostPopup({
           {idx < posts.length - 1 && (
             <button
               onClick={next}
-              className="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 bg-white/80 rounded-full flex items-center justify-center shadow hover:bg-white transition"
+              className="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-9 h-9 bg-white/80 rounded-full flex items-center justify-center shadow hover:bg-white transition"
             >
               <ChevronRight size={18} className="text-[#2d2416]" />
             </button>
@@ -170,7 +182,7 @@ function PostPopup({
             </span>
           </div>
 
-          {/* View on Instagram CTA */}
+          {/* CTA */}
           <div className="px-4 pb-4">
             <Link
               href={current.post_url}
@@ -266,7 +278,6 @@ export default function PublicInstaFeed() {
 
   return (
     <>
-      {/* Popup */}
       {activePost && (
         <PostPopup
           post={activePost}
@@ -276,125 +287,137 @@ export default function PublicInstaFeed() {
         />
       )}
 
-      <section className="bg-white py-6 md:py-10 px-4 md:px-6">
-        <div className="container mx-auto max-w-3xl">
+      <section
+        className="relative py-6 md:py-10 px-4 md:px-6"
+        style={{
+          backgroundImage: "url('/instagram-bg.png')",
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+        }}
+      >
+        {/* Soft overlay so content stays readable */}
+        <div className="absolute inset-0 bg-white/0 backdrop-blur-[0px]" />
 
-          {/* Header */}
-          <div className="text-center mb-6 md:mb-8">
-            <span className="text-[#0F5A7E] text-[8px] md:text-[10px] font-bold tracking-[0.3em] md:tracking-[0.4em] uppercase block mb-1.5 md:mb-2">
-              Follow Us
-            </span>
-            <h2 className="text-xl md:text-3xl lg:text-4xl font-serif text-[#2d2416] mb-1.5 md:mb-3">
-              The <span className="italic font-semibold text-[#d92b7a]">SB Edit</span>
-            </h2>
-            <p className="text-[#2d2416] text-xs md:text-sm opacity-70">
-              Curated moments from our Instagram feed
-            </p>
-          </div>
+        {/* All content sits above overlay */}
+        <div className="relative z-10">
+          <div className="container mx-auto max-w-3xl">
 
-          {/* Profile Card */}
-          <div className="border border-[#efefef] rounded-2xl p-4 md:p-5 mb-3 md:mb-4 flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3 md:gap-4">
+            {/* Header */}
+            <div className="text-center mb-6 md:mb-8">
+              <span className="text-[#0F5A7E] text-[8px] md:text-[10px] font-bold tracking-[0.3em] md:tracking-[0.4em] uppercase block mb-1.5 md:mb-2">
+                Follow Us
+              </span>
+              <h2 className="text-xl md:text-3xl lg:text-4xl font-serif text-[#2d2416] mb-1.5 md:mb-3">
+                The <span className="italic font-semibold text-[#d92b7a]">SB Edit</span>
+              </h2>
+              <p className="text-[#2d2416] text-xs md:text-sm opacity-70">
+                Curated moments from our Instagram feed
+              </p>
+            </div>
 
-              {/* Avatar */}
-              <div className="relative w-14 h-14 md:w-16 md:h-16 flex-shrink-0">
-                <div className="w-full h-full rounded-full bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] p-[2.5px]">
-                  <div className="w-full h-full rounded-full bg-white p-[2px] overflow-hidden relative">
+            {/* Profile Card */}
+            <div className="border border-[#efefef] rounded-2xl p-4 md:p-5 mb-3 md:mb-4 flex items-center justify-between gap-4 bg-white/80 backdrop-blur-sm">
+              <div className="flex items-center gap-3 md:gap-4">
+
+                {/* Avatar */}
+                <div className="relative w-14 h-14 md:w-16 md:h-16 flex-shrink-0">
+                  <div className="w-full h-full rounded-full bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] p-[2.5px]">
+                    <div className="w-full h-full rounded-full bg-white p-[2px] overflow-hidden relative">
+                      {loading ? (
+                        <Skeleton className="w-full h-full rounded-full" />
+                      ) : profile?.profile_pic_url ? (
+                        <Image src={profile.profile_pic_url} alt="Profile" fill className="object-cover rounded-full" />
+                      ) : (
+                        <Image src="/logo.png" alt="SB Creation" fill className="object-cover rounded-full" />
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Stats */}
+                <div>
+                  <p className="font-semibold text-[#2d2416] text-[14px] md:text-[15px]">
+                    {profile?.username ? `@${profile.username}` : '@_sbcreation'}
+                  </p>
+                  <div className="flex items-center gap-3 md:gap-4 mt-1.5">
                     {loading ? (
-                      <Skeleton className="w-full h-full rounded-full" />
-                    ) : profile?.profile_pic_url ? (
-                      <Image src={profile.profile_pic_url} alt="Profile" fill className="object-cover rounded-full" />
+                      <>
+                        <Skeleton className="w-12 h-8" />
+                        <Skeleton className="w-12 h-8" />
+                      </>
                     ) : (
-                      <Image src="/logo.png" alt="SB Creation" fill className="object-cover rounded-full" />
+                      <>
+                        {[
+                          { label: 'Followers', value: profile?.followers ?? 0 },
+                          { label: 'Following', value: profile?.following ?? 0 },
+                        ].map((stat, i, arr) => (
+                          <React.Fragment key={stat.label}>
+                            <div className="text-center">
+                              <p className="text-[13px] md:text-[14px] font-bold text-[#2d2416] leading-none">
+                                {formatCount(stat.value)}
+                              </p>
+                              <p className="text-[10px] md:text-[11px] text-[#6b6b6b] mt-0.5">{stat.label}</p>
+                            </div>
+                            {i < arr.length - 1 && <div className="w-px h-6 bg-[#efefef]" />}
+                          </React.Fragment>
+                        ))}
+                      </>
                     )}
                   </div>
                 </div>
               </div>
 
-              {/* Stats */}
-              <div>
-                <p className="font-semibold text-[#2d2416] text-[14px] md:text-[15px]">
-                  {profile?.username ? `@${profile.username}` : '@_sbcreation'}
-                </p>
-                <div className="flex items-center gap-3 md:gap-4 mt-1.5">
-                  {loading ? (
-                    <>
-                      <Skeleton className="w-12 h-8" />
-                      <Skeleton className="w-12 h-8" />
-                      <Skeleton className="w-12 h-8" />
-                    </>
-                  ) : (
-                    <>
-                      {[
-                        { label: 'Posts', value: profile?.posts_count ?? 0 },
-                        { label: 'Followers', value: profile?.followers ?? 0 },
-                        { label: 'Following', value: profile?.following ?? 0 },
-                      ].map((stat, i, arr) => (
-                        <React.Fragment key={stat.label}>
-                          <div className="text-center">
-                            <p className="text-[13px] md:text-[14px] font-bold text-[#2d2416] leading-none">
-                              {formatCount(stat.value)}
-                            </p>
-                            <p className="text-[10px] md:text-[11px] text-[#6b6b6b] mt-0.5">{stat.label}</p>
-                          </div>
-                          {i < arr.length - 1 && <div className="w-px h-6 bg-[#efefef]" />}
-                        </React.Fragment>
-                      ))}
-                    </>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Follow Button */}
-            <Link
-              href={INSTAGRAM_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex-shrink-0 inline-flex items-center gap-1.5 px-4 md:px-5 py-2 md:py-2.5 bg-[#2d2416] text-white rounded-full text-[11px] md:text-[12px] font-semibold hover:bg-[#d92b7a] transition-all"
-            >
-              <Instagram size={13} />
-              Follow
-            </Link>
-          </div>
-
-          {/* 3-col Grid */}
-          {error ? (
-            <div className="text-center py-10 text-[#6b6b6b] text-sm">
-              Could not load posts.{' '}
-              <Link href={INSTAGRAM_URL} target="_blank" className="text-[#d92b7a] underline">
-                Visit our Instagram
+              {/* Follow Button */}
+              <Link
+                href={INSTAGRAM_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-shrink-0 inline-flex items-center gap-1.5 px-4 md:px-5 py-2 md:py-2.5 bg-[#2d2416] text-white rounded-full text-[11px] md:text-[12px] font-semibold hover:bg-[#d92b7a] transition-all"
+              >
+                <Instagram size={13} />
+                Follow
               </Link>
             </div>
-          ) : (
-            <div className="grid grid-cols-3 gap-1 md:gap-1.5">
-              {loading
-                ? Array.from({ length: 9 }).map((_, i) => (
-                    <Skeleton key={i} className="aspect-square w-full rounded-[10px]" />
-                  ))
-                : posts.slice(0, 9).map((post) => (
-                    <PostCard
-                      key={post.id}
-                      post={post}
-                      onClick={() => setActivePost(post)}
-                    />
-                  ))}
+
+            {/* 3-col Grid */}
+            {error ? (
+              <div className="text-center py-10 text-[#6b6b6b] text-sm">
+                Could not load posts.{' '}
+                <Link href={INSTAGRAM_URL} target="_blank" className="text-[#d92b7a] underline">
+                  Visit our Instagram
+                </Link>
+              </div>
+            ) : (
+              <div className="grid grid-cols-3 gap-1 md:gap-1.5">
+                {loading
+                  ? Array.from({ length: 9 }).map((_, i) => (
+                      <Skeleton key={i} className="aspect-square w-full rounded-[10px]" />
+                    ))
+                  : posts.slice(0, 9).map((post) => (
+                      <PostCard
+                        key={post.id}
+                        post={post}
+                        onClick={() => setActivePost(post)}
+                      />
+                    ))}
+              </div>
+            )}
+
+            {/* CTA */}
+            <div className="mt-5 md:mt-6 flex justify-center">
+              <Link
+                href={INSTAGRAM_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-5 md:px-7 py-2 md:py-2.5 bg-[#2d2416] text-white rounded-full font-bold uppercase text-[8px] md:text-[10px] tracking-[0.2em] md:tracking-[0.3em] shadow-lg hover:bg-[#0F5A7E] transition-all"
+              >
+                <Instagram size={11} />
+                View all on Instagram
+              </Link>
             </div>
-          )}
 
-          {/* CTA */}
-          <div className="mt-5 md:mt-6 flex justify-center">
-            <Link
-              href={INSTAGRAM_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-5 md:px-7 py-2 md:py-2.5 bg-[#2d2416] text-white rounded-full font-bold uppercase text-[8px] md:text-[10px] tracking-[0.2em] md:tracking-[0.3em] shadow-lg hover:bg-[#0F5A7E] transition-all"
-            >
-              <Instagram size={11} />
-              View all on Instagram
-            </Link>
           </div>
-
         </div>
       </section>
     </>
