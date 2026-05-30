@@ -91,7 +91,7 @@ export default function WishlistPage() {
           </div>
           <h2 className="text-2xl md:text-4xl font-serif text-[#0F2C3E] mb-2 md:mb-4">Your Wishlist is Empty</h2>
           <p className="text-sm md:text-lg mb-6 md:mb-10">
-            <Link href="/sign-in" className="text-[#db2777] font-extrabold hover:underline">
+            <Link href="/dashboard" className="text-[#db2777] font-extrabold hover:underline">
               Sign in
             </Link>
             {' '}to add to wishlist.

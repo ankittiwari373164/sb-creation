@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Filter, Search, X, SlidersHorizontal, Sparkles, ChevronDown } from 'lucide-react'
+import { Filter, Search, X, SlidersHorizontal, Sparkles, ChevronDown, ArrowUpDown } from 'lucide-react'
 import { supabase, Product } from '../../lib/supabase'
 import ProductCard from '../../components/ProductCard'
 
@@ -35,6 +35,19 @@ export default function ShopPage() {
   const [showFilters, setShowFilters] = useState(false)
   const [showSortDropdown, setShowSortDropdown] = useState(false)
 
+  const sortDropdownRef = useRef<HTMLDivElement>(null)
+
+  // Close sort dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (sortDropdownRef.current && !sortDropdownRef.current.contains(e.target as Node)) {
+        setShowSortDropdown(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
   useEffect(() => {
     fetchProducts()
   }, [])
@@ -62,12 +75,10 @@ export default function ShopPage() {
   const filterAndSortProducts = () => {
     let filtered = [...products]
 
-    // Size Filter Logic
     if (selectedSizes.length > 0) {
       filtered = filtered.filter((p: any) => p.sizes?.some((s: string) => selectedSizes.includes(s)))
     }
 
-    // Category Filter Logic
     if (selectedCategories.length > 0) {
       filtered = filtered.filter((p: any) =>
         selectedCategories.some(cat => p.category === cat || p.tags?.includes(cat))
@@ -113,15 +124,71 @@ export default function ShopPage() {
           <aside className={`lg:w-64 shrink-0 ${showFilters ? 'fixed inset-0 z-50 bg-white overflow-y-auto' : 'hidden lg:block'}`}>
             <div className={`${showFilters ? 'p-4 md:p-6' : ''} sticky top-0 lg:top-28 space-y-4 md:space-y-6 lg:space-y-10`}>
 
-              {/* Header */}
-              <div className="flex items-center justify-between border-b-2 border-[#D4AF37] pb-2 md:pb-3 lg:pb-4">
-                <div className="flex items-center gap-2">
-                  <Filter size={14} className="md:w-4 md:h-4 text-[#D4AF37]" />
-                  <h2 className="text-[8px] md:text-xs font-bold uppercase tracking-[0.2em] md:tracking-[0.3em] text-[#2d2416]">Refine</h2>
+              {/* ── Sidebar Header: REFINE + SORT dropdown side by side ── */}
+              <div className="border-b-2 border-[#D4AF37] pb-2 md:pb-3 lg:pb-4">
+                <div className="flex items-center justify-between">
+                  {/* Left: Refine label */}
+                  <div className="flex items-center gap-2">
+                    <Filter size={14} className="md:w-4 md:h-4 text-[#D4AF37]" />
+                    <h2 className="text-[8px] md:text-xs font-bold uppercase tracking-[0.2em] md:tracking-[0.3em] text-[#2d2416]">Refine</h2>
+                  </div>
+
+                  {/* Right: Sort dropdown + mobile close button */}
+                  <div className="flex items-center gap-2">
+                    {/* Sort dropdown — visible on both desktop sidebar and mobile panel */}
+                    <div ref={sortDropdownRef} className="relative">
+                      <button
+                        onClick={() => setShowSortDropdown(prev => !prev)}
+                        className={`flex items-center gap-1.5 px-4 py-2 rounded-full border text-[11px] md:text-xs font-bold uppercase tracking-widest transition-all ${
+                          showSortDropdown
+                            ? 'bg-[#0F5A7E] border-[#0F5A7E] text-white'
+                            : 'bg-white border-[#D4AF37] text-[#2d2416] hover:border-[#0F5A7E] hover:text-[#0F5A7E]'
+                        }`}
+                      >
+                        <ArrowUpDown size={13} />
+                        <span>Sort</span>
+                        <ChevronDown
+                          size={12}
+                          className={`transition-transform duration-200 ${showSortDropdown ? 'rotate-180' : ''}`}
+                        />
+                      </button>
+
+                      <AnimatePresence>
+                        {showSortDropdown && (
+                          <motion.div
+                            initial={{ opacity: 0, y: -6, scale: 0.97 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: -6, scale: 0.97 }}
+                            transition={{ duration: 0.15 }}
+                            className="absolute right-0 top-full mt-2 bg-white border border-[#D4AF37] rounded-2xl shadow-xl z-[60] min-w-[170px] overflow-hidden"
+                          >
+                            {sortOptions.map((o, i) => (
+                              <button
+                                key={o.value}
+                                onClick={() => { setSortBy(o.value); setShowSortDropdown(false) }}
+                                className={`w-full text-left px-4 py-2.5 text-[9px] font-bold uppercase tracking-widest transition-colors flex items-center gap-2 ${
+                                  i !== 0 ? 'border-t border-[#D4AF37]/30' : ''
+                                } ${
+                                  sortBy === o.value
+                                    ? 'bg-[#0F5A7E] text-white'
+                                    : 'text-[#2d2416] hover:bg-[#F5E9DC]'
+                                }`}
+                              >
+                                <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${sortBy === o.value ? 'bg-white' : 'bg-[#D4AF37]'}`} />
+                                {o.label}
+                              </button>
+                            ))}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+
+                    {/* Mobile close button */}
+                    <button onClick={() => setShowFilters(false)} className="lg:hidden text-[#2d2416] bg-gray-50 p-1.5 md:p-2 rounded-full">
+                      <X size={14} className="md:w-4 md:h-4" />
+                    </button>
+                  </div>
                 </div>
-                <button onClick={() => setShowFilters(false)} className="lg:hidden text-[#2d2416] bg-gray-50 p-1.5 md:p-2 rounded-full">
-                  <X size={14} className="md:w-4 md:h-4" />
-                </button>
               </div>
 
               {/* 🗂️ Category Filter */}
@@ -188,29 +255,6 @@ export default function ShopPage() {
                 </div>
               </div>
 
-              {/* 🔄 Sort Section */}
-              <div className="space-y-2 md:space-y-3 pt-3 md:pt-4 lg:pt-6 border-t border-gray-100">
-                <h3 className="text-[8px] md:text-[10px] font-bold uppercase tracking-[0.2em] md:tracking-[0.3em] text-[#2d2416] opacity-60">Sort</h3>
-                <div className="space-y-0.5 md:space-y-1">
-                  {sortOptions.map((option) => (
-                    <button
-                      key={option.value}
-                      onClick={() => setSortBy(option.value)}
-                      className={`w-full flex items-center gap-2 py-1 md:py-1.5 text-[8px] md:text-xs transition-all duration-300 group ${
-                        sortBy === option.value ? 'text-[#0F5A7E] font-bold' : 'text-[#2d2416] hover:text-[#D4AF37]'
-                      }`}
-                    >
-                      <div className={`w-2 h-2 md:w-2.5 md:h-2.5 rounded-full border flex items-center justify-center transition-all ${
-                        sortBy === option.value ? 'border-[#0F5A7E]' : 'border-gray-300 group-hover:border-[#D4AF37]'
-                      }`}>
-                        {sortBy === option.value && <div className="w-0.5 h-0.5 md:w-1 md:h-1 bg-[#0F5A7E] rounded-full" />}
-                      </div>
-                      <span className="truncate">{option.label}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
               {/* 🔄 Reset Filters */}
               <div className="pt-4 md:pt-6 lg:pt-8">
                 <button
@@ -232,6 +276,7 @@ export default function ShopPage() {
           <main className="flex-1 min-w-0">
             {/* Control Bar */}
             <div className="flex flex-col md:flex-row justify-between items-stretch md:items-center mb-6 md:mb-8 gap-2 md:gap-4">
+              {/* Search */}
               <div className="relative w-full md:flex-1 group bg-[#F5E9DC] rounded-full border-2 border-[#D4AF37] px-3 md:px-4 py-1.5 md:py-2 flex items-center">
                 <Search className="absolute left-3 md:left-4 text-[#2d2416] opacity-40 group-focus-within:text-[#0F5A7E] group-focus-within:opacity-100 transition-all" size={14} />
                 <input
@@ -243,39 +288,63 @@ export default function ShopPage() {
                 />
               </div>
 
-              {/* Mobile: Refine + Sort buttons together on left */}
-              <div className="flex items-stretch gap-2 md:gap-3 lg:hidden">
+              {/* Mobile: Refine + Sort side by side */}
+              <div className="flex items-center gap-2 lg:hidden">
+                {/* Refine Button */}
                 <button
                   onClick={() => setShowFilters(true)}
-                  className="p-1.5 md:p-2.5 bg-[#2d2416] text-white rounded-full shadow-md hover:bg-[#0F5A7E] transition-all flex items-center justify-center gap-1.5"
+                  className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 bg-[#2d2416] text-white rounded-full shadow-md hover:bg-[#0F5A7E] transition-all"
                 >
-                  <SlidersHorizontal size={14} className="md:w-4 md:h-4" />
-                  <span className="text-[8px] font-bold uppercase tracking-widest pr-1">Refine</span>
+                  <SlidersHorizontal size={13} />
+                  <span className="text-[8px] font-bold uppercase tracking-widest">Refine</span>
                 </button>
 
-                <div className="relative">
+                {/* Sort Button + Dropdown */}
+                <div ref={sortDropdownRef} className="relative flex-1">
                   <button
                     onClick={() => setShowSortDropdown(prev => !prev)}
-                    className="p-1.5 md:p-2.5 bg-white border-2 border-[#D4AF37] text-[#2d2416] rounded-full shadow-sm hover:border-[#0F5A7E] transition-all flex items-center justify-center gap-1.5"
+                    className={`w-full flex items-center justify-center gap-1.5 py-2 px-3 border-2 rounded-full shadow-sm transition-all ${
+                      showSortDropdown
+                        ? 'bg-[#0F5A7E] border-[#0F5A7E] text-white'
+                        : 'bg-white border-[#D4AF37] text-[#2d2416] hover:border-[#0F5A7E]'
+                    }`}
                   >
-                    <span className="text-[8px] font-bold uppercase tracking-widest pl-1">Sort</span>
-                    <ChevronDown size={12} className={`mr-1 transition-transform ${showSortDropdown ? 'rotate-180' : ''}`} />
+                    <ArrowUpDown size={13} />
+                    <span className="text-[8px] font-bold uppercase tracking-widest">Sort</span>
+                    <ChevronDown
+                      size={11}
+                      className={`transition-transform duration-200 ${showSortDropdown ? 'rotate-180' : ''}`}
+                    />
                   </button>
-                  {showSortDropdown && (
-                    <div className="absolute left-0 top-full mt-1 bg-white border border-[#D4AF37] rounded-xl shadow-lg z-50 min-w-[160px] overflow-hidden">
-                      {sortOptions.map((o) => (
-                        <button
-                          key={o.value}
-                          onClick={() => { setSortBy(o.value); setShowSortDropdown(false) }}
-                          className={`w-full text-left px-3 py-2 text-[9px] font-bold uppercase tracking-widest transition-colors ${
-                            sortBy === o.value ? 'bg-[#0F5A7E] text-white' : 'text-[#2d2416] hover:bg-[#F5E9DC]'
-                          }`}
-                        >
-                          {o.label}
-                        </button>
-                      ))}
-                    </div>
-                  )}
+
+                  <AnimatePresence>
+                    {showSortDropdown && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -6, scale: 0.97 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -6, scale: 0.97 }}
+                        transition={{ duration: 0.15 }}
+                        className="absolute right-0 top-full mt-2 bg-white border border-[#D4AF37] rounded-2xl shadow-xl z-50 min-w-[170px] overflow-hidden"
+                      >
+                        {sortOptions.map((o, i) => (
+                          <button
+                            key={o.value}
+                            onClick={() => { setSortBy(o.value); setShowSortDropdown(false) }}
+                            className={`w-full text-left px-4 py-2.5 text-[9px] font-bold uppercase tracking-widest transition-colors flex items-center gap-2 ${
+                              i !== 0 ? 'border-t border-[#D4AF37]/30' : ''
+                            } ${
+                              sortBy === o.value
+                                ? 'bg-[#0F5A7E] text-white'
+                                : 'text-[#2d2416] hover:bg-[#F5E9DC]'
+                            }`}
+                          >
+                            <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${sortBy === o.value ? 'bg-white' : 'bg-[#D4AF37]'}`} />
+                            {o.label}
+                          </button>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               </div>
             </div>

@@ -108,7 +108,7 @@ const Footer = () => {
                 ["Custom Orders", "https://wa.me/919557111954?text=Hi%20SB%20Creation!%20I%20want%20to%20customize%20my%20order"],
                 ["Bulk Enquiries", "https://wa.me/919557111954?text=Hi%20SB%20Creation!%20I%20have%20a%20bulk%20inquiry"],
                 ["Contact Us", "/contact"],
-                ["Returns & Exchanges", "/returns"],
+                ["Returns & Exchanges", "https://wa.me/919557111954?text=Hi%20SB%20Creation!%20I%20want%20to%20initiate%20a%20return%20or%20exchange"],
               ].map(([label, href]) => (
                 <li key={label}>
                   <Link
