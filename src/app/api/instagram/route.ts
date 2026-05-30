@@ -46,28 +46,48 @@ async function apiFetch(path: string) {
   console.log('[IG] GET', url)
   const res  = await fetch(url, { headers: headers(), cache: 'no-store' })
   const text = await res.text()
-  console.log('[IG]', res.status, text.slice(0, 200))
+  console.log('[IG]', res.status, text.slice(0, 300))
   let data: any = {}
   try { data = JSON.parse(text) } catch {}
   return { ok: res.status === 200, status: res.status, data }
 }
 
-// ── Parse profile from the confirmed response shape ───────────────────────────
-// data.data.user → { edge_followed_by.count, edge_follow.count, username, full_name, biography, profile_pic_url, fbid }
+// ── Parse profile — matches CONFIRMED response from debug output ───────────────
+// user_info_web returns: data.data.user with:
+//   edge_followed_by: { count: 2917 }
+//   edge_follow: { count: 4 }
+//   username, full_name, biography, profile_pic_url_hd
 function parseProfile(user: any): InstagramProfile {
+  const followers = user?.edge_followed_by?.count
+    ?? user?.follower_count
+    ?? user?.followers_count
+    ?? 0
+
+  const following = user?.edge_follow?.count
+    ?? user?.following_count
+    ?? user?.following
+    ?? 0
+
+  const posts_count = user?.edge_owner_to_timeline_media?.count
+    ?? user?.media_count
+    ?? user?.posts_count
+    ?? 0
+
+  console.log('[IG] Profile parsed — followers:', followers, 'following:', following)
+
   return {
     username:        user?.username        || USERNAME,
     full_name:       user?.full_name       || '',
     bio:             user?.biography       || '',
-    followers:       user?.edge_followed_by?.count  ?? user?.follower_count  ?? 0,
-    following:       user?.edge_follow?.count        ?? user?.following_count ?? 0,
-    posts_count:     user?.edge_owner_to_timeline_media?.count ?? user?.media_count ?? 0,
-    profile_pic_url: user?.profile_pic_url_hd || user?.profile_pic_url || '',
+    followers,
+    following,
+    posts_count,
+    // Use profile_pic_url (not _hd) — the HD url often has scontent CDN auth issues
+    profile_pic_url: user?.profile_pic_url || user?.profile_pic_url_hd || '',
   }
 }
 
-// ── Parse posts from the confirmed response shape ─────────────────────────────
-// data.data.user.edge_owner_to_timeline_media.edges → [{ node: { ... } }]
+// ── Parse posts — matches confirmed edge_owner_to_timeline_media.edges shape ──
 function parsePosts(edges: any[]): InstagramPost[] {
   return edges
     .slice(0, 9)
@@ -79,26 +99,20 @@ function parsePosts(edges: any[]): InstagramPost[] {
         n?.is_video === true ||
         n?.media_type === 2
 
-      // For carousels grab first child image
       const carouselUrl =
         n?.edge_sidecar_to_children?.edges?.[0]?.node?.display_url
 
       const imageUrl =
         n?.display_url ||
-        carouselUrl   ||
+        carouselUrl    ||
         n?.thumbnail_url ||
-        n?.image_versions2?.candidates?.[0]?.url ||
         ''
 
       const shortcode = n?.shortcode || ''
-      const postUrl   = shortcode
-        ? `https://www.instagram.com/p/${shortcode}/`
-        : '#'
+      const postUrl   = shortcode ? `https://www.instagram.com/p/${shortcode}/` : '#'
 
       const takenAt   = n?.taken_at_timestamp || n?.taken_at
-      const timestamp = takenAt
-        ? new Date(Number(takenAt) * 1000).toISOString()
-        : ''
+      const timestamp = takenAt ? new Date(Number(takenAt) * 1000).toISOString() : ''
 
       return {
         id:        String(n?.id || n?.pk || Math.random()),
@@ -122,99 +136,81 @@ function parsePosts(edges: any[]): InstagramPost[] {
     .filter(p => p.image_url)
 }
 
-// ── Main fetch: user_info_web gives profile + posts in one call ───────────────
 async function fetchAll(): Promise<{ posts: InstagramPost[]; profile: InstagramProfile } | null> {
   const { ok, data } = await apiFetch(`/v1/user_info_web?username=${USERNAME}`)
-  if (!ok) {
-    console.error('[IG] user_info_web failed')
-    return null
-  }
+  if (!ok) return null
 
-  const user  = data?.data?.user
-  if (!user) {
-    console.error('[IG] No user object in response')
-    return null
-  }
+  const user = data?.data?.user
+  if (!user) { console.error('[IG] No user in response'); return null }
 
   const profile = parseProfile(user)
   const edges   = user?.edge_owner_to_timeline_media?.edges
+
   if (!Array.isArray(edges) || edges.length === 0) {
-    console.error('[IG] No posts edges in response')
+    console.error('[IG] No post edges found')
     return null
   }
 
   const posts = parsePosts(edges)
-  if (posts.length === 0) {
-    console.error('[IG] Posts parsed to empty array')
-    return null
-  }
+  if (posts.length === 0) { console.error('[IG] Posts mapped to empty'); return null }
 
   return { posts, profile }
-}
-
-// ── Fallback: separate user_posts call (if user_info_web stops working) ───────
-async function fetchPostsSeparately(userId: string): Promise<InstagramPost[] | null> {
-  const { ok, data } = await apiFetch(`/v1/user_posts?username_or_id=${userId}`)
-  if (!ok) return null
-  const edges = data?.data?.items || data?.data?.edges || data?.items || data?.edges
-  if (!Array.isArray(edges) || edges.length === 0) return null
-  return parsePosts(edges)
 }
 
 // ── GET handler ───────────────────────────────────────────────────────────────
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
 
-  if (searchParams.get('bust') === '1') cache = null
+  // ?bust=1 forces a fresh fetch and clears cache
+  if (searchParams.get('bust') === '1') {
+    cache = null
+    console.log('[IG] Cache busted')
+  }
 
-  // ?debug=1 — raw output for diagnostics
+  // ?debug=1 — shows raw API response for diagnosis
   if (searchParams.get('debug') === '1') {
     if (!RAPIDAPI_KEY) return NextResponse.json({ error: 'RAPIDAPI_KEY not set' }, { status: 500 })
     const { status, data } = await apiFetch(`/v1/user_info_web?username=${USERNAME}`)
-    return NextResponse.json({ host: HOST, key_prefix: RAPIDAPI_KEY.slice(0, 8), status, data })
+    const user = data?.data?.user
+    return NextResponse.json({
+      host:        HOST,
+      key_prefix:  RAPIDAPI_KEY.slice(0, 8),
+      status,
+      // Return only the profile fields so the response isn't huge
+      profile_raw: user ? {
+        username:          user.username,
+        full_name:         user.full_name,
+        biography:         user.biography,
+        edge_followed_by:  user.edge_followed_by,
+        edge_follow:       user.edge_follow,
+        profile_pic_url:   user.profile_pic_url,
+        posts_count:       user.edge_owner_to_timeline_media?.count,
+        posts_edges_count: user.edge_owner_to_timeline_media?.edges?.length,
+        first_post_shortcode: user.edge_owner_to_timeline_media?.edges?.[0]?.node?.shortcode,
+        first_post_display_url: user.edge_owner_to_timeline_media?.edges?.[0]?.node?.display_url?.slice(0, 80),
+      } : null,
+    })
   }
 
-  // Guard: missing key
   if (!RAPIDAPI_KEY?.trim()) {
     if (cache) return NextResponse.json({ posts: cache.posts, profile: cache.profile, cached: true, stale: true })
     return NextResponse.json({ error: 'Missing RAPIDAPI_KEY', posts: [], profile: null }, { status: 500 })
   }
 
-  // Serve fresh cache
+  // Serve from cache if fresh
   if (cache && Date.now() - cache.timestamp < CACHE_TTL) {
     return NextResponse.json({ posts: cache.posts, profile: cache.profile, cached: true })
   }
 
   try {
-    // Primary: one call gets everything
-    let result = await fetchAll()
-
-    // Fallback: try user_posts separately using username directly
-    if (!result) {
-      console.log('[IG] Trying fallback user_posts endpoint')
-      const posts = await fetchPostsSeparately(USERNAME)
-      if (posts && posts.length > 0) {
-        result = {
-          posts,
-          profile: {
-            username: USERNAME,
-            full_name: 'SB Creation',
-            bio: '',
-            followers: 0,
-            following: 0,
-            posts_count: 0,
-            profile_pic_url: '',
-          },
-        }
-      }
-    }
+    const result = await fetchAll()
 
     if (!result || result.posts.length === 0) {
       throw new Error('No posts returned. Visit /api/instagram?debug=1 to diagnose.')
     }
 
     cache = { posts: result.posts, profile: result.profile, timestamp: Date.now() }
-    console.log(`[IG] Cached ${result.posts.length} posts | followers: ${result.profile?.followers}`)
+    console.log(`[IG] Success: ${result.posts.length} posts | followers: ${result.profile?.followers} | following: ${result.profile?.following}`)
     return NextResponse.json({ posts: result.posts, profile: result.profile, cached: false })
 
   } catch (err: any) {
