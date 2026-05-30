@@ -47,6 +47,10 @@ async function fetchUserId(): Promise<string> {
     { headers: HEADERS }
   )
   const data = await res.json()
+  
+  // ADD THIS LINE to see the full response
+  console.log('[fetchUserId full response]', JSON.stringify(data))
+  
   const userId =
     data?.data?.user_id ||
     data?.data?.id ||
