@@ -122,8 +122,13 @@ async function fetchAll(): Promise<{ posts: InstagramPost[]; profile: InstagramP
     return null
   }
 
-  const user = data?.data?.user
-  if (!user) {
+  // API can return user at different nesting levels — try all
+  const user =
+    data?.data?.user ||   // expected shape
+    data?.data ||         // flat shape (what we're seeing now)
+    data?.user ||
+    data
+  if (!user || typeof user !== 'object') {
     console.error('[IG] No user object. data keys:', Object.keys(data || {}))
     return null
   }
@@ -155,7 +160,7 @@ export async function GET(request: Request) {
   if (isDebug) {
     if (!RAPIDAPI_KEY) return NextResponse.json({ error: 'RAPIDAPI_KEY not set' }, { status: 500 })
     const { status, data, raw } = await apiFetch(`/v1/user_info_web?username=${USERNAME}`)
-    const user = data?.data?.user
+    const user = data?.data?.user || data?.data || data?.user || data
     return NextResponse.json({
       host:       HOST,
       key_prefix: RAPIDAPI_KEY?.slice(0, 8),
