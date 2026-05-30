@@ -1,15 +1,15 @@
 import { NextResponse } from 'next/server'
 
 // ─────────────────────────────────────────────────────────────────────────────
-// VERCEL ENV VARS NEEDED:
-//   RAPIDAPI_KEY  = your existing key (already set)
+// VERCEL ENV VARS:
+//   RAPIDAPI_KEY  = (already set — keep as is)
 //   RAPIDAPI_HOST = instagram-public-bulk-scraper.p.rapidapi.com  ← ADD THIS
 // ─────────────────────────────────────────────────────────────────────────────
 
-const RAPIDAPI_KEY  = process.env.RAPIDAPI_KEY
-const HOST          = process.env.RAPIDAPI_HOST ?? 'instagram-public-bulk-scraper.p.rapidapi.com'
-const USERNAME      = '_sbcreation'
-const CACHE_TTL     = 4 * 60 * 60 * 1000 // 4 hours
+const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY
+const HOST         = process.env.RAPIDAPI_HOST ?? 'instagram-public-bulk-scraper.p.rapidapi.com'
+const USERNAME     = '_sbcreation'
+const CACHE_TTL    = 4 * 60 * 60 * 1000 // 4 hours
 
 export interface InstagramProfile {
   username: string
@@ -50,136 +50,142 @@ function headers() {
 async function apiFetch(path: string) {
   const url = `https://${HOST}${path}`
   console.log('[IG] GET', url)
-  const res = await fetch(url, { headers: headers(), cache: 'no-store' })
+  const res  = await fetch(url, { headers: headers(), cache: 'no-store' })
   const text = await res.text()
-  console.log('[IG] status:', res.status, 'body[:300]:', text.slice(0, 300))
+  console.log('[IG]', res.status, text.slice(0, 300))
   let data: any = {}
   try { data = JSON.parse(text) } catch {}
   return { ok: res.status === 200, status: res.status, data }
 }
 
-// ── Fetch profile via User Info endpoint ──────────────────────────────────────
-async function fetchProfile(): Promise<InstagramProfile | null> {
-  // Try both endpoints: User Info and User Info By Username
-  const paths = [
-    `/v1/info?username_or_id_or_url=${USERNAME}`,
-    `/v1.1/info?username_or_id_or_url=${USERNAME}`,
-    `/user_info?username=${USERNAME}`,
-  ]
-
-  for (const path of paths) {
-    const { ok, data } = await apiFetch(path)
-    if (!ok) continue
-
-    // This API nests data under data.data or data.user
-    const u = data?.data?.user || data?.data || data?.user || data
-    if (!u || !u.username) continue
-
-    return {
-      username:        u.username             || USERNAME,
-      full_name:       u.full_name            || '',
-      bio:             u.biography            || u.bio || '',
-      followers:       u.follower_count       ?? u.followers_count ?? u.edge_followed_by?.count ?? 0,
-      following:       u.following_count      ?? u.following ?? u.edge_follow?.count ?? 0,
-      posts_count:     u.media_count          ?? u.posts_count ?? 0,
-      profile_pic_url: u.profile_pic_url_hd   || u.profile_pic_url || '',
-    }
-  }
-  return null
-}
-
-// ── Map raw items → our post shape ────────────────────────────────────────────
+// ── Map raw post items → our shape ────────────────────────────────────────────
 function mapPosts(rawItems: any[]): InstagramPost[] {
   return rawItems
     .slice(0, 9)
     .map((item: any) => {
-      const node = item?.node || item  // some APIs wrap in { node: ... }
+      const n = item?.node || item
 
       const isVideo =
-        node?.is_video === true ||
-        node?.media_type === 2 ||
-        node?.__typename === 'GraphVideo'
+        n?.is_video === true ||
+        n?.media_type === 2 ||
+        n?.__typename === 'GraphVideo'
 
       const imageUrl =
-        node?.display_url ||
-        node?.thumbnail_url ||
-        node?.image_url ||
-        node?.image_versions2?.candidates?.[0]?.url ||
-        node?.carousel_media?.[0]?.image_versions2?.candidates?.[0]?.url ||
-        node?.edge_sidecar_to_children?.edges?.[0]?.node?.display_url ||
+        n?.display_url ||
+        n?.thumbnail_url ||
+        n?.image_url ||
+        n?.image_versions2?.candidates?.[0]?.url ||
+        n?.carousel_media?.[0]?.image_versions2?.candidates?.[0]?.url ||
+        n?.edge_sidecar_to_children?.edges?.[0]?.node?.display_url ||
         ''
 
-      const shortcode = node?.shortcode || node?.code || ''
-      const postUrl = shortcode
-        ? `https://www.instagram.com/p/${shortcode}/`
-        : node?.post_url || '#'
+      const shortcode = n?.shortcode || n?.code || ''
+      const postUrl   = shortcode ? `https://www.instagram.com/p/${shortcode}/` : '#'
 
-      const takenAt = node?.taken_at_timestamp || node?.taken_at
-      const timestamp = takenAt
-        ? new Date(Number(takenAt) * 1000).toISOString()
-        : node?.timestamp || ''
+      const takenAt   = n?.taken_at_timestamp || n?.taken_at
+      const timestamp = takenAt ? new Date(Number(takenAt) * 1000).toISOString() : ''
 
       return {
-        id:        String(node?.id || node?.pk || Math.random()),
+        id:        String(n?.id || n?.pk || Math.random()),
         image_url: imageUrl,
         caption:
-          node?.edge_media_to_caption?.edges?.[0]?.node?.text ||
-          node?.caption?.text ||
-          node?.caption ||
-          '',
+          n?.edge_media_to_caption?.edges?.[0]?.node?.text ||
+          n?.caption?.text ||
+          n?.caption || '',
         likes:
-          node?.edge_media_preview_like?.count ??
-          node?.edge_liked_by?.count ??
-          node?.like_count ??
-          node?.likes_count ??
-          0,
+          n?.edge_media_preview_like?.count ??
+          n?.edge_liked_by?.count ??
+          n?.like_count ?? 0,
         comments:
-          node?.edge_media_to_comment?.count ??
-          node?.comment_count ??
-          node?.comments_count ??
-          0,
-        post_url:  postUrl,
+          n?.edge_media_to_comment?.count ??
+          n?.comment_count ?? 0,
+        post_url: postUrl,
         timestamp,
-        is_video:  isVideo,
+        is_video: isVideo,
       }
     })
     .filter(p => p.image_url)
 }
 
-// ── Fetch posts ───────────────────────────────────────────────────────────────
-async function fetchPosts(): Promise<InstagramPost[] | null> {
-  // User Posts and User Posts - v2 endpoints visible in the screenshot
-  const paths = [
-    `/v1/posts?username_or_id_or_url=${USERNAME}`,
-    `/v1.1/posts?username_or_id_or_url=${USERNAME}`,
-    `/v1/posts?username_or_id_or_url=${USERNAME}&count=12`,
-    `/user_posts?username=${USERNAME}`,
+// ── Extract profile from user object ─────────────────────────────────────────
+function extractProfile(u: any): InstagramProfile | null {
+  if (!u || typeof u !== 'object') return null
+  return {
+    username:        u.username          || USERNAME,
+    full_name:       u.full_name         || '',
+    bio:             u.biography         || u.bio || '',
+    followers:       u.follower_count    ?? u.followers_count ?? u.edge_followed_by?.count ?? 0,
+    following:       u.following_count   ?? u.following ?? u.edge_follow?.count ?? 0,
+    posts_count:     u.media_count       ?? u.posts_count ?? 0,
+    profile_pic_url: u.profile_pic_url_hd || u.profile_pic_url || '',
+  }
+}
+
+// ── Extract posts array from any response shape ───────────────────────────────
+function extractRawPosts(data: any): any[] | null {
+  const candidates = [
+    // user_info_web — posts nested under user
+    data?.data?.user?.edge_owner_to_timeline_media?.edges,
+    // user_posts endpoint
+    data?.data?.items,
+    data?.data?.posts,
+    data?.items,
+    data?.posts,
+    // graphql
+    data?.graphql?.user?.edge_owner_to_timeline_media?.edges,
+  ]
+  for (const c of candidates) {
+    if (Array.isArray(c) && c.length > 0) return c
+  }
+  return null
+}
+
+// ── STRATEGY 1: user_info_web — one call gets profile + posts ─────────────────
+async function strategyInfoWeb(): Promise<{ posts: InstagramPost[]; profile: InstagramProfile | null } | null> {
+  const { ok, data } = await apiFetch(`/v1/user_info_web?username=${USERNAME}`)
+  if (!ok) return null
+
+  const u = data?.data?.user || data?.user || data?.data
+  const profile = extractProfile(u)
+
+  const raw = extractRawPosts(data)
+  if (!raw) return null
+
+  const posts = mapPosts(raw)
+  if (posts.length === 0) return null
+
+  return { posts, profile }
+}
+
+// ── STRATEGY 2: user_info + user_posts separately ────────────────────────────
+async function strategyInfoAndPosts(): Promise<{ posts: InstagramPost[]; profile: InstagramProfile | null } | null> {
+  // First get user info to resolve user ID (needed for posts endpoint)
+  const infoRes = await apiFetch(`/v1/user_info?username_or_id=${USERNAME}`)
+  
+  let profile: InstagramProfile | null = null
+  let userId: string | null = null
+
+  if (infoRes.ok) {
+    const u = infoRes.data?.data?.user || infoRes.data?.data || infoRes.data?.user
+    profile = extractProfile(u)
+    userId  = String(u?.id || u?.pk || u?.user_id || '')
+  }
+
+  // Fetch posts — try by username first, then by userId
+  const postTargets = [
+    `/v1/user_posts?username_or_id=${USERNAME}`,
+    ...(userId ? [`/v1/user_posts?username_or_id=${userId}`] : []),
   ]
 
-  for (const path of paths) {
+  for (const path of postTargets) {
     const { ok, data } = await apiFetch(path)
     if (!ok) continue
-
-    // Try every possible nesting pattern
-    const candidates = [
-      data?.data?.items,
-      data?.data?.posts,
-      data?.items,
-      data?.posts,
-      data?.data?.user?.edge_owner_to_timeline_media?.edges,
-      data?.data?.edge_owner_to_timeline_media?.edges,
-    ]
-
-    for (const c of candidates) {
-      if (Array.isArray(c) && c.length > 0) {
-        const posts = mapPosts(c)
-        if (posts.length > 0) {
-          console.log('[IG] Posts found via', path, '—', posts.length, 'posts')
-          return posts
-        }
-      }
-    }
+    const raw = extractRawPosts(data)
+    if (!raw) continue
+    const posts = mapPosts(raw)
+    if (posts.length > 0) return { posts, profile }
   }
+
   return null
 }
 
@@ -187,62 +193,56 @@ async function fetchPosts(): Promise<InstagramPost[] | null> {
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
 
-  // ?bust=1 → force refresh
   if (searchParams.get('bust') === '1') cache = null
 
-  // ?debug=1 → raw diagnostic output
+  // ?debug=1 — raw diagnostic
   if (searchParams.get('debug') === '1') {
-    if (!RAPIDAPI_KEY) {
-      return NextResponse.json({ error: 'RAPIDAPI_KEY not set' }, { status: 500 })
-    }
-    const [profileRes, postsRes] = await Promise.all([
-      apiFetch(`/v1/info?username_or_id_or_url=${USERNAME}`),
-      apiFetch(`/v1/posts?username_or_id_or_url=${USERNAME}`),
+    if (!RAPIDAPI_KEY) return NextResponse.json({ error: 'RAPIDAPI_KEY not set' }, { status: 500 })
+    const [r1, r2, r3] = await Promise.all([
+      apiFetch(`/v1/user_info_web?username=${USERNAME}`),
+      apiFetch(`/v1/user_info?username_or_id=${USERNAME}`),
+      apiFetch(`/v1/user_posts?username_or_id=${USERNAME}`),
     ])
     return NextResponse.json({
-      host:         HOST,
-      key_prefix:   RAPIDAPI_KEY.slice(0, 8),
-      key_length:   RAPIDAPI_KEY.length,
-      profile_status: profileRes.status,
-      profile_data:   profileRes.data,
-      posts_status:   postsRes.status,
-      posts_data:     postsRes.data,
+      host: HOST, key_prefix: RAPIDAPI_KEY.slice(0, 8),
+      user_info_web:  { status: r1.status, data: r1.data },
+      user_info:      { status: r2.status, data: r2.data },
+      user_posts:     { status: r3.status, data: r3.data },
     })
   }
 
-  // Guard: missing key
-  if (!RAPIDAPI_KEY || RAPIDAPI_KEY.trim() === '') {
-    console.error('[IG] RAPIDAPI_KEY missing')
+  // Guard
+  if (!RAPIDAPI_KEY?.trim()) {
     if (cache) return NextResponse.json({ posts: cache.posts, profile: cache.profile, cached: true, stale: true })
     return NextResponse.json({ error: 'Missing RAPIDAPI_KEY', posts: [], profile: null }, { status: 500 })
   }
 
-  // Serve cache if fresh
+  // Serve fresh cache
   if (cache && Date.now() - cache.timestamp < CACHE_TTL) {
     return NextResponse.json({ posts: cache.posts, profile: cache.profile, cached: true })
   }
 
   try {
-    // Fetch posts + profile in parallel
-    const [posts, profile] = await Promise.all([fetchPosts(), fetchProfile()])
+    // Strategy 1: one call — user_info_web (profile + posts together)
+    let result = await strategyInfoWeb()
 
-    if (!posts || posts.length === 0) {
-      throw new Error(
-        `No posts returned from ${HOST}. ` +
-        `Add RAPIDAPI_HOST env var if needed. ` +
-        `Visit /api/instagram?debug=1 for raw output.`
-      )
+    // Strategy 2: two calls — user_info + user_posts
+    if (!result) {
+      console.log('[IG] Strategy 1 failed, trying Strategy 2')
+      result = await strategyInfoAndPosts()
     }
 
-    cache = { posts, profile, timestamp: Date.now() }
-    console.log(`[IG] Cached ${posts.length} posts, profile followers: ${profile?.followers}`)
-    return NextResponse.json({ posts, profile, cached: false })
+    if (!result || result.posts.length === 0) {
+      throw new Error('No posts returned. Check Vercel logs and /api/instagram?debug=1')
+    }
+
+    cache = { posts: result.posts, profile: result.profile, timestamp: Date.now() }
+    console.log(`[IG] Success: ${result.posts.length} posts, followers: ${result.profile?.followers}`)
+    return NextResponse.json({ posts: result.posts, profile: result.profile, cached: false })
 
   } catch (err: any) {
     console.error('[IG] Error:', err.message)
-    if (cache) {
-      return NextResponse.json({ posts: cache.posts, profile: cache.profile, cached: true, stale: true })
-    }
+    if (cache) return NextResponse.json({ posts: cache.posts, profile: cache.profile, cached: true, stale: true })
     return NextResponse.json({ error: err.message, posts: [], profile: null }, { status: 500 })
   }
 }
