@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 
-const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY || '3f5b6051b4mshf5863ac3ae6a88ap118d8ejsn35f5694b53b7'
+const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY!
 const INSTAGRAM_USERNAME = '_sbcreation'
 const INSTAGRAM_URL = `https://www.instagram.com/${INSTAGRAM_USERNAME}`
 const CACHE_DURATION = 60 * 60 * 1000
@@ -135,7 +135,7 @@ async function fetchProfile(): Promise<InstagramProfile | null> {
       bio: u?.biography || u?.bio || '',
       followers: u?.followers_count ?? u?.follower_count ?? 0,
       following: u?.following_count ?? u?.following ?? 0,
-      posts_count: 0,
+      posts_count: 0, // API doesn't return this accurately
       profile_pic_url: u?.profile_pic_url_hd || u?.profile_pic_url || '',
     }
   } catch (e) {
