@@ -15,7 +15,7 @@
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "jsx": "preserve",
+    "jsx": "react-jsx",
     "incremental": true,
     "plugins": [
       {
@@ -23,7 +23,7 @@
       }
     ],
     /* ⚡ Crucial Fix Below ⚡ */
-    "baseUrl": ".", 
+    "baseUrl": ".",
     "paths": {
       "@/*": [
         "./src/*"
@@ -37,8 +37,9 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
     "**/*.mts",
-    "next.config.mjs"
-, "src/lib/sampleTestimonialsData.js"  ],
+    "next.config.mjs",
+    "src/lib/sampleTestimonialsData.js"
+  ],
   "exclude": [
     "node_modules"
   ]

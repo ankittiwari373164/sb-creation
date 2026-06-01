@@ -54,6 +54,16 @@ export default function AdminPage() {
 
   const [couponForm, setCouponForm] = useState({ code: '', discount_percent: 10 })
 
+  // --- ⚙️ Store Settings (Payments) ---
+  const [settings, setSettings] = useState({
+    razorpay_enabled: false,
+    cod_enabled: true,
+    razorpay_key_id: '',
+    razorpay_key_secret: '',
+  })
+  const [savingSettings, setSavingSettings] = useState(false)
+  const [showSecret, setShowSecret] = useState(false)
+
   // --- 🔐 Security & Auth ---
   useEffect(() => { verifyAdmin() }, [])
 
@@ -64,6 +74,57 @@ export default function AdminPage() {
       router.push('/login'); return
     }
     fetchData()
+    fetchSettings()
+  }
+
+  // --- ⚙️ Settings: fetch / save (goes through admin-only API so the secret
+  // never lives in client-readable tables) ---
+  const getToken = async () => {
+    const { data } = await supabase.auth.getSession()
+    return data.session?.access_token || ''
+  }
+
+  const fetchSettings = async () => {
+    try {
+      const token = await getToken()
+      const res = await fetch('/api/admin/settings', {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (!res.ok) return
+      const data = await res.json()
+      setSettings({
+        razorpay_enabled: !!data.razorpay_enabled,
+        cod_enabled: !!data.cod_enabled,
+        razorpay_key_id: data.razorpay_key_id || '',
+        razorpay_key_secret: data.razorpay_key_secret || '',
+      })
+    } catch (err) {
+      console.error('Failed to load settings', err)
+    }
+  }
+
+  const saveSettings = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSavingSettings(true)
+    try {
+      const token = await getToken()
+      const res = await fetch('/api/admin/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify(settings),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        toast.error(data.error || 'Could not save settings')
+      } else {
+        toast.success('Payment settings saved')
+        fetchSettings()
+      }
+    } catch (err) {
+      toast.error('Could not save settings')
+    } finally {
+      setSavingSettings(false)
+    }
   }
 
   const fetchData = async () => {
@@ -264,7 +325,8 @@ export default function AdminPage() {
             { id: 'orders', icon: Package, label: 'Orders' },
             { id: 'coupons', icon: Ticket, label: 'Coupons' },
             { id: 'blog', icon: BookOpen, label: 'Journal' },
-            { id: 'customers', icon: Users, label: 'Customers' }
+            { id: 'customers', icon: Users, label: 'Customers' },
+            { id: 'settings', icon: Settings, label: 'Settings' }
           ].map(tab => (
             <button 
               key={tab.id} 
@@ -508,6 +570,99 @@ export default function AdminPage() {
                 </div>
                )
             })}
+          </div>
+        )}
+
+        {/* --- ⚙️ SETTINGS / PAYMENTS TAB --- */}
+        {activeTab === 'settings' && (
+          <div className="max-w-3xl mx-auto space-y-8">
+            <h2 className="text-2xl font-serif text-[#0F2C3E]">Payment Settings</h2>
+
+            <form onSubmit={saveSettings} className="bg-white p-8 md:p-12 rounded-[3rem] border border-gray-100 shadow-xl space-y-10">
+
+              {/* Payment method toggles */}
+              <div className="space-y-5">
+                <h3 className="text-[10px] font-bold uppercase tracking-widest text-[#D4AF37]">Accepted Methods</h3>
+
+                {/* COD toggle */}
+                <div className="flex items-center justify-between bg-[#FAF9F6] p-6 rounded-3xl">
+                  <div>
+                    <p className="font-bold text-[#0F2C3E]">Cash on Delivery</p>
+                    <p className="text-xs text-gray-400 mt-0.5">Let customers pay when the order arrives.</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setSettings(s => ({ ...s, cod_enabled: !s.cod_enabled }))}
+                    className={`relative w-14 h-8 rounded-full transition-colors shrink-0 ${settings.cod_enabled ? 'bg-[#0F2C3E]' : 'bg-gray-300'}`}
+                    aria-pressed={settings.cod_enabled}
+                  >
+                    <span className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full shadow transition-transform ${settings.cod_enabled ? 'translate-x-6' : ''}`} />
+                  </button>
+                </div>
+
+                {/* Razorpay toggle */}
+                <div className="flex items-center justify-between bg-[#FAF9F6] p-6 rounded-3xl">
+                  <div>
+                    <p className="font-bold text-[#0F2C3E]">Razorpay (Online Payment)</p>
+                    <p className="text-xs text-gray-400 mt-0.5">Cards, UPI, netbanking & wallets.</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setSettings(s => ({ ...s, razorpay_enabled: !s.razorpay_enabled }))}
+                    className={`relative w-14 h-8 rounded-full transition-colors shrink-0 ${settings.razorpay_enabled ? 'bg-[#0F2C3E]' : 'bg-gray-300'}`}
+                    aria-pressed={settings.razorpay_enabled}
+                  >
+                    <span className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full shadow transition-transform ${settings.razorpay_enabled ? 'translate-x-6' : ''}`} />
+                  </button>
+                </div>
+              </div>
+
+              {/* Razorpay credentials */}
+              <div className="space-y-5 border-t border-gray-100 pt-8">
+                <h3 className="text-[10px] font-bold uppercase tracking-widest text-[#D4AF37]">Razorpay Credentials</h3>
+                <p className="text-xs text-gray-400 -mt-2">
+                  From your Razorpay Dashboard → Settings → API Keys. The secret is stored securely on the server and is never exposed to shoppers.
+                </p>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold uppercase text-gray-400 ml-5">Key ID</label>
+                  <input
+                    value={settings.razorpay_key_id}
+                    onChange={e => setSettings(s => ({ ...s, razorpay_key_id: e.target.value }))}
+                    placeholder="rzp_live_xxxxxxxx or rzp_test_xxxxxxxx"
+                    className="w-full bg-[#FAF9F6] p-5 rounded-full outline-none text-sm font-mono"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold uppercase text-gray-400 ml-5">Key Secret</label>
+                  <div className="relative">
+                    <input
+                      type={showSecret ? 'text' : 'password'}
+                      value={settings.razorpay_key_secret}
+                      onChange={e => setSettings(s => ({ ...s, razorpay_key_secret: e.target.value }))}
+                      placeholder="••••••••••••••••"
+                      className="w-full bg-[#FAF9F6] p-5 pr-24 rounded-full outline-none text-sm font-mono"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowSecret(v => !v)}
+                      className="absolute right-5 top-1/2 -translate-y-1/2 text-[10px] font-bold uppercase text-[#D4AF37]"
+                    >
+                      {showSecret ? 'Hide' : 'Show'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={savingSettings}
+                className="w-full bg-[#0F2C3E] text-white py-5 rounded-full text-[11px] font-bold uppercase tracking-[0.3em] shadow-xl hover:bg-[#db2777] transition-all disabled:opacity-50 flex items-center justify-center gap-3"
+              >
+                <Save size={16} /> {savingSettings ? 'Saving...' : 'Save Settings'}
+              </button>
+            </form>
           </div>
         )}
 

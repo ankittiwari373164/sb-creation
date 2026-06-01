@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Country, State, City } from 'country-state-city'
 import { motion } from 'framer-motion'
-import { Truck, ShieldCheck, ArrowLeft, CreditCard, Lock, Tag } from 'lucide-react'
+import { Truck, ShieldCheck, ArrowLeft, CreditCard, Lock, Tag, Banknote } from 'lucide-react'
 import { useCartStore } from '../../lib/cartStore'
 import { supabase } from '../../lib/supabase'
 import Link from 'next/link'
@@ -14,6 +14,13 @@ export default function CheckoutPage() {
   const router = useRouter()
   const { items, getTotalPrice, clearCart, coupon } = useCartStore()
   const [loading, setLoading] = useState(false)
+
+  // Payment configuration fetched from the server (never includes the secret).
+  const [paySettings, setPaySettings] = useState({
+    razorpay_enabled: false,
+    cod_enabled: true,
+    razorpay_key_id: '',
+  })
 
   const [couponCode, setCouponCode] = useState(coupon?.code || '')
   const [discount, setDiscount] = useState(coupon?.discount_percent || 0)
@@ -36,6 +43,35 @@ export default function CheckoutPage() {
   const subtotal = getTotalPrice()
   const discountAmount = (subtotal * discount) / 100
   const finalTotal = subtotal - discountAmount
+
+  // Load payment settings once on mount, then pick a sensible default method.
+  useEffect(() => {
+    let active = true
+    fetch('/api/settings')
+      .then(r => r.json())
+      .then((s) => {
+        if (!active) return
+        setPaySettings(s)
+        setFormData(prev => ({
+          ...prev,
+          paymentMethod: s.cod_enabled ? 'cod' : (s.razorpay_enabled ? 'razorpay' : 'cod'),
+        }))
+      })
+      .catch(() => {})
+    return () => { active = false }
+  }, [])
+
+  // Inject the Razorpay checkout script on demand.
+  const loadRazorpayScript = (): Promise<boolean> =>
+    new Promise((resolve) => {
+      if (typeof window === 'undefined') return resolve(false)
+      if ((window as any).Razorpay) return resolve(true)
+      const script = document.createElement('script')
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js'
+      script.onload = () => resolve(true)
+      script.onerror = () => resolve(false)
+      document.body.appendChild(script)
+    })
 
   const handleApplyCoupon = async () => {
     if (!couponCode) return
@@ -91,9 +127,41 @@ export default function CheckoutPage() {
     }))
   }
 
+  // Creates the order + items in Supabase. Returns the created order, or null on failure.
+  const createOrderRecord = async (userId: string, paymentMethod: string) => {
+    const { data: order, error: orderError } = await supabase
+      .from('orders')
+      .insert({
+        user_id: userId,
+        total: finalTotal,
+        status: 'pending',
+        payment_method: paymentMethod,
+        payment_status: 'pending',
+        shipping_address: formData,
+        coupon_used: discount > 0 ? couponCode.toUpperCase() : null,
+      })
+      .select()
+      .single()
+
+    if (orderError) throw orderError
+
+    const orderItems = items.map(item => ({
+      order_id: order.id,
+      product_id: item.product.id,
+      quantity: item.quantity,
+      price: item.product.price,
+    }))
+
+    const { error: itemsError } = await supabase.from('order_items').insert(orderItems)
+    if (itemsError) throw itemsError
+
+    return order
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
+    let modalOpened = false
 
     try {
       const { data: { user } } = await supabase.auth.getUser()
@@ -102,36 +170,114 @@ export default function CheckoutPage() {
         router.push('/login'); return
       }
 
-      const { data: order, error: orderError } = await supabase
-        .from('orders')
-        .insert({
-          user_id: user.id,
-          total: finalTotal,
-          status: 'pending',
-          shipping_address: formData,
-          coupon_used: discount > 0 ? couponCode.toUpperCase() : null
+      const method = formData.paymentMethod
+
+      // ── Cash on Delivery ──
+      if (method === 'cod') {
+        if (!paySettings.cod_enabled) {
+          toast.error('Cash on Delivery is currently unavailable')
+          return
+        }
+        await createOrderRecord(user.id, 'cod')
+        clearCart()
+        toast.success('Order placed! Thank you for choosing SB Creation.')
+        router.push('/dashboard')
+        return
+      }
+
+      // ── Razorpay (online) ──
+      if (method === 'razorpay') {
+        if (!paySettings.razorpay_enabled) {
+          toast.error('Online payment is currently unavailable')
+          return
+        }
+
+        const ok = await loadRazorpayScript()
+        if (!ok) {
+          toast.error('Could not load payment gateway. Check your connection.')
+          return
+        }
+
+        // 1. Record the order as pending/unpaid first.
+        const order = await createOrderRecord(user.id, 'razorpay')
+
+        // 2. Ask the server to create a Razorpay order.
+        const res = await fetch('/api/razorpay/create-order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ amount: finalTotal, receipt: `order_${order.id}` }),
         })
-        .select().single()
+        const rzp = await res.json()
+        if (!res.ok) {
+          toast.error(rzp.error || 'Could not start payment')
+          return
+        }
 
-      if (orderError) throw orderError
+        // 3. Open the Razorpay checkout.
+        const rzpInstance = new (window as any).Razorpay({
+          key: rzp.keyId,
+          amount: rzp.amount,
+          currency: rzp.currency,
+          name: 'SB Creation',
+          description: 'Order Payment',
+          order_id: rzp.orderId,
+          prefill: {
+            name: formData.fullName,
+            email: formData.email,
+            contact: formData.phone,
+          },
+          theme: { color: '#0F2C3E' },
+          handler: async (response: any) => {
+            // 4. Verify the signature on the server before trusting the payment.
+            try {
+              const vRes = await fetch('/api/razorpay/verify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  razorpay_order_id: response.razorpay_order_id,
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_signature: response.razorpay_signature,
+                  order_id: order.id,
+                }),
+              })
+              const vData = await vRes.json()
+              if (!vRes.ok) {
+                toast.error(vData.error || 'Payment verification failed')
+                setLoading(false)
+                return
+              }
+              clearCart()
+              toast.success('Payment successful! Thank you for your order.')
+              router.push('/dashboard')
+            } catch {
+              toast.error('Payment verification failed')
+              setLoading(false)
+            }
+          },
+          modal: {
+            ondismiss: () => {
+              toast('Payment cancelled. Your order is saved as pending.', { icon: '⚠️' })
+              setLoading(false)
+            },
+          },
+        })
 
-      const orderItems = items.map(item => ({
-        order_id: order.id,
-        product_id: item.product.id,
-        quantity: item.quantity,
-        price: item.product.price,
-      }))
+        rzpInstance.on('payment.failed', () => {
+          toast.error('Payment failed. Please try again.')
+          setLoading(false)
+        })
 
-      const { error: itemsError } = await supabase.from('order_items').insert(orderItems)
-      if (itemsError) throw itemsError
-
-      clearCart()
-      toast.success('Order placed! Thank you for choosing SB Creation.')
-      router.push('/dashboard')
+        rzpInstance.open()
+        modalOpened = true
+        // Note: don't clear loading here — the handler/ondismiss callbacks manage it.
+        return
+      }
     } catch (error: any) {
       toast.error('Something went wrong. Please check your details.')
     } finally {
-      setLoading(false)
+      // Once the Razorpay modal is open its callbacks own the loading state;
+      // otherwise (COD, or any early failure) reset it here.
+      if (!modalOpened) setLoading(false)
     }
   }
 
@@ -272,22 +418,59 @@ export default function CheckoutPage() {
                   <h2 className="text-xl font-serif text-[#2d2416] mb-5 flex items-center gap-3">
                     <CreditCard size={18} className="text-[#0F5A7E]" /> Payment Method
                   </h2>
-                  <label className="flex items-center p-4 md:p-5 border border-[#D4AF37]/50 bg-[#F8C8DC]/10 rounded-xl md:rounded-2xl cursor-pointer hover:bg-[#F8C8DC]/20 transition-all">
-                    <input type="radio" checked readOnly className="mr-3 accent-[#d92b7a]" />
-                    <div>
-                      <p className="text-sm font-bold text-[#2d2416] font-sans">Cash on Delivery</p>
-                      <p className="text-xs text-[#5a4a42] font-sans mt-0.5">Pay upon delivery — no advance required</p>
-                    </div>
-                  </label>
+
+                  <div className="space-y-3">
+                    {paySettings.cod_enabled && (
+                      <label className={`flex items-center p-4 md:p-5 border rounded-xl md:rounded-2xl cursor-pointer transition-all ${formData.paymentMethod === 'cod' ? 'border-[#d92b7a] bg-[#F8C8DC]/20' : 'border-[#D4AF37]/50 bg-[#F8C8DC]/10 hover:bg-[#F8C8DC]/20'}`}>
+                        <input
+                          type="radio" name="paymentMethod" value="cod"
+                          checked={formData.paymentMethod === 'cod'}
+                          onChange={handleInputChange}
+                          className="mr-3 accent-[#d92b7a]"
+                        />
+                        <Banknote size={20} className="text-[#0F5A7E] mr-3 shrink-0" />
+                        <div>
+                          <p className="text-sm font-bold text-[#2d2416] font-sans">Cash on Delivery</p>
+                          <p className="text-xs text-[#5a4a42] font-sans mt-0.5">Pay upon delivery — no advance required</p>
+                        </div>
+                      </label>
+                    )}
+
+                    {paySettings.razorpay_enabled && (
+                      <label className={`flex items-center p-4 md:p-5 border rounded-xl md:rounded-2xl cursor-pointer transition-all ${formData.paymentMethod === 'razorpay' ? 'border-[#d92b7a] bg-[#F8C8DC]/20' : 'border-[#D4AF37]/50 bg-[#F8C8DC]/10 hover:bg-[#F8C8DC]/20'}`}>
+                        <input
+                          type="radio" name="paymentMethod" value="razorpay"
+                          checked={formData.paymentMethod === 'razorpay'}
+                          onChange={handleInputChange}
+                          className="mr-3 accent-[#d92b7a]"
+                        />
+                        <CreditCard size={20} className="text-[#0F5A7E] mr-3 shrink-0" />
+                        <div>
+                          <p className="text-sm font-bold text-[#2d2416] font-sans">Pay Online</p>
+                          <p className="text-xs text-[#5a4a42] font-sans mt-0.5">UPI, Cards, Netbanking & Wallets via Razorpay</p>
+                        </div>
+                      </label>
+                    )}
+
+                    {!paySettings.cod_enabled && !paySettings.razorpay_enabled && (
+                      <p className="text-sm text-[#5a4a42] font-sans p-4 bg-[#F8C8DC]/10 rounded-xl border border-[#D4AF37]/40">
+                        No payment methods are currently available. Please check back soon.
+                      </p>
+                    )}
+                  </div>
                 </div>
 
                 {/* Submit */}
                 <button
                   type="submit"
-                  disabled={loading}
+                  disabled={loading || (!paySettings.cod_enabled && !paySettings.razorpay_enabled)}
                   className="w-full bg-[#2d2416] text-white py-4 rounded-full flex items-center justify-center gap-3 text-xs font-bold uppercase tracking-[0.2em] hover:bg-[#0F5A7E] shadow-lg disabled:opacity-50 transition-all font-sans"
                 >
-                  {loading ? 'Confirming...' : <><Lock size={14} /> Place Order Now</>}
+                  {loading
+                    ? 'Confirming...'
+                    : formData.paymentMethod === 'razorpay'
+                      ? <><Lock size={14} /> Pay ₹{finalTotal.toLocaleString()} Securely</>
+                      : <><Lock size={14} /> Place Order Now</>}
                 </button>
 
               </form>
