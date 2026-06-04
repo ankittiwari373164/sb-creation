@@ -6,6 +6,7 @@ import { Filter, Search, X, SlidersHorizontal, Sparkles, ChevronDown, ArrowUpDow
 import { supabase } from '../../../lib/supabase'
 import ProductCard from '../../../components/ProductCard'
 import Link from 'next/link'
+import { use } from 'react'
 
 // Helper function translates the URL slug back to exact Database Category Name
 const getCategoryName = (slug: string) => {
@@ -26,8 +27,9 @@ const sortOptions = [
   { value: 'price-high', label: 'Price: High to Low' },
 ]
 
-export default function CategoryPage({ params }: { params: { slug: string } }) {
-  const categoryName = getCategoryName(params.slug)
+export default function CategoryPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = use(params)
+  const categoryName = getCategoryName(slug)
 
   const [products, setProducts] = useState<any[]>([])
   const [filteredProducts, setFilteredProducts] = useState<any[]>([])
