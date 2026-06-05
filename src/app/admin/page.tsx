@@ -6,7 +6,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { 
   Plus, Edit, Trash2, Upload, X, Settings, History, 
   Ticket, BookOpen, Save, Users, Package, ShoppingBag,
-  ExternalLink, CheckCircle, Search, LayoutDashboard, User, RefreshCcw, LogOut
+  ExternalLink, CheckCircle, Search, LayoutDashboard, User, RefreshCcw, LogOut,
+  Eye, MapPin, Phone, Mail, CreditCard, ChevronDown
 } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import toast from 'react-hot-toast'
@@ -40,6 +41,7 @@ export default function AdminPage() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [uploading, setUploading] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
+  const [selectedOrder, setSelectedOrder] = useState<any>(null)
 
   // --- Form States ---
   // 💎 Updated default category to match your list
@@ -143,7 +145,7 @@ export default function AdminPage() {
     try {
       const [p, o, c, b, cust] = await Promise.all([
         supabase.from('products').select('*').order('created_at', { ascending: false }),
-        supabase.from('orders').select('*').order('created_at', { ascending: false }),
+        supabase.from('orders').select('*, order_items(*, products(name, image_url, price))').order('created_at', { ascending: false }),
         supabase.from('coupons').select('*').order('created_at', { ascending: false }),
         supabase.from('blog_posts').select('*').order('created_at', { ascending: false }),
         supabase.from('user_profiles').select('*').order('created_at', { ascending: false })
@@ -533,6 +535,7 @@ export default function AdminPage() {
                      <option value="shipped">Shipped</option>
                      <option value="delivered">Delivered</option>
                    </select>
+                   <button onClick={() => setSelectedOrder(order)} className="p-3 text-[#D4AF37] hover:bg-[#FAF9F6] rounded-full" title="View Details"><Eye size={18}/></button>
                    <button onClick={() => deleteItem('orders', order.id)} className="p-3 text-red-400 hover:bg-red-50 rounded-full"><Trash2 size={18}/></button>
                 </div>
               </div>
@@ -706,6 +709,145 @@ export default function AdminPage() {
         )}
 
       </div>
+
+      {/* ─── Order Detail Modal ─── */}
+      <AnimatePresence>
+        {selectedOrder && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+            onClick={() => setSelectedOrder(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              onClick={e => e.stopPropagation()}
+              className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+            >
+              {/* Modal Header */}
+              <div className="flex items-center justify-between p-8 border-b border-gray-100">
+                <div>
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Order Details</p>
+                  <h2 className="text-2xl font-serif text-[#0F2C3E]">#{selectedOrder.id.substring(0,8).toUpperCase()}</h2>
+                </div>
+                <button onClick={() => setSelectedOrder(null)} className="p-3 rounded-full hover:bg-gray-100 transition-colors">
+                  <X size={20} className="text-gray-400" />
+                </button>
+              </div>
+
+              <div className="p-8 space-y-8">
+
+                {/* Status + Payment Row */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-[#FAF9F6] rounded-2xl p-5">
+                    <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-2">Order Status</p>
+                    <select
+                      defaultValue={selectedOrder.status}
+                      onChange={async (e) => {
+                        const { error } = await supabase.from('orders').update({ status: e.target.value }).eq('id', selectedOrder.id)
+                        if (!error) { toast.success('Status Updated'); fetchData() }
+                      }}
+                      className="bg-white px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest outline-none border border-gray-100 cursor-pointer w-full"
+                    >
+                      <option value="pending">Pending</option>
+                      <option value="processing">Processing</option>
+                      <option value="shipped">Shipped</option>
+                      <option value="delivered">Delivered</option>
+                    </select>
+                  </div>
+                  <div className="bg-[#FAF9F6] rounded-2xl p-5">
+                    <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-2">Payment</p>
+                    <span className={`text-[10px] font-bold uppercase px-3 py-1.5 rounded-full ${
+                      selectedOrder.payment_status === 'paid' ? 'bg-green-100 text-green-600' :
+                      selectedOrder.payment_method === 'cod' ? 'bg-blue-50 text-blue-600' :
+                      'bg-orange-50 text-orange-500'
+                    }`}>
+                      {selectedOrder.payment_method === 'cod' ? 'Cash on Delivery' : selectedOrder.payment_status === 'paid' ? '✓ Paid Online' : '⏳ Unpaid'}
+                    </span>
+                    <p className="text-xl font-serif text-[#0F2C3E] mt-2">₹{(selectedOrder.total_amount || 0).toLocaleString()}</p>
+                  </div>
+                </div>
+
+                {/* Customer & Shipping */}
+                {selectedOrder.shipping_address && (
+                  <div className="bg-[#FAF9F6] rounded-2xl p-6 space-y-3">
+                    <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">Shipping Details</p>
+                    <div className="flex items-start gap-3">
+                      <User size={14} className="text-[#D4AF37] mt-0.5 shrink-0" />
+                      <p className="text-sm font-bold text-[#0F2C3E]">{selectedOrder.shipping_address.fullName}</p>
+                    </div>
+                    {selectedOrder.shipping_address.phone && (
+                      <div className="flex items-center gap-3">
+                        <Phone size={14} className="text-[#D4AF37] shrink-0" />
+                        <p className="text-sm text-gray-600">{selectedOrder.shipping_address.phone}</p>
+                      </div>
+                    )}
+                    {selectedOrder.shipping_address.email && (
+                      <div className="flex items-center gap-3">
+                        <Mail size={14} className="text-[#D4AF37] shrink-0" />
+                        <p className="text-sm text-gray-600">{selectedOrder.shipping_address.email}</p>
+                      </div>
+                    )}
+                    <div className="flex items-start gap-3">
+                      <MapPin size={14} className="text-[#D4AF37] mt-0.5 shrink-0" />
+                      <div className="text-sm text-gray-600">
+                        <p>{selectedOrder.shipping_address.address}</p>
+                        <p>{selectedOrder.shipping_address.city}{selectedOrder.shipping_address.state ? `, ${selectedOrder.shipping_address.state}` : ''} {selectedOrder.shipping_address.pincode}</p>
+                        <p>{selectedOrder.shipping_address.country}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Order Items */}
+                {selectedOrder.order_items?.length > 0 && (
+                  <div>
+                    <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-4">Items ({selectedOrder.order_items.length})</p>
+                    <div className="space-y-3">
+                      {selectedOrder.order_items.map((item: any, i: number) => (
+                        <div key={i} className="flex items-center gap-4 p-4 bg-[#FAF9F6] rounded-2xl">
+                          {item.products?.image_url && (
+                            <div className="relative w-14 h-14 rounded-xl overflow-hidden shrink-0">
+                              <Image src={item.products.image_url} fill alt={item.products?.name} className="object-cover" />
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-bold text-[#0F2C3E] truncate">{item.products?.name || 'Product'}</p>
+                            <p className="text-[10px] text-gray-400 font-bold uppercase">Qty: {item.quantity} × ₹{(item.price || 0).toLocaleString()}</p>
+                          </div>
+                          <p className="text-sm font-serif text-[#0F2C3E] font-bold shrink-0">₹{((item.price || 0) * item.quantity).toLocaleString()}</p>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-100">
+                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Order Total</span>
+                      <span className="text-2xl font-serif text-[#0F2C3E]">₹{(selectedOrder.total_amount || 0).toLocaleString()}</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Razorpay IDs if paid online */}
+                {selectedOrder.razorpay_payment_id && (
+                  <div className="bg-green-50 rounded-2xl p-5 space-y-2">
+                    <p className="text-[9px] font-bold text-green-600 uppercase tracking-widest">Payment Reference</p>
+                    <p className="text-[10px] text-gray-500 font-mono break-all">Payment ID: {selectedOrder.razorpay_payment_id}</p>
+                    {selectedOrder.razorpay_order_id && <p className="text-[10px] text-gray-500 font-mono break-all">Razorpay Order: {selectedOrder.razorpay_order_id}</p>}
+                  </div>
+                )}
+
+                {/* Date */}
+                <p className="text-[10px] text-gray-400 text-center font-bold uppercase tracking-widest">
+                  Placed on {new Date(selectedOrder.created_at).toLocaleString('en-IN', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                </p>
+
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

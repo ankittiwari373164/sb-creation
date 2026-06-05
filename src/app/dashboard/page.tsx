@@ -174,7 +174,7 @@ export default function DashboardPage() {
                           </div>
                           
                           <div className="flex items-center justify-between md:justify-end gap-8">
-                             <p className="text-lg font-serif text-[#0F2C3E]">₹{order.total.toLocaleString()}</p>
+                             <p className="text-lg font-serif text-[#0F2C3E]">₹{(order.total_amount || 0).toLocaleString()}</p>
                              <div className={`px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest ${status.bg} ${status.text} flex items-center gap-2`}>
                                 <div className={`w-1.5 h-1.5 rounded-full ${status.dot}`} />
                                 {status.label}
