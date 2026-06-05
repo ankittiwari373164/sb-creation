@@ -16,8 +16,22 @@ export default function CheckoutPage() {
   const [CSC, setCSC] = useState<any>(null)
 
   // Lazy-load country-state-city so it doesn't block page render
+  // Once loaded, default to India
   useEffect(() => {
-    import('country-state-city').then(m => setCSC(m))
+    import('country-state-city').then(m => {
+      setCSC(m)
+      const india = m.Country.getAllCountries().find((c: any) => c.isoCode === 'IN')
+      if (india) {
+        setFormData(prev => ({
+          ...prev,
+          country: india.name,
+          countryCode: 'IN',
+          state: '',
+          stateCode: '',
+          city: '',
+        }))
+      }
+    })
   }, [])
 
   const [paySettings, setPaySettings] = useState({
@@ -344,32 +358,43 @@ export default function CheckoutPage() {
 
                     <div className="space-y-1.5">
                       <label className={labelCls}>Country</label>
-                      <select name="country" value={formData.country} onChange={handleCountryChange} required className={selectCls}>
-                        <option value="">Select Country</option>
-                        {( CSC?.Country?.getAllCountries() ?? []).map((c: any) => (
-                          <option key={c.isoCode} value={c.name}>{c.name}</option>
-                        ))}
-                      </select>
+                      {!CSC ? (
+                        <div className={`${selectCls} animate-pulse bg-[#F8C8DC]/20 text-[#5a4a42]/50`}>Loading countries...</div>
+                      ) : (
+                        <select name="country" value={formData.country} onChange={handleCountryChange} required className={selectCls}>
+                          <option value="">Select Country</option>
+                          {CSC.Country.getAllCountries().map((c: any) => (
+                            <option key={c.isoCode} value={c.name}>{c.name}</option>
+                          ))}
+                        </select>
+                      )}
                     </div>
 
                     <div className="space-y-1.5">
                       <label className={labelCls}>State</label>
-                      <select name="state" value={formData.state} onChange={handleStateChange} required disabled={!formData.country} className={`${selectCls} disabled:opacity-40`}>
-                        <option value="">Select State</option>
-                        {( CSC?.State?.getStatesOfCountry(formData.countryCode) ?? []).map((s: any) => (
-                          <option key={s.isoCode} value={s.name}>{s.name}</option>
-                        ))}
-                      </select>
+                      {!CSC ? (
+                        <div className={`${selectCls} animate-pulse bg-[#F8C8DC]/20 text-[#5a4a42]/50`}>Loading states...</div>
+                      ) : (
+                        <select name="state" value={formData.state} onChange={handleStateChange} required disabled={!formData.countryCode} className={`${selectCls} disabled:opacity-40`}>
+                          <option value="">Select State</option>
+                          {CSC.State.getStatesOfCountry(formData.countryCode).map((s: any) => (
+                            <option key={s.isoCode} value={s.name}>{s.name}</option>
+                          ))}
+                        </select>
+                      )}
                     </div>
 
                     <div className="space-y-1.5 md:col-span-2">
                       <label className={labelCls}>City</label>
-                      <select name="city" value={formData.city} onChange={handleInputChange} required disabled={!formData.state} className={`${selectCls} disabled:opacity-40`}>
-                        <option value="">Select City</option>
-                        {( CSC?.City?.getCitiesOfState(formData.countryCode, formData.stateCode) ?? []).map((city: any) => (
-                          <option key={city.name} value={city.name}>{city.name}</option>
-                        ))}
-                      </select>
+                      <input
+                        type="text"
+                        name="city"
+                        value={formData.city}
+                        onChange={handleInputChange}
+                        required
+                        className={inputCls}
+                        placeholder="Enter your city"
+                      />
                     </div>
 
                   </div>
