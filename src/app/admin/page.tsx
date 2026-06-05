@@ -480,12 +480,40 @@ export default function AdminPage() {
         {/* --- 📦 ORDERS TAB --- */}
         {activeTab === 'orders' && (
           <div className="space-y-6">
-            <h2 className="text-2xl font-serif text-[#0F2C3E]">Order Logs</h2>
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-serif text-[#0F2C3E]">Order Logs</h2>
+              <button
+                onClick={async () => {
+                  const ghosts = orders.filter(o => o.payment_method === 'razorpay' && o.payment_status === 'pending')
+                  if (ghosts.length === 0) { toast('No ghost orders found', { icon: 'ℹ️' }); return }
+                  if (!confirm(`Delete ${ghosts.length} unpaid Razorpay order(s)?`)) return
+                  await Promise.all(ghosts.map(o => supabase.from('orders').delete().eq('id', o.id)))
+                  toast.success(`Cleared ${ghosts.length} ghost order(s)`)
+                  fetchData()
+                }}
+                className="px-6 py-3 rounded-full border border-red-100 text-red-400 text-[10px] font-bold uppercase hover:bg-red-50 transition-all"
+              >
+                Clear Ghost Orders
+              </button>
+            </div>
             {orders.map(order => (
-              <div key={order.id} className="bg-white p-8 rounded-[3rem] border border-gray-100 shadow-sm flex flex-col md:flex-row justify-between items-center gap-6 transition-all hover:border-[#D4AF37]/30">
+              <div key={order.id} className={`bg-white p-8 rounded-[3rem] border shadow-sm flex flex-col md:flex-row justify-between items-center gap-6 transition-all hover:border-[#D4AF37]/30 ${order.payment_method === 'razorpay' && order.payment_status === 'pending' ? 'border-red-100 opacity-60' : 'border-gray-100'}`}>
                 <div className="flex items-center gap-6">
                   <div className="w-14 h-14 bg-[#FAF9F6] rounded-2xl flex items-center justify-center text-[#D4AF37]"><History size={24}/></div>
-                  <div><p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Order #{order.id.substring(0,8).toUpperCase()}</p><p className="text-xl font-serif text-[#0F2C3E]">₹{(order.total_amount || 0).toLocaleString()}</p></div>
+                  <div>
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Order #{order.id.substring(0,8).toUpperCase()}</p>
+                    <p className="text-xl font-serif text-[#0F2C3E]">₹{(order.total_amount || 0).toLocaleString()}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded-full ${
+                        order.payment_status === 'paid' ? 'bg-green-100 text-green-600' :
+                        order.payment_status === 'failed' ? 'bg-red-100 text-red-500' :
+                        order.payment_method === 'cod' ? 'bg-blue-50 text-blue-500' :
+                        'bg-orange-50 text-orange-400'
+                      }`}>
+                        {order.payment_method === 'cod' ? 'COD' : order.payment_status === 'paid' ? '✓ Paid' : order.payment_status === 'failed' ? '✗ Failed' : '⏳ Unpaid'}
+                      </span>
+                    </div>
+                  </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-4">
                    <div className="text-center md:text-right px-6 border-r border-gray-100">

@@ -220,11 +220,12 @@ export default function CheckoutPage() {
         const ok = await loadRazorpayScript()
         if (!ok) { toast.error('Could not load payment gateway. Check your connection.'); return }
 
-        const order = await createOrderRecord(user.id, 'razorpay')
+        // Step 1: Create Razorpay order (NO DB record yet — user hasn't paid)
+        const tempReceipt = `rcpt_${user.id.replace(/-/g, '').substring(0, 28)}`
         const res = await fetch('/api/razorpay/create-order', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ amount: finalTotal, receipt: `rcpt_${order.id.replace(/-/g, '').substring(0, 30)}` }),
+          body: JSON.stringify({ amount: finalTotal, receipt: tempReceipt }),
         })
         const rzp = await res.json()
         if (!res.ok) { toast.error(rzp.error || 'Could not start payment'); return }
@@ -239,7 +240,9 @@ export default function CheckoutPage() {
           prefill: { name: formData.fullName, email: formData.email, contact: formData.phone },
           theme: { color: '#0F2C3E' },
           handler: async (response: any) => {
+            // Step 2: Payment succeeded — now create DB order & verify signature
             try {
+              const order = await createOrderRecord(user.id, 'razorpay')
               const vRes = await fetch('/api/razorpay/verify', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -262,7 +265,8 @@ export default function CheckoutPage() {
           },
           modal: {
             ondismiss: () => {
-              toast('Payment cancelled. Your order is saved as pending.', { icon: '⚠️' })
+              // User closed modal without paying — no DB record was created, nothing to clean up
+              toast('Payment cancelled.', { icon: '⚠️' })
               setLoading(false)
             },
           },
