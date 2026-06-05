@@ -18,7 +18,7 @@ export default function CartPage() {
   const [checkingOut, setCheckingOut] = useState(false)
   const router = useRouter()
 
-  useEffect(() => { setMounted(true) }, [])
+  useEffect(() => { setMounted(true); router.prefetch('/checkout') }, [router])
 
   const handleApplyCoupon = async () => {
     if (!couponInput) return

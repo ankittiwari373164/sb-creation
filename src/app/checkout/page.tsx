@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Country, State, City } from 'country-state-city'
 import { motion } from 'framer-motion'
 import { Truck, ShieldCheck, ArrowLeft, CreditCard, Lock, Tag, Banknote } from 'lucide-react'
 import { useCartStore } from '../../lib/cartStore'
@@ -14,6 +13,12 @@ export default function CheckoutPage() {
   const router = useRouter()
   const { items, getTotalPrice, clearCart, _hasHydrated } = useCartStore()
   const [loading, setLoading] = useState(false)
+  const [CSC, setCSC] = useState<any>(null)
+
+  // Lazy-load country-state-city so it doesn't block page render
+  useEffect(() => {
+    import('country-state-city').then(m => setCSC(m))
+  }, [])
 
   const [paySettings, setPaySettings] = useState({
     razorpay_enabled: false,
@@ -117,7 +122,7 @@ export default function CheckoutPage() {
 
   const handleCountryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const countryName = e.target.value
-    const selectedCountry = Country.getAllCountries().find(c => c.name === countryName)
+    const selectedCountry = (CSC?.Country?.getAllCountries() ?? []).find((c: any) => c.name === countryName)
     setFormData(prev => ({
       ...prev,
       country: countryName,
@@ -130,7 +135,7 @@ export default function CheckoutPage() {
 
   const handleStateChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const stateName = e.target.value
-    const selectedState = State.getStatesOfCountry(formData.countryCode).find(s => s.name === stateName)
+    const selectedState = (CSC?.State?.getStatesOfCountry(formData.countryCode) ?? []).find((s: any) => s.name === stateName)
     setFormData(prev => ({
       ...prev,
       state: stateName,
@@ -205,7 +210,7 @@ export default function CheckoutPage() {
         const res = await fetch('/api/razorpay/create-order', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ amount: finalTotal, receipt: `order_${order.id}` }),
+          body: JSON.stringify({ amount: finalTotal, receipt: `rcpt_${order.id.replace(/-/g, '').substring(0, 30)}` }),
         })
         const rzp = await res.json()
         if (!res.ok) { toast.error(rzp.error || 'Could not start payment'); return }
@@ -341,7 +346,7 @@ export default function CheckoutPage() {
                       <label className={labelCls}>Country</label>
                       <select name="country" value={formData.country} onChange={handleCountryChange} required className={selectCls}>
                         <option value="">Select Country</option>
-                        {Country.getAllCountries().map((c) => (
+                        {( CSC?.Country?.getAllCountries() ?? []).map((c: any) => (
                           <option key={c.isoCode} value={c.name}>{c.name}</option>
                         ))}
                       </select>
@@ -351,7 +356,7 @@ export default function CheckoutPage() {
                       <label className={labelCls}>State</label>
                       <select name="state" value={formData.state} onChange={handleStateChange} required disabled={!formData.country} className={`${selectCls} disabled:opacity-40`}>
                         <option value="">Select State</option>
-                        {State.getStatesOfCountry(formData.countryCode).map((s) => (
+                        {( CSC?.State?.getStatesOfCountry(formData.countryCode) ?? []).map((s: any) => (
                           <option key={s.isoCode} value={s.name}>{s.name}</option>
                         ))}
                       </select>
@@ -361,7 +366,7 @@ export default function CheckoutPage() {
                       <label className={labelCls}>City</label>
                       <select name="city" value={formData.city} onChange={handleInputChange} required disabled={!formData.state} className={`${selectCls} disabled:opacity-40`}>
                         <option value="">Select City</option>
-                        {City.getCitiesOfState(formData.countryCode, formData.stateCode).map((city) => (
+                        {( CSC?.City?.getCitiesOfState(formData.countryCode, formData.stateCode) ?? []).map((city: any) => (
                           <option key={city.name} value={city.name}>{city.name}</option>
                         ))}
                       </select>

@@ -33,17 +33,16 @@ export async function POST(req: NextRequest) {
       body: JSON.stringify({
         amount: Math.round(rupees * 100), // Razorpay works in paise
         currency: 'INR',
-        receipt: receipt || `rcpt_${Date.now()}`,
+        receipt: (receipt || `rcpt_${Date.now()}`).substring(0, 40), // Razorpay max 40 chars
         payment_capture: 1,
       }),
     })
 
     const data = await rzpRes.json()
     if (!rzpRes.ok) {
-      return NextResponse.json(
-        { error: data?.error?.description || 'Failed to create Razorpay order' },
-        { status: 502 }
-      )
+      const errMsg = data?.error?.description || data?.error?.reason || JSON.stringify(data?.error) || 'Failed to create Razorpay order'
+      console.error('[Razorpay create-order]', rzpRes.status, errMsg)
+      return NextResponse.json({ error: errMsg }, { status: 502 })
     }
 
     return NextResponse.json({

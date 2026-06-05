@@ -485,7 +485,7 @@ export default function AdminPage() {
               <div key={order.id} className="bg-white p-8 rounded-[3rem] border border-gray-100 shadow-sm flex flex-col md:flex-row justify-between items-center gap-6 transition-all hover:border-[#D4AF37]/30">
                 <div className="flex items-center gap-6">
                   <div className="w-14 h-14 bg-[#FAF9F6] rounded-2xl flex items-center justify-center text-[#D4AF37]"><History size={24}/></div>
-                  <div><p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Order #{order.id.substring(0,8).toUpperCase()}</p><p className="text-xl font-serif text-[#0F2C3E]">₹{order.total.toLocaleString()}</p></div>
+                  <div><p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Order #{order.id.substring(0,8).toUpperCase()}</p><p className="text-xl font-serif text-[#0F2C3E]">₹{(order.total_amount || 0).toLocaleString()}</p></div>
                 </div>
                 <div className="flex flex-wrap items-center gap-4">
                    <div className="text-center md:text-right px-6 border-r border-gray-100">
@@ -567,7 +567,7 @@ export default function AdminPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {customers.map(c => {
                const userOrders = orders.filter(o => o.user_id === c.id)
-               const spent = userOrders.reduce((acc, curr) => acc + curr.total, 0)
+               const spent = userOrders.reduce((acc, curr) => acc + (curr.total_amount || 0), 0)
                return (
                 <div key={c.id} className="bg-white p-10 rounded-[3rem] border border-gray-100 shadow-sm relative group overflow-hidden transition-all hover:border-[#D4AF37]/30">
                   <div className="flex items-center gap-5 mb-8">
