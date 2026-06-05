@@ -4,11 +4,13 @@ import { Product, CartItem } from './supabase'
 
 interface CartStore {
   items: CartItem[]
-  coupon: any | null // Added coupon state
+  coupon: any | null
+  _hasHydrated: boolean          // ← new: true once localStorage is read
+  setHasHydrated: (v: boolean) => void
   addItem: (product: Product, quantity?: number) => void
   removeItem: (productId: string) => void
   updateQuantity: (productId: string, quantity: number) => void
-  setCoupon: (coupon: any) => void // Added setCoupon function
+  setCoupon: (coupon: any) => void
   clearCart: () => void
   getTotalItems: () => number
   getTotalPrice: () => number
@@ -18,14 +20,16 @@ export const useCartStore = create<CartStore>()(
   persist(
     (set, get) => ({
       items: [],
-      coupon: null, // Initialized coupon
+      coupon: null,
+      _hasHydrated: false,
+
+      setHasHydrated: (v) => set({ _hasHydrated: v }),
 
       addItem: (product, quantity = 1) => {
         set((state) => {
           const existingItem = state.items.find(
             (item) => item.product.id === product.id
           )
-
           if (existingItem) {
             return {
               items: state.items.map((item) =>
@@ -35,10 +39,7 @@ export const useCartStore = create<CartStore>()(
               ),
             }
           }
-
-          return {
-            items: [...state.items, { product, quantity }],
-          }
+          return { items: [...state.items, { product, quantity }] }
         })
       },
 
@@ -49,41 +50,33 @@ export const useCartStore = create<CartStore>()(
       },
 
       updateQuantity: (productId, quantity) => {
-        if (quantity <= 0) {
-          get().removeItem(productId)
-          return
-        }
-
+        if (quantity <= 0) { get().removeItem(productId); return }
         set((state) => ({
           items: state.items.map((item) =>
-            item.product.id === productId
-              ? { ...item, quantity }
-              : item
+            item.product.id === productId ? { ...item, quantity } : item
           ),
         }))
       },
 
-      setCoupon: (coupon) => {
-        set({ coupon })
-      },
+      setCoupon: (coupon) => set({ coupon }),
 
-      clearCart: () => {
-        set({ items: [], coupon: null })
-      },
+      clearCart: () => set({ items: [], coupon: null }),
 
-      getTotalItems: () => {
-        return get().items.reduce((total, item) => total + item.quantity, 0)
-      },
+      getTotalItems: () =>
+        get().items.reduce((total, item) => total + item.quantity, 0),
 
-      getTotalPrice: () => {
-        return get().items.reduce(
+      getTotalPrice: () =>
+        get().items.reduce(
           (total, item) => total + item.product.price * item.quantity,
           0
-        )
-      },
+        ),
     }),
     {
       name: 'cart-storage',
+      // Called the instant rehydration from localStorage finishes
+      onRehydrateStorage: () => (state) => {
+        state?.setHasHydrated(true)
+      },
     }
   )
 )

@@ -12,10 +12,8 @@ import toast from 'react-hot-toast'
 
 export default function CheckoutPage() {
   const router = useRouter()
-  const { items, getTotalPrice, clearCart, coupon } = useCartStore()
+  const { items, getTotalPrice, clearCart, _hasHydrated } = useCartStore()
   const [loading, setLoading] = useState(false)
-  // Wait for Zustand to hydrate from localStorage before checking cart
-  const [hydrated, setHydrated] = useState(false)
 
   const [paySettings, setPaySettings] = useState({
     razorpay_enabled: false,
@@ -45,17 +43,14 @@ export default function CheckoutPage() {
   const discountAmount = (subtotal * discount) / 100
   const finalTotal = subtotal - discountAmount
 
-  // Hydrate on mount — read coupon from URL query params passed by cart page
+  // Read coupon/discount from URL params set by cart page
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
-    const code = params.get('code') || coupon?.code || ''
-    const disc = Number(params.get('discount')) || coupon?.discount_percent || 0
-    setCouponCode(code)
-    setDiscount(disc)
-    setHydrated(true)
+    setCouponCode(params.get('code') || '')
+    setDiscount(Number(params.get('discount')) || 0)
   }, [])
 
-  // Load payment settings once on mount
+  // Load payment settings
   useEffect(() => {
     let active = true
     fetch('/api/settings')
@@ -72,12 +67,12 @@ export default function CheckoutPage() {
     return () => { active = false }
   }, [])
 
-  // Only redirect after hydration confirms cart is truly empty
+  // Only redirect after Zustand has fully rehydrated from localStorage
   useEffect(() => {
-    if (hydrated && !loading && items.length === 0) {
+    if (_hasHydrated && !loading && items.length === 0) {
       router.push('/cart')
     }
-  }, [hydrated, items, loading, router])
+  }, [_hasHydrated, items.length, loading, router])
 
   const loadRazorpayScript = (): Promise<boolean> =>
     new Promise((resolve) => {
@@ -108,7 +103,7 @@ export default function CheckoutPage() {
         setDiscount(data.discount_percent)
         toast.success(`Applied: ${data.discount_percent}% off!`)
       }
-    } catch (err) {
+    } catch {
       toast.error('Error applying coupon')
     } finally {
       setIsApplying(false)
@@ -145,7 +140,6 @@ export default function CheckoutPage() {
   }
 
   const createOrderRecord = async (userId: string, paymentMethod: string) => {
-    // Strip internal/UI-only fields before saving to DB
     const { paymentMethod: _pm, countryCode: _cc, stateCode: _sc, ...shippingAddress } = formData
 
     const { data: order, error: orderError } = await supabase
@@ -193,10 +187,7 @@ export default function CheckoutPage() {
       const method = formData.paymentMethod
 
       if (method === 'cod') {
-        if (!paySettings.cod_enabled) {
-          toast.error('Cash on Delivery is currently unavailable')
-          return
-        }
+        if (!paySettings.cod_enabled) { toast.error('Cash on Delivery is currently unavailable'); return }
         await createOrderRecord(user.id, 'cod')
         clearCart()
         toast.success('Order placed! Thank you for choosing SB Creation.')
@@ -205,29 +196,19 @@ export default function CheckoutPage() {
       }
 
       if (method === 'razorpay') {
-        if (!paySettings.razorpay_enabled) {
-          toast.error('Online payment is currently unavailable')
-          return
-        }
+        if (!paySettings.razorpay_enabled) { toast.error('Online payment is currently unavailable'); return }
 
         const ok = await loadRazorpayScript()
-        if (!ok) {
-          toast.error('Could not load payment gateway. Check your connection.')
-          return
-        }
+        if (!ok) { toast.error('Could not load payment gateway. Check your connection.'); return }
 
         const order = await createOrderRecord(user.id, 'razorpay')
-
         const res = await fetch('/api/razorpay/create-order', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ amount: finalTotal, receipt: `order_${order.id}` }),
         })
         const rzp = await res.json()
-        if (!res.ok) {
-          toast.error(rzp.error || 'Could not start payment')
-          return
-        }
+        if (!res.ok) { toast.error(rzp.error || 'Could not start payment'); return }
 
         const rzpInstance = new (window as any).Razorpay({
           key: rzp.keyId,
@@ -236,11 +217,7 @@ export default function CheckoutPage() {
           name: 'SB Creation',
           description: 'Order Payment',
           order_id: rzp.orderId,
-          prefill: {
-            name: formData.fullName,
-            email: formData.email,
-            contact: formData.phone,
-          },
+          prefill: { name: formData.fullName, email: formData.email, contact: formData.phone },
           theme: { color: '#0F2C3E' },
           handler: async (response: any) => {
             try {
@@ -255,11 +232,7 @@ export default function CheckoutPage() {
                 }),
               })
               const vData = await vRes.json()
-              if (!vRes.ok) {
-                toast.error(vData.error || 'Payment verification failed')
-                setLoading(false)
-                return
-              }
+              if (!vRes.ok) { toast.error(vData.error || 'Payment verification failed'); setLoading(false); return }
               clearCart()
               toast.success('Payment successful! Thank you for your order.')
               router.push('/dashboard')
@@ -276,11 +249,7 @@ export default function CheckoutPage() {
           },
         })
 
-        rzpInstance.on('payment.failed', () => {
-          toast.error('Payment failed. Please try again.')
-          setLoading(false)
-        })
-
+        rzpInstance.on('payment.failed', () => { toast.error('Payment failed. Please try again.'); setLoading(false) })
         rzpInstance.open()
         modalOpened = true
         return
@@ -293,14 +262,11 @@ export default function CheckoutPage() {
     }
   }
 
-  // Show loading skeleton while Zustand hydrates
-  if (!hydrated) {
+  // Show minimal spinner only during rehydration (typically <50ms on real devices)
+  if (!_hasHydrated) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-center space-y-3">
-          <div className="w-10 h-10 border-2 border-[#D4AF37] border-t-[#d92b7a] rounded-full animate-spin mx-auto" />
-          <p className="text-xs font-bold uppercase tracking-widest text-[#5a4a42] font-sans">Loading your order...</p>
-        </div>
+        <div className="w-8 h-8 border-2 border-[#D4AF37] border-t-[#d92b7a] rounded-full animate-spin" />
       </div>
     )
   }
@@ -318,10 +284,7 @@ export default function CheckoutPage() {
 
           {/* Page Header */}
           <div className="flex flex-col md:flex-row justify-between items-center mb-8 md:mb-10 gap-3 md:gap-6">
-            <Link
-              href="/cart"
-              className="flex items-center text-xs font-bold uppercase tracking-widest text-[#D4AF37] hover:text-[#d92b7a] transition-colors"
-            >
+            <Link href="/cart" className="flex items-center text-xs font-bold uppercase tracking-widest text-[#D4AF37] hover:text-[#d92b7a] transition-colors">
               <ArrowLeft size={14} className="mr-2" /> Back to Bag
             </Link>
             <h1 className="text-3xl md:text-4xl font-serif text-[#2d2416]">
@@ -339,7 +302,6 @@ export default function CheckoutPage() {
             <div className="lg:col-span-8">
               <form onSubmit={handleSubmit} className="space-y-6">
 
-                {/* Shipping Address */}
                 <div className="bg-white rounded-2xl md:rounded-[2rem] p-6 md:p-8 border border-[#D4AF37]/40 shadow-sm">
                   <div className="flex items-center gap-3 mb-6 border-b border-[#D4AF37]/30 pb-4">
                     <Truck size={18} className="text-[#0F5A7E]" />
@@ -350,57 +312,34 @@ export default function CheckoutPage() {
 
                     <div className="md:col-span-2 space-y-1.5">
                       <label className={labelCls}>Full Name</label>
-                      <input
-                        type="text" name="fullName" value={formData.fullName}
-                        onChange={handleInputChange} required
-                        className={inputCls} placeholder="Name of recipient"
-                      />
+                      <input type="text" name="fullName" value={formData.fullName} onChange={handleInputChange} required className={inputCls} placeholder="Name of recipient" />
                     </div>
 
                     <div className="md:col-span-2 space-y-1.5">
                       <label className={labelCls}>Email</label>
-                      <input
-                        type="email" name="email" value={formData.email}
-                        onChange={handleInputChange} required
-                        className={inputCls} placeholder="your@email.com"
-                      />
+                      <input type="email" name="email" value={formData.email} onChange={handleInputChange} required className={inputCls} placeholder="your@email.com" />
                     </div>
 
                     <div className="space-y-1.5">
                       <label className={labelCls}>Phone</label>
-                      <input
-                        type="tel" name="phone" value={formData.phone}
-                        onChange={handleInputChange} required
-                        className={inputCls} placeholder="Mobile Number"
-                      />
+                      <input type="tel" name="phone" value={formData.phone} onChange={handleInputChange} required className={inputCls} placeholder="Mobile Number" />
                     </div>
 
                     <div className="space-y-1.5">
                       <label className={labelCls}>Pincode</label>
-                      <input
-                        type="text" name="pincode" value={formData.pincode}
-                        onChange={handleInputChange} required
-                        className={inputCls} placeholder="ZIP / Postal Code"
-                      />
+                      <input type="text" name="pincode" value={formData.pincode} onChange={handleInputChange} required className={inputCls} placeholder="ZIP / Postal Code" />
                     </div>
 
                     <div className="md:col-span-2 space-y-1.5">
                       <label className={labelCls}>Full Address</label>
-                      <textarea
-                        name="address" value={formData.address}
-                        onChange={handleInputChange} required rows={2}
+                      <textarea name="address" value={formData.address} onChange={handleInputChange} required rows={2}
                         className="w-full bg-[#F8C8DC]/10 border border-[#D4AF37]/50 rounded-2xl py-3 px-5 text-sm text-[#2d2416] placeholder-[#5a4a42]/50 focus:ring-2 focus:ring-[#F8C8DC] focus:border-[#F8C8DC] resize-none outline-none font-sans"
-                        placeholder="House no, Street, Area..."
-                      />
+                        placeholder="House no, Street, Area..." />
                     </div>
 
                     <div className="space-y-1.5">
                       <label className={labelCls}>Country</label>
-                      <select
-                        name="country" value={formData.country}
-                        onChange={handleCountryChange} required
-                        className={selectCls}
-                      >
+                      <select name="country" value={formData.country} onChange={handleCountryChange} required className={selectCls}>
                         <option value="">Select Country</option>
                         {Country.getAllCountries().map((c) => (
                           <option key={c.isoCode} value={c.name}>{c.name}</option>
@@ -410,12 +349,7 @@ export default function CheckoutPage() {
 
                     <div className="space-y-1.5">
                       <label className={labelCls}>State</label>
-                      <select
-                        name="state" value={formData.state}
-                        onChange={handleStateChange} required
-                        disabled={!formData.country}
-                        className={`${selectCls} disabled:opacity-40`}
-                      >
+                      <select name="state" value={formData.state} onChange={handleStateChange} required disabled={!formData.country} className={`${selectCls} disabled:opacity-40`}>
                         <option value="">Select State</option>
                         {State.getStatesOfCountry(formData.countryCode).map((s) => (
                           <option key={s.isoCode} value={s.name}>{s.name}</option>
@@ -425,12 +359,7 @@ export default function CheckoutPage() {
 
                     <div className="space-y-1.5 md:col-span-2">
                       <label className={labelCls}>City</label>
-                      <select
-                        name="city" value={formData.city}
-                        onChange={handleInputChange} required
-                        disabled={!formData.state}
-                        className={`${selectCls} disabled:opacity-40`}
-                      >
+                      <select name="city" value={formData.city} onChange={handleInputChange} required disabled={!formData.state} className={`${selectCls} disabled:opacity-40`}>
                         <option value="">Select City</option>
                         {City.getCitiesOfState(formData.countryCode, formData.stateCode).map((city) => (
                           <option key={city.name} value={city.name}>{city.name}</option>
@@ -446,16 +375,10 @@ export default function CheckoutPage() {
                   <h2 className="text-xl font-serif text-[#2d2416] mb-5 flex items-center gap-3">
                     <CreditCard size={18} className="text-[#0F5A7E]" /> Payment Method
                   </h2>
-
                   <div className="space-y-3">
                     {paySettings.cod_enabled && (
                       <label className={`flex items-center p-4 md:p-5 border rounded-xl md:rounded-2xl cursor-pointer transition-all ${formData.paymentMethod === 'cod' ? 'border-[#d92b7a] bg-[#F8C8DC]/20' : 'border-[#D4AF37]/50 bg-[#F8C8DC]/10 hover:bg-[#F8C8DC]/20'}`}>
-                        <input
-                          type="radio" name="paymentMethod" value="cod"
-                          checked={formData.paymentMethod === 'cod'}
-                          onChange={handleInputChange}
-                          className="mr-3 accent-[#d92b7a]"
-                        />
+                        <input type="radio" name="paymentMethod" value="cod" checked={formData.paymentMethod === 'cod'} onChange={handleInputChange} className="mr-3 accent-[#d92b7a]" />
                         <Banknote size={20} className="text-[#0F5A7E] mr-3 shrink-0" />
                         <div>
                           <p className="text-sm font-bold text-[#2d2416] font-sans">Cash on Delivery</p>
@@ -463,15 +386,9 @@ export default function CheckoutPage() {
                         </div>
                       </label>
                     )}
-
                     {paySettings.razorpay_enabled && (
                       <label className={`flex items-center p-4 md:p-5 border rounded-xl md:rounded-2xl cursor-pointer transition-all ${formData.paymentMethod === 'razorpay' ? 'border-[#d92b7a] bg-[#F8C8DC]/20' : 'border-[#D4AF37]/50 bg-[#F8C8DC]/10 hover:bg-[#F8C8DC]/20'}`}>
-                        <input
-                          type="radio" name="paymentMethod" value="razorpay"
-                          checked={formData.paymentMethod === 'razorpay'}
-                          onChange={handleInputChange}
-                          className="mr-3 accent-[#d92b7a]"
-                        />
+                        <input type="radio" name="paymentMethod" value="razorpay" checked={formData.paymentMethod === 'razorpay'} onChange={handleInputChange} className="mr-3 accent-[#d92b7a]" />
                         <CreditCard size={20} className="text-[#0F5A7E] mr-3 shrink-0" />
                         <div>
                           <p className="text-sm font-bold text-[#2d2416] font-sans">Pay Online</p>
@@ -479,7 +396,6 @@ export default function CheckoutPage() {
                         </div>
                       </label>
                     )}
-
                     {!paySettings.cod_enabled && !paySettings.razorpay_enabled && (
                       <p className="text-sm text-[#5a4a42] font-sans p-4 bg-[#F8C8DC]/10 rounded-xl border border-[#D4AF37]/40">
                         No payment methods are currently available. Please check back soon.
@@ -511,31 +427,23 @@ export default function CheckoutPage() {
                   Order <span className="italic text-[#d92b7a]">Summary</span>
                 </h2>
 
-                {/* Coupon Input */}
                 <div className="mb-5 p-4 bg-[#F8C8DC]/10 rounded-xl border border-[#F8C8DC]/60">
                   <p className="text-[10px] font-bold uppercase tracking-widest text-[#0F5A7E] mb-2 font-sans flex items-center gap-1.5">
                     <Tag size={11} /> Apply Coupon
                   </p>
                   <div className="flex gap-2">
                     <input
-                      type="text"
-                      placeholder="Code"
-                      value={couponCode}
+                      type="text" placeholder="Code" value={couponCode}
                       onChange={(e) => setCouponCode(e.target.value)}
                       className="flex-1 bg-white border border-[#D4AF37]/50 rounded-full px-4 py-2 text-sm text-[#2d2416] placeholder-[#5a4a42]/40 focus:ring-2 focus:ring-[#F8C8DC] focus:border-[#F8C8DC] outline-none font-sans"
                     />
-                    <button
-                      type="button"
-                      onClick={handleApplyCoupon}
-                      disabled={isApplying || !couponCode}
-                      className="bg-[#2d2416] text-white px-4 py-2 rounded-full text-xs font-bold uppercase transition-all hover:bg-[#0F5A7E] shrink-0 font-sans disabled:opacity-50"
-                    >
+                    <button type="button" onClick={handleApplyCoupon} disabled={isApplying || !couponCode}
+                      className="bg-[#2d2416] text-white px-4 py-2 rounded-full text-xs font-bold uppercase transition-all hover:bg-[#0F5A7E] shrink-0 font-sans disabled:opacity-50">
                       {isApplying ? '...' : 'Apply'}
                     </button>
                   </div>
                 </div>
 
-                {/* Item List */}
                 <div className="space-y-3 mb-5 max-h-[280px] overflow-y-auto">
                   {items.map((item) => (
                     <div key={item.product.id} className="flex justify-between items-center text-sm border-b border-[#D4AF37]/20 pb-2.5">
@@ -545,7 +453,6 @@ export default function CheckoutPage() {
                   ))}
                 </div>
 
-                {/* Price Breakdown */}
                 <div className="space-y-2.5 mb-4">
                   <div className="flex justify-between text-sm text-[#5a4a42] font-sans">
                     <span>Subtotal</span>
