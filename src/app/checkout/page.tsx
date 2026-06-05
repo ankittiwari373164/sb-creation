@@ -136,7 +136,7 @@ export default function CheckoutPage() {
       .from('orders')
       .insert({
         user_id: userId,
-        total: finalTotal,
+        total_amount: finalTotal,
         status: 'pending',
         payment_method: paymentMethod,
         payment_status: 'pending',
