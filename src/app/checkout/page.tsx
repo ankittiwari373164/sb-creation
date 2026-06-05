@@ -14,16 +14,17 @@ export default function CheckoutPage() {
   const router = useRouter()
   const { items, getTotalPrice, clearCart, coupon } = useCartStore()
   const [loading, setLoading] = useState(false)
+  // Wait for Zustand to hydrate from localStorage before checking cart
+  const [hydrated, setHydrated] = useState(false)
 
-  // Payment configuration fetched from the server (never includes the secret).
   const [paySettings, setPaySettings] = useState({
     razorpay_enabled: false,
     cod_enabled: true,
     razorpay_key_id: '',
   })
 
-  const [couponCode, setCouponCode] = useState(coupon?.code || '')
-  const [discount, setDiscount] = useState(coupon?.discount_percent || 0)
+  const [couponCode, setCouponCode] = useState('')
+  const [discount, setDiscount] = useState(0)
   const [isApplying, setIsApplying] = useState(false)
 
   const [formData, setFormData] = useState({
@@ -44,7 +45,17 @@ export default function CheckoutPage() {
   const discountAmount = (subtotal * discount) / 100
   const finalTotal = subtotal - discountAmount
 
-  // Load payment settings once on mount, then pick a sensible default method.
+  // Hydrate on mount — read coupon from URL query params passed by cart page
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const code = params.get('code') || coupon?.code || ''
+    const disc = Number(params.get('discount')) || coupon?.discount_percent || 0
+    setCouponCode(code)
+    setDiscount(disc)
+    setHydrated(true)
+  }, [])
+
+  // Load payment settings once on mount
   useEffect(() => {
     let active = true
     fetch('/api/settings')
@@ -61,7 +72,13 @@ export default function CheckoutPage() {
     return () => { active = false }
   }, [])
 
-  // Inject the Razorpay checkout script on demand.
+  // Only redirect after hydration confirms cart is truly empty
+  useEffect(() => {
+    if (hydrated && !loading && items.length === 0) {
+      router.push('/cart')
+    }
+  }, [hydrated, items, loading, router])
+
   const loadRazorpayScript = (): Promise<boolean> =>
     new Promise((resolve) => {
       if (typeof window === 'undefined') return resolve(false)
@@ -127,9 +144,8 @@ export default function CheckoutPage() {
     }))
   }
 
-  // Creates the order + items in Supabase. Returns the created order, or null on failure.
   const createOrderRecord = async (userId: string, paymentMethod: string) => {
-    // Destructure internal/UI-only fields before saving shipping address
+    // Strip internal/UI-only fields before saving to DB
     const { paymentMethod: _pm, countryCode: _cc, stateCode: _sc, ...shippingAddress } = formData
 
     const { data: order, error: orderError } = await supabase
@@ -163,10 +179,7 @@ export default function CheckoutPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-
-    // Guard against double-submit
     if (loading) return
-
     setLoading(true)
     let modalOpened = false
 
@@ -179,7 +192,6 @@ export default function CheckoutPage() {
 
       const method = formData.paymentMethod
 
-      // ── Cash on Delivery ──
       if (method === 'cod') {
         if (!paySettings.cod_enabled) {
           toast.error('Cash on Delivery is currently unavailable')
@@ -192,7 +204,6 @@ export default function CheckoutPage() {
         return
       }
 
-      // ── Razorpay (online) ──
       if (method === 'razorpay') {
         if (!paySettings.razorpay_enabled) {
           toast.error('Online payment is currently unavailable')
@@ -205,10 +216,8 @@ export default function CheckoutPage() {
           return
         }
 
-        // 1. Record the order as pending/unpaid first.
         const order = await createOrderRecord(user.id, 'razorpay')
 
-        // 2. Ask the server to create a Razorpay order.
         const res = await fetch('/api/razorpay/create-order', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -220,7 +229,6 @@ export default function CheckoutPage() {
           return
         }
 
-        // 3. Open the Razorpay checkout.
         const rzpInstance = new (window as any).Razorpay({
           key: rzp.keyId,
           amount: rzp.amount,
@@ -235,7 +243,6 @@ export default function CheckoutPage() {
           },
           theme: { color: '#0F2C3E' },
           handler: async (response: any) => {
-            // 4. Verify the signature on the server before trusting the payment.
             try {
               const vRes = await fetch('/api/razorpay/verify', {
                 method: 'POST',
@@ -276,27 +283,30 @@ export default function CheckoutPage() {
 
         rzpInstance.open()
         modalOpened = true
-        // Note: don't clear loading here — the handler/ondismiss callbacks manage it.
         return
       }
     } catch (error: any) {
-      // Log the real error for debugging, show a friendly message to user
       console.error('Checkout error:', error)
       toast.error(error?.message || 'Something went wrong. Please check your details.')
     } finally {
-      // Once the Razorpay modal is open its callbacks own the loading state;
-      // otherwise (COD, or any early failure) reset it here.
       if (!modalOpened) setLoading(false)
     }
   }
 
-  useEffect(() => {
-    if (!loading && items.length === 0) router.push('/cart')
-  }, [items, loading, router])
+  // Show loading skeleton while Zustand hydrates
+  if (!hydrated) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center space-y-3">
+          <div className="w-10 h-10 border-2 border-[#D4AF37] border-t-[#d92b7a] rounded-full animate-spin mx-auto" />
+          <p className="text-xs font-bold uppercase tracking-widest text-[#5a4a42] font-sans">Loading your order...</p>
+        </div>
+      </div>
+    )
+  }
 
   if (items.length === 0) return null
 
-  /* ── shared input classes ── */
   const inputCls = "w-full bg-[#F8C8DC]/10 border border-[#D4AF37]/50 rounded-full py-3 px-5 text-sm text-[#2d2416] placeholder-[#5a4a42]/50 focus:ring-2 focus:ring-[#F8C8DC] focus:border-[#F8C8DC] outline-none font-sans"
   const selectCls = "w-full bg-[#F8C8DC]/10 border border-[#D4AF37]/50 rounded-full py-3 px-5 text-sm text-[#2d2416] outline-none focus:ring-2 focus:ring-[#F8C8DC] focus:border-[#F8C8DC] appearance-none cursor-pointer font-sans"
   const labelCls = "text-xs font-bold uppercase tracking-widest text-[#0F5A7E] ml-1 font-sans"
@@ -325,7 +335,7 @@ export default function CheckoutPage() {
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-10">
 
-            {/* ── Form Section ── */}
+            {/* Form Section */}
             <div className="lg:col-span-8">
               <form onSubmit={handleSubmit} className="space-y-6">
 
@@ -338,7 +348,6 @@ export default function CheckoutPage() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
 
-                    {/* Full Name */}
                     <div className="md:col-span-2 space-y-1.5">
                       <label className={labelCls}>Full Name</label>
                       <input
@@ -348,7 +357,6 @@ export default function CheckoutPage() {
                       />
                     </div>
 
-                    {/* Email */}
                     <div className="md:col-span-2 space-y-1.5">
                       <label className={labelCls}>Email</label>
                       <input
@@ -358,7 +366,6 @@ export default function CheckoutPage() {
                       />
                     </div>
 
-                    {/* Phone */}
                     <div className="space-y-1.5">
                       <label className={labelCls}>Phone</label>
                       <input
@@ -368,7 +375,6 @@ export default function CheckoutPage() {
                       />
                     </div>
 
-                    {/* Pincode */}
                     <div className="space-y-1.5">
                       <label className={labelCls}>Pincode</label>
                       <input
@@ -378,7 +384,6 @@ export default function CheckoutPage() {
                       />
                     </div>
 
-                    {/* Full Address */}
                     <div className="md:col-span-2 space-y-1.5">
                       <label className={labelCls}>Full Address</label>
                       <textarea
@@ -389,7 +394,6 @@ export default function CheckoutPage() {
                       />
                     </div>
 
-                    {/* Country */}
                     <div className="space-y-1.5">
                       <label className={labelCls}>Country</label>
                       <select
@@ -404,7 +408,6 @@ export default function CheckoutPage() {
                       </select>
                     </div>
 
-                    {/* State */}
                     <div className="space-y-1.5">
                       <label className={labelCls}>State</label>
                       <select
@@ -420,7 +423,6 @@ export default function CheckoutPage() {
                       </select>
                     </div>
 
-                    {/* City */}
                     <div className="space-y-1.5 md:col-span-2">
                       <label className={labelCls}>City</label>
                       <select
@@ -493,7 +495,7 @@ export default function CheckoutPage() {
                   className="w-full bg-[#2d2416] text-white py-4 rounded-full flex items-center justify-center gap-3 text-xs font-bold uppercase tracking-[0.2em] hover:bg-[#0F5A7E] shadow-lg disabled:opacity-50 transition-all font-sans"
                 >
                   {loading
-                    ? 'Confirming...'
+                    ? <><div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /> Confirming...</>
                     : formData.paymentMethod === 'razorpay'
                       ? <><Lock size={14} /> Pay ₹{finalTotal.toLocaleString()} Securely</>
                       : <><Lock size={14} /> Place Order Now</>}
@@ -502,7 +504,7 @@ export default function CheckoutPage() {
               </form>
             </div>
 
-            {/* ── Summary Sidebar ── */}
+            {/* Summary Sidebar */}
             <div className="lg:col-span-4">
               <div className="bg-white rounded-2xl md:rounded-[2.5rem] p-5 md:p-7 sticky top-24 border border-[#D4AF37]/50 shadow-md">
                 <h2 className="text-xl font-serif mb-5 text-[#2d2416]">

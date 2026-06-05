@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { Trash2, Plus, Minus, ShoppingBag, ArrowRight, Tag } from 'lucide-react'
 import { useCartStore } from '../../lib/cartStore'
 import { supabase } from '../../lib/supabase'
@@ -14,6 +15,8 @@ export default function CartPage() {
   const [mounted, setMounted] = useState(false)
   const [couponInput, setCouponInput] = useState('')
   const [appliedDiscount, setAppliedDiscount] = useState(0)
+  const [checkingOut, setCheckingOut] = useState(false)
+  const router = useRouter()
 
   useEffect(() => { setMounted(true) }, [])
 
@@ -38,6 +41,17 @@ export default function CartPage() {
       toast.error('Error checking code')
     }
   }
+
+  // Navigate to checkout programmatically so we can show a loading state
+  const handleCheckout = useCallback(() => {
+    if (checkingOut) return
+    setCheckingOut(true)
+    const params = new URLSearchParams({
+      code: couponInput,
+      discount: String(appliedDiscount),
+    })
+    router.push(`/checkout?${params.toString()}`)
+  }, [checkingOut, couponInput, appliedDiscount, router])
 
   const subtotal = getTotalPrice()
   const discountAmount = (subtotal * appliedDiscount) / 100
@@ -201,11 +215,15 @@ export default function CartPage() {
                 </div>
 
                 <div className="space-y-3">
-                  <Link href={{ pathname: '/checkout', query: { code: couponInput, discount: appliedDiscount } }}>
-                    <button className="w-full bg-[#2d2416] text-white py-3 rounded-full text-xs font-bold uppercase tracking-[0.2em] shadow-md hover:bg-[#0F5A7E] transition-all flex items-center justify-center gap-2 font-sans">
-                      Checkout Now <ArrowRight size={14} />
-                    </button>
-                  </Link>
+                  <button
+                    onClick={handleCheckout}
+                    disabled={checkingOut}
+                    className="w-full bg-[#2d2416] text-white py-3 rounded-full text-xs font-bold uppercase tracking-[0.2em] shadow-md hover:bg-[#0F5A7E] transition-all flex items-center justify-center gap-2 font-sans disabled:opacity-70"
+                  >
+                    {checkingOut
+                      ? <><div className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" /> Going to Checkout...</>
+                      : <>Checkout Now <ArrowRight size={14} /></>}
+                  </button>
                   <Link
                     href="/shop"
                     className="block text-center text-xs uppercase tracking-widest text-[#D4AF37] hover:text-[#d92b7a] font-bold font-sans pt-1 transition-colors"
