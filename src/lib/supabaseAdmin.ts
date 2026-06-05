@@ -6,9 +6,15 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
-export const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
-  auth: { persistSession: false, autoRefreshToken: false },
-})
+// Use placeholders if env is missing so importing this module never throws.
+// requireAdmin()/getStoreSettings() surface a clear error instead.
+export const supabaseAdmin = createClient(
+  supabaseUrl || 'http://localhost',
+  serviceRoleKey || 'missing-service-role-key',
+  {
+    auth: { persistSession: false, autoRefreshToken: false },
+  }
+)
 
 export type StoreSettings = {
   id: number
@@ -50,12 +56,39 @@ export async function getStoreSettings(): Promise<StoreSettings> {
 }
 
 // Validates the caller's Supabase access token and confirms they are an admin.
-// Returns the user on success, or null if unauthorized.
+// Returns { user } on success, or { error, status } describing what failed so
+// the client can show a useful message instead of a blanket "Unauthorized".
 export async function requireAdmin(authHeader: string | null) {
-  if (!authHeader?.startsWith('Bearer ')) return null
-  const token = authHeader.slice(7)
+  if (!serviceRoleKey) {
+    return {
+      error:
+        'Server is missing SUPABASE_SERVICE_ROLE_KEY. Add it to your hosting environment variables and redeploy.',
+      status: 500 as const,
+    }
+  }
+
+  const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7).trim() : ''
+  if (!token) {
+    return { error: 'You are signed out. Please log in again.', status: 401 as const }
+  }
+
   const { data, error } = await supabaseAdmin.auth.getUser(token)
-  if (error || !data.user) return null
-  if (data.user.app_metadata?.role !== 'admin') return null
-  return data.user
+  if (error || !data.user) {
+    return { error: 'Your session has expired. Please log in again.', status: 401 as const }
+  }
+
+  // Accept the role wherever it might live (app_metadata is the standard spot).
+  const role =
+    (data.user.app_metadata as any)?.role ??
+    (data.user.user_metadata as any)?.role ??
+    (data.user as any)?.role
+
+  if (role !== 'admin') {
+    return {
+      error: 'This account is not an admin. Sign in with your admin account.',
+      status: 403 as const,
+    }
+  }
+
+  return { user: data.user }
 }

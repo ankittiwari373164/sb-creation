@@ -6,8 +6,8 @@ export const dynamic = 'force-dynamic'
 
 // Admin reads the full settings (including the secret) to display in the panel.
 export async function GET(req: NextRequest) {
-  const admin = await requireAdmin(req.headers.get('authorization'))
-  if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const auth = await requireAdmin(req.headers.get('authorization'))
+  if ('error' in auth) return NextResponse.json({ error: auth.error }, { status: auth.status })
 
   try {
     const s = await getStoreSettings()
@@ -24,8 +24,8 @@ export async function GET(req: NextRequest) {
 
 // Admin saves settings.
 export async function POST(req: NextRequest) {
-  const admin = await requireAdmin(req.headers.get('authorization'))
-  if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const auth = await requireAdmin(req.headers.get('authorization'))
+  if ('error' in auth) return NextResponse.json({ error: auth.error }, { status: auth.status })
 
   try {
     const body = await req.json()

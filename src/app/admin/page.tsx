@@ -80,7 +80,12 @@ export default function AdminPage() {
   // --- ⚙️ Settings: fetch / save (goes through admin-only API so the secret
   // never lives in client-readable tables) ---
   const getToken = async () => {
-    const { data } = await supabase.auth.getSession()
+    let { data } = await supabase.auth.getSession()
+    // If there's no live access token, try a refresh before giving up.
+    if (!data.session?.access_token) {
+      const refreshed = await supabase.auth.refreshSession()
+      data = refreshed.data as any
+    }
     return data.session?.access_token || ''
   }
 
