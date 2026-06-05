@@ -1,13 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Search, Package, Truck, CheckCircle, XCircle } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import toast from 'react-hot-toast'
 
-export default function TrackOrderPage() {
+function TrackOrderContent() {
   const [orderId, setOrderId] = useState('')
   const [order, setOrder] = useState<any>(null)
   const [loading, setLoading] = useState(false)
@@ -252,5 +252,17 @@ export default function TrackOrderPage() {
         </div>
       </section>
     </div>
+  )
+}
+
+export default function TrackOrderPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-[#db2777] border-t-transparent rounded-full animate-spin" />
+      </div>
+    }>
+      <TrackOrderContent />
+    </Suspense>
   )
 }
