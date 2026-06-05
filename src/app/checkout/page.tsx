@@ -129,6 +129,9 @@ export default function CheckoutPage() {
 
   // Creates the order + items in Supabase. Returns the created order, or null on failure.
   const createOrderRecord = async (userId: string, paymentMethod: string) => {
+    // Destructure internal/UI-only fields before saving shipping address
+    const { paymentMethod: _pm, countryCode: _cc, stateCode: _sc, ...shippingAddress } = formData
+
     const { data: order, error: orderError } = await supabase
       .from('orders')
       .insert({
@@ -137,7 +140,7 @@ export default function CheckoutPage() {
         status: 'pending',
         payment_method: paymentMethod,
         payment_status: 'pending',
-        shipping_address: formData,
+        shipping_address: shippingAddress,
         coupon_used: discount > 0 ? couponCode.toUpperCase() : null,
       })
       .select()
@@ -160,6 +163,10 @@ export default function CheckoutPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    // Guard against double-submit
+    if (loading) return
+
     setLoading(true)
     let modalOpened = false
 
@@ -273,7 +280,9 @@ export default function CheckoutPage() {
         return
       }
     } catch (error: any) {
-      toast.error('Something went wrong. Please check your details.')
+      // Log the real error for debugging, show a friendly message to user
+      console.error('Checkout error:', error)
+      toast.error(error?.message || 'Something went wrong. Please check your details.')
     } finally {
       // Once the Razorpay modal is open its callbacks own the loading state;
       // otherwise (COD, or any early failure) reset it here.
@@ -329,6 +338,7 @@ export default function CheckoutPage() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
 
+                    {/* Full Name */}
                     <div className="md:col-span-2 space-y-1.5">
                       <label className={labelCls}>Full Name</label>
                       <input
@@ -338,6 +348,17 @@ export default function CheckoutPage() {
                       />
                     </div>
 
+                    {/* Email */}
+                    <div className="md:col-span-2 space-y-1.5">
+                      <label className={labelCls}>Email</label>
+                      <input
+                        type="email" name="email" value={formData.email}
+                        onChange={handleInputChange} required
+                        className={inputCls} placeholder="your@email.com"
+                      />
+                    </div>
+
+                    {/* Phone */}
                     <div className="space-y-1.5">
                       <label className={labelCls}>Phone</label>
                       <input
@@ -347,6 +368,7 @@ export default function CheckoutPage() {
                       />
                     </div>
 
+                    {/* Pincode */}
                     <div className="space-y-1.5">
                       <label className={labelCls}>Pincode</label>
                       <input
@@ -356,6 +378,7 @@ export default function CheckoutPage() {
                       />
                     </div>
 
+                    {/* Full Address */}
                     <div className="md:col-span-2 space-y-1.5">
                       <label className={labelCls}>Full Address</label>
                       <textarea
@@ -366,6 +389,7 @@ export default function CheckoutPage() {
                       />
                     </div>
 
+                    {/* Country */}
                     <div className="space-y-1.5">
                       <label className={labelCls}>Country</label>
                       <select
@@ -380,6 +404,7 @@ export default function CheckoutPage() {
                       </select>
                     </div>
 
+                    {/* State */}
                     <div className="space-y-1.5">
                       <label className={labelCls}>State</label>
                       <select
@@ -395,6 +420,7 @@ export default function CheckoutPage() {
                       </select>
                     </div>
 
+                    {/* City */}
                     <div className="space-y-1.5 md:col-span-2">
                       <label className={labelCls}>City</label>
                       <select
