@@ -74,7 +74,13 @@ export async function requireAdmin(authHeader: string | null) {
 
   const { data, error } = await supabaseAdmin.auth.getUser(token)
   if (error || !data.user) {
-    return { error: 'Your session has expired. Please log in again.', status: 401 as const }
+    // Surface the real reason so we can tell apart an expired token, a bad
+    // service-role key / project mismatch, etc.
+    const detail = error?.message || 'no user returned'
+    return {
+      error: `Could not verify session: ${detail}. Please log in again.`,
+      status: 401 as const,
+    }
   }
 
   // Accept the role wherever it might live (app_metadata is the standard spot).

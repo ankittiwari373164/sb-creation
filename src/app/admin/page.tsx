@@ -81,12 +81,18 @@ export default function AdminPage() {
   // never lives in client-readable tables) ---
   const getToken = async () => {
     let { data } = await supabase.auth.getSession()
-    // If there's no live access token, try a refresh before giving up.
-    if (!data.session?.access_token) {
+    const session = data.session
+    const now = Math.floor(Date.now() / 1000)
+    // Refresh if there's no token, or it's expired / within 60s of expiring.
+    const needsRefresh =
+      !session?.access_token || !session.expires_at || session.expires_at - now < 60
+    if (needsRefresh) {
       const refreshed = await supabase.auth.refreshSession()
-      data = refreshed.data as any
+      if (refreshed.data?.session?.access_token) {
+        return refreshed.data.session.access_token
+      }
     }
-    return data.session?.access_token || ''
+    return session?.access_token || ''
   }
 
   const fetchSettings = async () => {
