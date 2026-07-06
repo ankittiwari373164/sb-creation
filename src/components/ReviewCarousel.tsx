@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { X, ChevronLeft, ChevronRight, Quote, ShieldCheck } from 'lucide-react';
 
 // Real customer screenshots — WhatsApp thank-yous & Instagram story reposts.
-const reviewImages = Array.from({ length: 19 }, (_, i) => ({
+const reviewImages = Array.from({ length: 21 }, (_, i) => ({
   src: `/reviews/review-${String(i + 1).padStart(2, '0')}.png`,
   alt: `SB Creation customer review screenshot ${i + 1}`,
 }));
