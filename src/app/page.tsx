@@ -8,6 +8,7 @@ import Heritage from '../components/Heritage';
 import CreativeGallery from '../components/CreativeGallery';
 import ProductSlider from '../components/ProductSlider';
 import Testimonials from '../components/Testimonials';
+import ReviewCarousel from '../components/ReviewCarousel';
 import PublicInstaFeed from '../components/PublicInstaFeed';
 import Newsletter from '../components/Newsletter';
 import ProductGrid from '../components/ProductGrid';
@@ -91,6 +92,7 @@ export default function Home() {
 </section> */}
       <ProductSlider products={products.slice(0, 8)} />
       <PublicInstaFeed />
+      <ReviewCarousel />
       <CreativeGallery products={products} />
       {/* <ProductGrid products={products} title="Our Masterpieces" /> */}
       <ArtisanalStack products={products} />
