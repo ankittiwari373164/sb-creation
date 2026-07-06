@@ -1,9 +1,35 @@
 'use client'
 
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Hammer, Palette, Crown, CheckCircle } from 'lucide-react'
+
+function FounderAvatar({ name, image }: { name: string; image: string }) {
+  const [failed, setFailed] = useState(false)
+
+  if (failed) {
+    return (
+      <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[#0F2C3E] to-[#db2777] flex items-center justify-center mx-auto mb-4 shadow-md">
+        <span className="text-white font-playfair font-bold text-xl">{name[0]}</span>
+      </div>
+    )
+  }
+
+  return (
+    <div className="relative w-14 h-14 rounded-full overflow-hidden mx-auto mb-4 shadow-md border-2 border-[#F8C8DC]">
+      <Image
+        src={image}
+        alt={name}
+        fill
+        className="object-cover"
+        unoptimized
+        onError={() => setFailed(true)}
+      />
+    </div>
+  )
+}
 
 export default function AboutPage() {
   const process = [
@@ -117,9 +143,9 @@ export default function AboutPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {[
-                { name: 'Piyush Gupta', role: 'Co-Founder', quote: 'Driving innovation while honoring tradition in every design.' },
-                { name: 'Sejal Gupta', role: 'Co-Founder', quote: 'Creating experiences that celebrate the art of craftsmanship.' },
-                { name: 'Vaishali Gupta', role: 'Co-Founder', quote: 'Bringing the spirit of Firozabad to the world stage.' }
+                { name: 'Piyush Gupta', role: 'Co-Founder', quote: 'Driving innovation while honoring tradition in every design.', image: '/piyush.jpeg' },
+                { name: 'Sejal Gupta', role: 'Co-Founder', quote: 'Creating experiences that celebrate the art of craftsmanship.', image: '/sejal.jpeg' },
+                { name: 'Vaishali Gupta', role: 'Co-Founder', quote: 'Bringing the spirit of Firozabad to the world stage.', image: '/vaishali.jpeg' }
               ].map((founder, idx) => (
                 <motion.div
                   key={idx}
@@ -128,9 +154,7 @@ export default function AboutPage() {
                   transition={{ delay: idx * 0.2 }}
                   className="text-center bg-white rounded-2xl p-6 shadow-sm border border-[#F8C8DC]"
                 >
-                  <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[#0F2C3E] to-[#db2777] flex items-center justify-center mx-auto mb-4 shadow-md">
-                    <span className="text-white font-playfair font-bold text-xl">{founder.name[0]}</span>
-                  </div>
+                  <FounderAvatar name={founder.name} image={founder.image} />
                   <CheckCircle className="text-[#db2777] mx-auto mb-2" size={18} />
                   <h3 className="text-lg font-playfair text-[#0F2C3E] mb-0.5 font-semibold">{founder.name}</h3>
                   <p className="text-[#db2777] font-poppins font-bold text-[9px] uppercase tracking-[0.3em] mb-2">{founder.role}</p>

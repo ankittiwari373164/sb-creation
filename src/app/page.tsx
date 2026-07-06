@@ -92,10 +92,11 @@ export default function Home() {
 </section> */}
       <ProductSlider products={products.slice(0, 8)} />
       <PublicInstaFeed />
-      <ReviewCarousel />
+      
       <CreativeGallery products={products} />
       {/* <ProductGrid products={products} title="Our Masterpieces" /> */}
       <ArtisanalStack products={products} />
+      <ReviewCarousel />
       <ProductVault products={products} />
       {/* <VideoShowcase product={products[0]} /> */}
       {/* <Hero />
