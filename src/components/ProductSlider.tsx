@@ -73,7 +73,7 @@ const ProductSlider = ({ products }: { products: any[] }) => {
       <div className="relative flex group/marquee">
         <div className="flex animate-marquee group-hover/marquee:pause-marquee gap-3 md:gap-5 py-3">
           {infiniteProducts.map((product, index) => {
-            const primaryImage = product.gallery?.[0] || product.image_url || '/banner6.png'
+            const primaryImage = product.gallery?.[0] || product.image_url || '/placeholder.jpg'
             const secondaryImage = product.gallery?.[1] || product.image_url || primaryImage
             const isLiked = wishlistIds.includes(product.id)
 

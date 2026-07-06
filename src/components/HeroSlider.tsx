@@ -11,7 +11,7 @@ export default function HeroSlider() {
         {/* Desktop image — hidden on mobile */}
         <div className="hidden md:block relative w-full h-[420px] lg:h-[480px]">
           <Image
-            src="/banner3.png"
+            src="/banner6.png"
             alt="SB Creation — Handcrafted Bangles from Firozabad"
             fill
             priority
