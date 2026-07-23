@@ -212,7 +212,7 @@ export default function ProductDetailPage() {
 
           {/* ── LEFT: Image panel ── */}
           <div className="lg:col-span-6 flex flex-col md:flex-row-reverse gap-2 md:gap-3
-                          h-[52vw] md:h-[60vw] lg:h-full min-h-[280px] max-h-[calc(100vh-5rem)]">
+                          h-[75vw] md:h-[60vw] lg:h-full min-h-[380px] max-h-[calc(100vh-5rem)]">
 
             {/* Main image with magnifier */}
             <motion.div
