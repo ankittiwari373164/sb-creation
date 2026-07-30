@@ -461,15 +461,15 @@ export default function CheckoutPage() {
                   Order <span className="italic text-[#d92b7a]">Summary</span>
                 </h2>
 
-                <div className="mb-5 p-4 bg-[#F8C8DC]/10 rounded-xl border border-[#F8C8DC]/60">
+                <div className="mb-5 p-4 bg-[#F8C8DC]/10 rounded-xl border border-[#F8C8DC]/60 overflow-hidden">
                   <p className="text-[10px] font-bold uppercase tracking-widest text-[#0F5A7E] mb-2 font-sans flex items-center gap-1.5">
                     <Tag size={11} /> Apply Coupon
                   </p>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
                     <input
                       type="text" placeholder="Code" value={couponCode}
                       onChange={(e) => setCouponCode(e.target.value)}
-                      className="flex-1 bg-white border border-[#D4AF37]/50 rounded-full px-4 py-2 text-sm text-[#2d2416] placeholder-[#5a4a42]/40 focus:ring-2 focus:ring-[#F8C8DC] focus:border-[#F8C8DC] outline-none font-sans"
+                      className="flex-1 min-w-0 bg-white border border-[#D4AF37]/50 rounded-full px-4 py-2 text-sm text-[#2d2416] placeholder-[#5a4a42]/40 focus:ring-2 focus:ring-[#F8C8DC] focus:border-[#F8C8DC] outline-none font-sans"
                     />
                     <button type="button" onClick={handleApplyCoupon} disabled={isApplying || !couponCode}
                       className="bg-[#2d2416] text-white px-4 py-2 rounded-full text-xs font-bold uppercase transition-all hover:bg-[#0F5A7E] shrink-0 font-sans disabled:opacity-50">
