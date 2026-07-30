@@ -1,9 +1,13 @@
 import { NextResponse } from 'next/server'
 
-const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY
-const HOST         = process.env.RAPIDAPI_HOST ?? 'instagram-public-bulk-scraper.p.rapidapi.com'
-const USERNAME     = '_sbcreation'
-const CACHE_TTL    = 6 * 60 * 60 * 1000 // 6 hours — conserve free tier quota
+const HIKER_KEY  = process.env.HIKERAPI_KEY
+const HIKER_BASE = 'https://api.hikerapi.com'
+const USERNAME   = '_sbcreation'
+
+// HikerAPI is pay-per-request with a one-time free-credit signup bonus (not a
+// daily refill), so we cache aggressively — 1 full refresh costs 2 requests
+// (profile + medias). 24h cache ≈ 60 requests/month, well inside a free trial.
+const CACHE_TTL = 24 * 60 * 60 * 1000 // 24 hours
 
 export interface InstagramProfile {
   username: string
@@ -35,16 +39,14 @@ interface Cache {
 let cache: Cache | null = null
 
 function headers() {
-  return {
-    'x-rapidapi-key':  RAPIDAPI_KEY!,
-    'x-rapidapi-host': HOST,
-  }
+  return { 'x-access-key': HIKER_KEY! }
 }
 
-async function apiFetch(path: string) {
-  const url  = `https://${HOST}${path}`
-  console.log('[IG] GET', url)
-  const res  = await fetch(url, { headers: headers(), cache: 'no-store' })
+async function apiFetch(path: string, params: Record<string, string>) {
+  const url = new URL(`${HIKER_BASE}${path}`)
+  Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v))
+  console.log('[IG] GET', url.toString())
+  const res  = await fetch(url.toString(), { headers: headers(), cache: 'no-store' })
   const text = await res.text()
   console.log('[IG]', res.status, text.slice(0, 400))
   let data: any = {}
@@ -53,96 +55,101 @@ async function apiFetch(path: string) {
 }
 
 function parseProfile(user: any): InstagramProfile {
-  const followers = user?.edge_followed_by?.count
-    ?? user?.follower_count
-    ?? user?.followers_count
-    ?? 0
-
-  const following = user?.edge_follow?.count
-    ?? user?.following_count
-    ?? user?.following
-    ?? 0
-
-  console.log('[IG] parseProfile → followers:', followers, 'following:', following)
-
   return {
-    username:        user?.username      || USERNAME,
-    full_name:       user?.full_name     || '',
-    bio:             user?.biography     || '',
-    followers,
-    following,
-    posts_count:     user?.edge_owner_to_timeline_media?.count ?? user?.media_count ?? 0,
+    username:        user?.username  || USERNAME,
+    full_name:       user?.full_name || '',
+    bio:             user?.biography || '',
+    followers:       user?.follower_count  ?? 0,
+    following:       user?.following_count ?? 0,
+    posts_count:     user?.media_count ?? 0,
     profile_pic_url: user?.profile_pic_url || user?.profile_pic_url_hd || '',
   }
 }
 
-function parsePosts(edges: any[]): InstagramPost[] {
-  return edges
+function parsePosts(items: any[]): InstagramPost[] {
+  return items
     .slice(0, 9)
-    .map((edge: any) => {
-      const n = edge?.node || edge
-
+    .map((n: any) => {
+      try {
       const isVideo =
-        n?.__typename === 'GraphVideo' ||
-        n?.is_video === true ||
-        n?.media_type === 2
+        n?.media_type === 2 ||
+        n?.is_video === true
 
       const imageUrl =
-        n?.display_url ||
-        n?.edge_sidecar_to_children?.edges?.[0]?.node?.display_url ||
+        n?.image_versions2?.candidates?.[0]?.url ||
         n?.thumbnail_url ||
+        n?.display_url ||
+        n?.carousel_media?.[0]?.image_versions2?.candidates?.[0]?.url ||
         ''
 
-      const shortcode = n?.shortcode || ''
+      const shortcode = n?.code || n?.shortcode || ''
       const postUrl   = shortcode ? `https://www.instagram.com/p/${shortcode}/` : '#'
-      const takenAt   = n?.taken_at_timestamp || n?.taken_at
-      const timestamp = takenAt ? new Date(Number(takenAt) * 1000).toISOString() : ''
+      // HikerAPI returns taken_at as an ISO string already, plus taken_at_ts
+      // as a unix-seconds fallback. Never assume taken_at is numeric.
+      let timestamp = ''
+      if (typeof n?.taken_at === 'string' && !Number.isNaN(Date.parse(n.taken_at))) {
+        timestamp = new Date(n.taken_at).toISOString()
+      } else if (n?.taken_at_ts) {
+        timestamp = new Date(Number(n.taken_at_ts) * 1000).toISOString()
+      } else if (n?.taken_at_timestamp) {
+        timestamp = new Date(Number(n.taken_at_timestamp) * 1000).toISOString()
+      }
+
+      // Caption can come back as a string OR { text: '...' } — never hand React an object.
+      const rawCaption = n?.caption?.text ?? n?.caption ?? n?.caption_text ?? ''
+      const caption = typeof rawCaption === 'string' ? rawCaption : ''
 
       return {
-        id:        String(n?.id || n?.pk || Math.random()),
+        id:        String(n?.pk || n?.id || `${shortcode || 'post'}-${Math.random().toString(36).slice(2)}`),
         image_url: imageUrl,
-        caption:
-          n?.edge_media_to_caption?.edges?.[0]?.node?.text ||
-          n?.caption?.text || n?.caption || '',
-        likes:     n?.edge_media_preview_like?.count ?? n?.like_count ?? 0,
-        comments:  n?.edge_media_to_comment?.count   ?? n?.comment_count ?? 0,
+        caption,
+        likes:     n?.like_count    ?? 0,
+        comments:  n?.comment_count ?? 0,
         post_url:  postUrl,
         timestamp,
         is_video:  isVideo,
       }
+      } catch (e) {
+        console.error('[IG] Failed to parse one post item, skipping:', e)
+        return null
+      }
     })
-    .filter(p => p.image_url)
+    .filter((p): p is InstagramPost => p !== null && !!p.image_url)
 }
 
 async function fetchAll(): Promise<{ posts: InstagramPost[]; profile: InstagramProfile } | null> {
-  const { ok, status, data } = await apiFetch(`/v1/user_info_web?username=${USERNAME}`)
-
-  if (!ok) {
-    console.error('[IG] user_info_web returned', status)
+  // 1) Resolve username -> user object (contains pk + follower/following counts)
+  const profileRes = await apiFetch('/v1/user/by/username', { username: USERNAME })
+  if (!profileRes.ok) {
+    console.error('[IG] user/by/username failed', profileRes.status, profileRes.raw.slice(0, 200))
     return null
   }
-
-  // API can return user at different nesting levels — try all
-  const user =
-    data?.data?.user ||   // expected shape
-    data?.data ||         // flat shape (what we're seeing now)
-    data?.user ||
-    data
-  if (!user || typeof user !== 'object') {
-    console.error('[IG] No user object. data keys:', Object.keys(data || {}))
+  const user = profileRes.data
+  const pk = user?.pk || user?.id
+  if (!pk) {
+    console.error('[IG] No pk in profile response. Keys:', Object.keys(user || {}))
     return null
   }
-
   const profile = parseProfile(user)
-  const edges   = user?.edge_owner_to_timeline_media?.edges
 
-  if (!Array.isArray(edges) || edges.length === 0) {
-    console.error('[IG] No edges. edge_owner_to_timeline_media:', user?.edge_owner_to_timeline_media)
+  // 2) Fetch recent medias by user id
+  const mediasRes = await apiFetch('/v1/user/medias', { user_id: String(pk), amount: '9' })
+  if (!mediasRes.ok) {
+    console.error('[IG] user/medias failed', mediasRes.status, mediasRes.raw.slice(0, 200))
+    return null
+  }
+  // Response can be a bare array or { items: [...] } depending on endpoint/version
+  const items = Array.isArray(mediasRes.data)
+    ? mediasRes.data
+    : mediasRes.data?.items || []
+
+  if (!Array.isArray(items) || items.length === 0) {
+    console.error('[IG] No media items. Raw:', mediasRes.raw.slice(0, 300))
     return null
   }
 
-  const posts = parsePosts(edges)
-  console.log('[IG] Parsed', posts.length, 'posts from', edges.length, 'edges')
+  const posts = parsePosts(items)
+  console.log('[IG] Parsed', posts.length, 'posts from', items.length, 'items')
   if (posts.length === 0) return null
 
   return { posts, profile }
@@ -156,37 +163,54 @@ export async function GET(request: Request) {
 
   if (isBust) { cache = null; console.log('[IG] Cache cleared') }
 
-  // ?debug=1 — compact diagnostic, won't blow up on huge response
+  // ?debug=1 — compact diagnostic, safe to hit in production
   if (isDebug) {
-    if (!RAPIDAPI_KEY) return NextResponse.json({ error: 'RAPIDAPI_KEY not set' }, { status: 500 })
-    const { status, data, raw } = await apiFetch(`/v1/user_info_web?username=${USERNAME}`)
-    const user = data?.data?.user || data?.data || data?.user || data
+    if (!HIKER_KEY?.trim()) {
+      return NextResponse.json({
+        error: 'HIKERAPI_KEY not set in this environment. Add it in your hosting dashboard (e.g. Vercel Project Settings → Environment Variables) and redeploy.',
+      }, { status: 500 })
+    }
+    const profileRes = await apiFetch('/v1/user/by/username', { username: USERNAME })
+    const user = profileRes.data
+    const pk = user?.pk || user?.id
+
+    let mediasStatus: number | null = null
+    let itemsLength: number | null = null
+    let mediasRawSnippet = ''
+    if (pk) {
+      const mediasRes = await apiFetch('/v1/user/medias', { user_id: String(pk), amount: '9' })
+      mediasStatus = mediasRes.status
+      mediasRawSnippet = mediasRes.raw.slice(0, 300)
+      const items = Array.isArray(mediasRes.data) ? mediasRes.data : mediasRes.data?.items
+      itemsLength = Array.isArray(items) ? items.length : null
+    }
+
     return NextResponse.json({
-      host:       HOST,
-      key_prefix: RAPIDAPI_KEY?.slice(0, 8),
-      status,
-      // If rate limited or error, show raw message
-      raw_snippet: raw.slice(0, 500),
+      key_prefix: HIKER_KEY?.slice(0, 8),
+      profile_status: profileRes.status,
+      profile_raw_snippet: profileRes.raw.slice(0, 400),
       profile_fields: user ? {
-        username:         user.username,
-        full_name:        user.full_name,
-        edge_followed_by: user.edge_followed_by,   // should be { count: 2917 }
-        edge_follow:      user.edge_follow,         // should be { count: 4 }
-        profile_pic_url:  user.profile_pic_url?.slice(0, 60),
-        posts_count:      user.edge_owner_to_timeline_media?.count,
-        edges_length:     user.edge_owner_to_timeline_media?.edges?.length,
-        first_shortcode:  user.edge_owner_to_timeline_media?.edges?.[0]?.node?.shortcode,
+        pk,
+        username:        user.username,
+        full_name:       user.full_name,
+        follower_count:  user.follower_count,
+        following_count: user.following_count,
+        media_count:     user.media_count,
+        profile_pic_url: user.profile_pic_url?.slice(0, 60),
       } : null,
+      medias_status: mediasStatus,
+      medias_items_length: itemsLength,
+      medias_raw_snippet: mediasRawSnippet,
     })
   }
 
-  if (!RAPIDAPI_KEY?.trim()) {
+  if (!HIKER_KEY?.trim()) {
     if (cache) return NextResponse.json({ posts: cache.posts, profile: cache.profile, cached: true, stale: true })
-    return NextResponse.json({ error: 'Missing RAPIDAPI_KEY', posts: [], profile: null }, { status: 500 })
+    return NextResponse.json({ error: 'Missing HIKERAPI_KEY', posts: [], profile: null }, { status: 500 })
   }
 
-  // Serve from cache — DO NOT bust unless explicitly asked
-  // This is critical to conserve free tier quota (100 req/day or similar)
+  // Serve from cache — DO NOT bust unless explicitly asked. Critical for
+  // stretching a one-time free-credit balance across the month.
   if (cache && !isBust && Date.now() - cache.timestamp < CACHE_TTL) {
     return NextResponse.json({ posts: cache.posts, profile: cache.profile, cached: true })
   }
@@ -195,7 +219,6 @@ export async function GET(request: Request) {
     const result = await fetchAll()
 
     if (!result || result.posts.length === 0) {
-      // If we have stale cache, serve it rather than showing empty
       if (cache) {
         console.log('[IG] Fetch failed, serving stale cache')
         return NextResponse.json({ posts: cache.posts, profile: cache.profile, cached: true, stale: true })

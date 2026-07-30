@@ -442,13 +442,13 @@ export default function CheckoutPage() {
                 <button
                   type="submit"
                   disabled={loading || (!paySettings.cod_enabled && !paySettings.razorpay_enabled)}
-                  className="w-full bg-[#2d2416] text-white py-4 rounded-full flex items-center justify-center gap-3 text-xs font-bold uppercase tracking-[0.2em] hover:bg-[#0F5A7E] shadow-lg disabled:opacity-50 transition-all font-sans"
+                  className="w-full bg-[#2d2416] text-white py-4 px-4 rounded-full flex items-center justify-center gap-2 text-[11px] md:text-xs font-bold uppercase tracking-wide md:tracking-[0.2em] hover:bg-[#0F5A7E] shadow-lg disabled:opacity-50 transition-all font-sans"
                 >
                   {loading
-                    ? <><div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /> Confirming...</>
+                    ? <><div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin shrink-0" /> Confirming...</>
                     : formData.paymentMethod === 'razorpay'
-                      ? <><Lock size={14} /> Pay ₹{finalTotal.toLocaleString()} Securely</>
-                      : <><Lock size={14} /> Place Order Now</>}
+                      ? <><Lock size={14} className="shrink-0" /> <span className="truncate">Pay ₹{finalTotal.toLocaleString()} Securely</span></>
+                      : <><Lock size={14} className="shrink-0" /> Place Order Now</>}
                 </button>
 
               </form>
@@ -506,7 +506,7 @@ export default function CheckoutPage() {
 
                 <div className="pt-4 border-t border-[#D4AF37]/40 flex justify-between items-end">
                   <span className="text-sm font-bold uppercase tracking-wide text-[#5a4a42] font-sans">Total</span>
-                  <span className="text-2xl md:text-3xl font-serif text-[#2d2416]">₹{finalTotal.toLocaleString()}</span>
+                  <span className="text-xl md:text-2xl font-sans text-[#2d2416]">₹{finalTotal.toLocaleString()}</span>
                 </div>
               </div>
             </div>
