@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useRef, useCallback } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useParams } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -12,115 +12,58 @@ import ProductCard from '../../../components/ProductCard'
 import toast from 'react-hot-toast'
 
 // ─── Magnifier ────────────────────────────────────────────────────────────────
-// Fixed: previously the zoom background-size was based only on the container's
-// width/height, which ignores how `object-cover` actually crops the source
-// image when its aspect ratio differs from the container. That mismatch made
-// the zoomed view look shifted/misaligned. We now read the image's natural
-// dimensions and compute the true "cover" scale (like CSS object-fit: cover)
-// before applying the extra zoom factor, so the magnified view lines up
-// exactly with what's on screen. Touch devices are also supported now.
+// Simple, reliable hover-zoom: on mouse move we just scale up the already
+// rendered image around the cursor position (transform-origin follows the
+// pointer). This avoids the earlier approach's dependency on separately
+// loading the image again just to read its natural pixel size — one less
+// thing that can silently fail and leave zoom not working. Works the same
+// on touch by following the finger while pressed.
 function MagnifierImage({ src, alt }: { src: string; alt: string }) {
   const containerRef = useRef<HTMLDivElement>(null)
-  const [lensVisible, setLensVisible] = useState(false)
-  const [lensStyle, setLensStyle] = useState<React.CSSProperties>({})
-  const [bgStyle, setBgStyle] = useState<React.CSSProperties>({})
-  const [naturalSize, setNaturalSize] = useState<{ w: number; h: number } | null>(null)
+  const [isZooming, setIsZooming] = useState(false)
+  const [origin, setOrigin] = useState('50% 50%')
 
-  const LENS_SIZE = 220   // px — diameter of the magnifier circle
-  const ZOOM = 2.5        // zoom factor
+  const ZOOM = 2.2
 
-  // Preload the image (outside Next/Image) purely to read its true pixel size
-  useEffect(() => {
-    setNaturalSize(null)
-    const img = new window.Image()
-    img.src = src
-    img.onload = () => setNaturalSize({ w: img.naturalWidth, h: img.naturalHeight })
-  }, [src])
-
-  const updateLens = useCallback((clientX: number, clientY: number) => {
+  const updateOrigin = (clientX: number, clientY: number) => {
     const container = containerRef.current
-    if (!container || !naturalSize) return
-
+    if (!container) return
     const rect = container.getBoundingClientRect()
-    const x = clientX - rect.left
-    const y = clientY - rect.top
-    if (x < 0 || y < 0 || x > rect.width || y > rect.height) return
-
-    // Clamp so the lens circle stays fully inside the image
-    const clampedX = Math.max(LENS_SIZE / 2, Math.min(rect.width - LENS_SIZE / 2, x))
-    const clampedY = Math.max(LENS_SIZE / 2, Math.min(rect.height - LENS_SIZE / 2, y))
-
-    // Replicate object-fit: cover — the image is scaled up until it fully
-    // covers the container, then centered, before we apply the zoom factor.
-    const coverScale = Math.max(rect.width / naturalSize.w, rect.height / naturalSize.h)
-    const renderedW = naturalSize.w * coverScale
-    const renderedH = naturalSize.h * coverScale
-    const offsetX = (rect.width - renderedW) / 2
-    const offsetY = (rect.height - renderedH) / 2
-
-    const bgWidth = renderedW * ZOOM
-    const bgHeight = renderedH * ZOOM
-    const bgX = -(clampedX * ZOOM - LENS_SIZE / 2) + offsetX * ZOOM
-    const bgY = -(clampedY * ZOOM - LENS_SIZE / 2) + offsetY * ZOOM
-
-    setLensStyle({
-      left: clampedX - LENS_SIZE / 2,
-      top: clampedY - LENS_SIZE / 2,
-      width: LENS_SIZE,
-      height: LENS_SIZE,
-    })
-    setBgStyle({
-      backgroundImage: `url(${src})`,
-      backgroundSize: `${bgWidth}px ${bgHeight}px`,
-      backgroundPosition: `${bgX}px ${bgY}px`,
-      backgroundRepeat: 'no-repeat',
-    })
-  }, [src, naturalSize])
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => updateLens(e.clientX, e.clientY)
-  const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
-    const t = e.touches[0]
-    if (t) { setLensVisible(true); updateLens(t.clientX, t.clientY) }
+    const xPct = Math.min(100, Math.max(0, ((clientX - rect.left) / rect.width) * 100))
+    const yPct = Math.min(100, Math.max(0, ((clientY - rect.top) / rect.height) * 100))
+    setOrigin(`${xPct}% ${yPct}%`)
   }
 
   return (
     <div
       ref={containerRef}
-      className="relative w-full h-full group cursor-crosshair touch-none"
-      onMouseEnter={() => setLensVisible(true)}
-      onMouseLeave={() => setLensVisible(false)}
-      onMouseMove={handleMouseMove}
-      onTouchStart={handleTouchMove}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={() => setLensVisible(false)}
+      className="relative w-full h-full overflow-hidden group cursor-crosshair"
+      onMouseEnter={() => setIsZooming(true)}
+      onMouseLeave={() => setIsZooming(false)}
+      onMouseMove={(e) => updateOrigin(e.clientX, e.clientY)}
+      onTouchStart={(e) => { const t = e.touches[0]; if (t) { setIsZooming(true); updateOrigin(t.clientX, t.clientY) } }}
+      onTouchMove={(e) => { const t = e.touches[0]; if (t) updateOrigin(t.clientX, t.clientY) }}
+      onTouchEnd={() => setIsZooming(false)}
     >
-      {/* Base image */}
       <Image
         src={src}
         alt={alt}
         fill
-        className="object-cover transition-transform duration-700 group-hover:scale-[1.02]"
+        className="object-cover"
+        style={{
+          transform: isZooming ? `scale(${ZOOM})` : 'scale(1)',
+          transformOrigin: origin,
+          transition: isZooming ? 'transform 0.05s linear' : 'transform 0.3s ease',
+        }}
         unoptimized
       />
 
-      {/* Zoom hint badge — disappears when lens is active */}
-      {!lensVisible && (
+      {/* Zoom hint badge — disappears while zooming */}
+      {!isZooming && (
         <div className="absolute bottom-3 right-3 flex items-center gap-1.5 bg-white/90 backdrop-blur-sm rounded-full px-3 py-1.5 shadow border border-[#D4AF37]/40 pointer-events-none">
           <ZoomIn size={13} className="text-[#0F5A7E]" />
           <span className="text-[9px] font-bold uppercase tracking-widest text-[#2d2416]">Hover to zoom</span>
         </div>
-      )}
-
-      {/* Magnifier lens */}
-      {lensVisible && naturalSize && (
-        <div
-          className="absolute rounded-full border-[3px] border-[#D4AF37] shadow-2xl pointer-events-none z-20"
-          style={{
-            ...lensStyle,
-            ...bgStyle,
-            boxShadow: '0 0 0 2px #fff, 0 8px 32px rgba(0,0,0,0.28)',
-          }}
-        />
       )}
     </div>
   )
