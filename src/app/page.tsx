@@ -12,7 +12,6 @@ import ReviewCarousel from '../components/ReviewCarousel';
 import PublicInstaFeed from '../components/PublicInstaFeed';
 import Newsletter from '../components/Newsletter';
 import ProductGrid from '../components/ProductGrid';
-import ArtisanalStack from '../components/ArtisanalStack'
 import ProductVault from '../components/ProductVault'
 import VideoShowcase from '../components/VideoShowcase';
 import HeroSlider from '../components/HeroSlider';
@@ -95,7 +94,7 @@ export default function Home() {
       
       <CreativeGallery products={products} />
       {/* <ProductGrid products={products} title="Our Masterpieces" /> */}
-      <ArtisanalStack products={products} />
+      {/* "Why Trust SB Creation" section removed per request */}
       <ReviewCarousel />
       <ProductVault products={products} />
       {/* <VideoShowcase product={products[0]} /> */}

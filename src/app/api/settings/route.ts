@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getStoreSettings } from '../../../lib/supabaseAdmin'
+import { getStoreSettings, DEFAULT_HERO_DESKTOP, DEFAULT_HERO_MOBILE, DEFAULT_COLLECTIONS } from '../../../lib/supabaseAdmin'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -13,11 +13,21 @@ export async function GET() {
       razorpay_enabled: s.razorpay_enabled && !!s.razorpay_key_id && !!s.razorpay_key_secret,
       cod_enabled: s.cod_enabled,
       razorpay_key_id: s.razorpay_enabled ? s.razorpay_key_id : '',
+      hero_desktop_image: s.hero_desktop_image,
+      hero_mobile_image: s.hero_mobile_image,
+      collections: s.collections,
     })
   } catch (err: any) {
     // Fail safe: COD on, online off, so checkout never fully breaks.
     return NextResponse.json(
-      { razorpay_enabled: false, cod_enabled: true, razorpay_key_id: '' },
+      {
+        razorpay_enabled: false,
+        cod_enabled: true,
+        razorpay_key_id: '',
+        hero_desktop_image: DEFAULT_HERO_DESKTOP,
+        hero_mobile_image: DEFAULT_HERO_MOBILE,
+        collections: DEFAULT_COLLECTIONS,
+      },
       { status: 200 }
     )
   }

@@ -16,6 +16,9 @@ export async function GET(req: NextRequest) {
       cod_enabled: s.cod_enabled,
       razorpay_key_id: s.razorpay_key_id || '',
       razorpay_key_secret: s.razorpay_key_secret || '',
+      hero_desktop_image: s.hero_desktop_image || '',
+      hero_mobile_image: s.hero_mobile_image || '',
+      collections: s.collections || [],
     })
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 })
@@ -36,6 +39,22 @@ export async function POST(req: NextRequest) {
       cod_enabled: !!body.cod_enabled,
       razorpay_key_id: String(body.razorpay_key_id ?? '').trim(),
       updated_at: new Date().toISOString(),
+    }
+
+    // Hero + collection cover images (optional — only overwrite when sent)
+    if (typeof body.hero_desktop_image === 'string') {
+      payload.hero_desktop_image = body.hero_desktop_image.trim()
+    }
+    if (typeof body.hero_mobile_image === 'string') {
+      payload.hero_mobile_image = body.hero_mobile_image.trim()
+    }
+    if (Array.isArray(body.collections)) {
+      payload.collections = body.collections.map((c: any) => ({
+        title: String(c.title ?? ''),
+        subtitle: String(c.subtitle ?? ''),
+        image: String(c.image ?? ''),
+        link: String(c.link ?? '/shop'),
+      }))
     }
 
     // Only overwrite the secret when a non-masked value is sent, so re-saving the

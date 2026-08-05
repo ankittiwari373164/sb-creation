@@ -16,6 +16,12 @@ export type Product = {
   stock: number
   sku: string
   weight: string
+  sizes?: string[]
+  colors?: string[]
+  gallery?: string[]
+  has_hand_option?: boolean
+  one_hand_price?: number
+  two_hand_price?: number
   created_at: string
   updated_at: string
 }

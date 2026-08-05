@@ -46,7 +46,7 @@ const ProductSlider = ({ products }: { products: any[] }) => {
     e.preventDefault()
     e.stopPropagation()
     setSelectedProduct(product)
-    setTempSize(product.sizes?.[0] || '2.4')
+    setTempSize(product.sizes?.[0] || '2-4')
   }
 
   const confirmAddToCart = () => {
@@ -148,7 +148,7 @@ const ProductSlider = ({ products }: { products: any[] }) => {
                 <span className="text-[10px] font-bold uppercase tracking-[0.4em] block text-[#0F5A7E]">Select Size</span>
                 <h3 className="text-xl font-serif text-[#0F2C3E]">{selectedProduct.name}</h3>
                 <div className="flex justify-center gap-2 py-4">
-                  {(selectedProduct.sizes?.length > 0 ? selectedProduct.sizes : ['2.2', '2.4', '2.6', '2.8']).map((size: string) => (
+                  {(selectedProduct.sizes?.length > 0 ? selectedProduct.sizes : ['2-2', '2-4', '2-6', '2-8']).map((size: string) => (
                     <button
                       key={size}
                       onClick={() => setTempSize(size)}

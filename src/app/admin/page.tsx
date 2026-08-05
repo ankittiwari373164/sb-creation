@@ -47,7 +47,8 @@ export default function AdminPage() {
   // 💎 Updated default category to match your list
   const [productForm, setProductForm] = useState<any>({
     name: '', price: '', stock: '', category: PRODUCT_CATEGORIES[0],
-    description: '', image_url: '', gallery: [], colors: [], sizes: ['2.4', '2.6']
+    description: '', image_url: '', gallery: [], colors: [], sizes: ['2-4', '2-6'],
+    has_hand_option: false, one_hand_price: '', two_hand_price: '', new_color: '#D4AF37'
   })
 
   const [blogForm, setBlogForm] = useState({
@@ -62,6 +63,9 @@ export default function AdminPage() {
     cod_enabled: true,
     razorpay_key_id: '',
     razorpay_key_secret: '',
+    hero_desktop_image: '',
+    hero_mobile_image: '',
+    collections: [] as { title: string; subtitle: string; image: string; link: string }[],
   })
   const [savingSettings, setSavingSettings] = useState(false)
   const [showSecret, setShowSecret] = useState(false)
@@ -110,6 +114,9 @@ export default function AdminPage() {
         cod_enabled: !!data.cod_enabled,
         razorpay_key_id: data.razorpay_key_id || '',
         razorpay_key_secret: data.razorpay_key_secret || '',
+        hero_desktop_image: data.hero_desktop_image || '',
+        hero_mobile_image: data.hero_mobile_image || '',
+        collections: Array.isArray(data.collections) ? data.collections : [],
       })
     } catch (err) {
       console.error('Failed to load settings', err)
@@ -179,10 +186,28 @@ export default function AdminPage() {
       if (field === 'main') setProductForm({ ...productForm, image_url: uploadedUrls[0] })
       if (field === 'gallery') setProductForm({ ...productForm, gallery: [...(productForm.gallery || []), ...uploadedUrls] })
       if (field === 'blog') setBlogForm({ ...blogForm, image_url: uploadedUrls[0] })
-      
+
       toast.success('Upload complete')
+      return uploadedUrls
     } catch (err) {
       toast.error('Upload failed')
+      return []
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  // Upload a single image for hero / collection cover use and return its URL
+  const uploadStoreImage = async (file: File, path: string): Promise<string | null> => {
+    setUploading(true)
+    try {
+      const { error: uploadError } = await supabase.storage.from('products').upload(path, file, { upsert: true })
+      if (uploadError) throw uploadError
+      const { data: { publicUrl } } = supabase.storage.from('products').getPublicUrl(path)
+      return publicUrl
+    } catch (err) {
+      toast.error('Upload failed')
+      return null
     } finally {
       setUploading(false)
     }
@@ -214,7 +239,10 @@ export default function AdminPage() {
         sku: autoSku,
         sizes: Array.isArray(productForm.sizes) ? productForm.sizes : [],
         colors: Array.isArray(productForm.colors) ? productForm.colors : [],
-        gallery: Array.isArray(productForm.gallery) ? productForm.gallery : []
+        gallery: Array.isArray(productForm.gallery) ? productForm.gallery : [],
+        has_hand_option: !!productForm.has_hand_option,
+        one_hand_price: productForm.has_hand_option ? (parseFloat(productForm.one_hand_price) || 0) : null,
+        two_hand_price: productForm.has_hand_option ? (parseFloat(productForm.two_hand_price) || 0) : null,
       };
 
       console.log("Saving item with SKU:", autoSku);
@@ -249,7 +277,7 @@ export default function AdminPage() {
 
   const resetProductForm = () => {
     // 💎 Reset to default category
-    setProductForm({ name: '', price: '', stock: '', category: PRODUCT_CATEGORIES[0], description: '', image_url: '', gallery: [], colors: [], sizes: ['2.4', '2.6'] })
+    setProductForm({ name: '', price: '', stock: '', category: PRODUCT_CATEGORIES[0], description: '', image_url: '', gallery: [], colors: [], sizes: ['2-4', '2-6'], has_hand_option: false, one_hand_price: '', two_hand_price: '', new_color: '#D4AF37' })
     setShowProductForm(false)
     setEditingId(null)
   }
@@ -258,7 +286,11 @@ export default function AdminPage() {
     setProductForm({
       ...p,
       price: p.price.toString(),
-      stock: p.stock.toString()
+      stock: p.stock.toString(),
+      has_hand_option: !!p.has_hand_option,
+      one_hand_price: p.one_hand_price != null ? String(p.one_hand_price) : '',
+      two_hand_price: p.two_hand_price != null ? String(p.two_hand_price) : '',
+      new_color: '#D4AF37'
     })
     setEditingId(p.id)
     setShowProductForm(true)
@@ -401,20 +433,79 @@ export default function AdminPage() {
                     <div className="space-y-3">
                       <label className="text-[10px] font-bold uppercase text-gray-400 ml-2">Available Sizes</label>
                       <div className="flex gap-2">
-                        {['2.2', '2.4', '2.6', '2.8'].map(s => (
+                        {['2-2', '2-4', '2-6', '2-8'].map(s => (
                           <button key={s} type="button" onClick={() => setProductForm({ ...productForm, sizes: productForm.sizes?.includes(s) ? productForm.sizes.filter((z:any)=>z!==s) : [...(productForm.sizes || []), s]})} className={`px-5 py-3 rounded-xl text-[10px] font-bold transition-all ${productForm.sizes?.includes(s) ? 'bg-[#0F2C3E] text-white shadow-md' : 'bg-gray-100 text-gray-400'}`}>{s}</button>
                         ))}
                       </div>
                     </div>
 
-                    {/* NEW: Colors Input Added Here */}
+                    {/* Colors — real color picker + swatches (any custom color) */}
                     <div className="space-y-3">
                       <label className="text-[10px] font-bold uppercase text-gray-400 ml-2">Available Colors</label>
-                      <div className="flex flex-wrap gap-2">
-                        {['Red', 'Green', 'Blue', 'Gold', 'Silver', 'Pink', 'Black', 'Multicolor'].map(c => (
-                          <button key={c} type="button" onClick={() => setProductForm({ ...productForm, colors: productForm.colors?.includes(c) ? productForm.colors.filter((z:any)=>z!==c) : [...(productForm.colors || []), c]})} className={`px-5 py-3 rounded-xl text-[10px] font-bold transition-all ${productForm.colors?.includes(c) ? 'bg-[#0F2C3E] text-white shadow-md' : 'bg-gray-100 text-gray-400'}`}>{c}</button>
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="color"
+                          value={productForm.new_color || '#D4AF37'}
+                          onChange={e => setProductForm({ ...productForm, new_color: e.target.value })}
+                          className="w-12 h-12 rounded-xl border-2 border-gray-200 cursor-pointer bg-transparent p-0"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const c = productForm.new_color || '#D4AF37'
+                            if (!productForm.colors?.includes(c)) {
+                              setProductForm({ ...productForm, colors: [...(productForm.colors || []), c] })
+                            }
+                          }}
+                          className="px-5 py-3 rounded-xl text-[10px] font-bold uppercase bg-gray-100 text-[#0F2C3E] hover:bg-gray-200 transition-all"
+                        >
+                          + Add Color
+                        </button>
+                      </div>
+                      <div className="flex flex-wrap gap-3 pt-1">
+                        {productForm.colors?.map((c: string) => (
+                          <div key={c} className="relative group/color">
+                            <div
+                              title={c}
+                              className="w-9 h-9 rounded-full border-2 border-gray-200 shadow-inner"
+                              style={{ backgroundColor: c }}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setProductForm({ ...productForm, colors: productForm.colors.filter((z: string) => z !== c) })}
+                              className="absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full p-0.5 opacity-0 group-hover/color:opacity-100 transition-all"
+                            >
+                              <X size={9} />
+                            </button>
+                          </div>
                         ))}
                       </div>
+                    </div>
+
+                    {/* One-hand / Two-hand pricing */}
+                    <div className="space-y-3 bg-[#FAF9F6] p-5 rounded-2xl">
+                      <div className="flex items-center justify-between">
+                        <label className="text-[10px] font-bold uppercase text-gray-400">Hand-wise Pricing (Bangle Sets)</label>
+                        <button
+                          type="button"
+                          onClick={() => setProductForm({ ...productForm, has_hand_option: !productForm.has_hand_option })}
+                          className={`relative w-12 h-7 rounded-full transition-colors shrink-0 ${productForm.has_hand_option ? 'bg-[#0F2C3E]' : 'bg-gray-300'}`}
+                        >
+                          <span className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full shadow transition-transform ${productForm.has_hand_option ? 'translate-x-5' : ''}`} />
+                        </button>
+                      </div>
+                      {productForm.has_hand_option && (
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-1">
+                            <label className="text-[9px] font-bold uppercase text-gray-400 ml-3">One Hand (₹)</label>
+                            <input type="number" value={productForm.one_hand_price} onChange={e => setProductForm({ ...productForm, one_hand_price: e.target.value })} className="w-full bg-white p-4 rounded-full outline-none text-sm" placeholder="e.g. 499" />
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-[9px] font-bold uppercase text-gray-400 ml-3">Two Hands (₹)</label>
+                            <input type="number" value={productForm.two_hand_price} onChange={e => setProductForm({ ...productForm, two_hand_price: e.target.value })} className="w-full bg-white p-4 rounded-full outline-none text-sm" placeholder="e.g. 899" />
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                   </div>
@@ -705,6 +796,127 @@ export default function AdminPage() {
                 <Save size={16} /> {savingSettings ? 'Saving...' : 'Save Settings'}
               </button>
             </form>
+
+            {/* ─── Storefront: Hero + Collection Covers ─── */}
+            <div className="bg-white p-8 md:p-12 rounded-[3rem] border border-gray-100 shadow-xl space-y-10">
+              <div>
+                <h2 className="text-2xl font-serif text-[#0F2C3E]">Storefront Images</h2>
+                <p className="text-xs text-gray-400 mt-1">Control the homepage hero banner and the &quot;Shop by Collection&quot; cover images shown to shoppers.</p>
+              </div>
+
+              {/* Hero images */}
+              <div className="space-y-5">
+                <h3 className="text-[10px] font-bold uppercase tracking-widest text-[#D4AF37]">Hero Banner</h3>
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold uppercase text-gray-400 ml-2">Desktop Image</label>
+                    <div className="relative h-40 bg-[#FAF9F6] rounded-2xl border-2 border-dashed border-gray-200 flex items-center justify-center overflow-hidden">
+                      {settings.hero_desktop_image
+                        ? <Image src={settings.hero_desktop_image} fill alt="" className="object-cover" unoptimized />
+                        : <div className="text-center text-gray-300"><Upload className="mx-auto mb-2" /><p className="text-[10px] font-bold uppercase">Upload desktop banner</p></div>}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="absolute inset-0 opacity-0 cursor-pointer"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0]; if (!file) return
+                          const url = await uploadStoreImage(file, `hero/desktop-${Date.now()}-${file.name.replace(/\s/g, '_')}`)
+                          if (url) setSettings(s => ({ ...s, hero_desktop_image: url }))
+                        }}
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold uppercase text-gray-400 ml-2">Mobile Image</label>
+                    <div className="relative h-40 bg-[#FAF9F6] rounded-2xl border-2 border-dashed border-gray-200 flex items-center justify-center overflow-hidden">
+                      {settings.hero_mobile_image
+                        ? <Image src={settings.hero_mobile_image} fill alt="" className="object-cover" unoptimized />
+                        : <div className="text-center text-gray-300"><Upload className="mx-auto mb-2" /><p className="text-[10px] font-bold uppercase">Upload mobile banner</p></div>}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="absolute inset-0 opacity-0 cursor-pointer"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0]; if (!file) return
+                          const url = await uploadStoreImage(file, `hero/mobile-${Date.now()}-${file.name.replace(/\s/g, '_')}`)
+                          if (url) setSettings(s => ({ ...s, hero_mobile_image: url }))
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Collection covers */}
+              <div className="space-y-5 border-t border-gray-100 pt-8">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-[10px] font-bold uppercase tracking-widest text-[#D4AF37]">Shop by Collection Covers</h3>
+                  <button
+                    type="button"
+                    onClick={() => setSettings(s => ({ ...s, collections: [...s.collections, { title: 'New Collection', subtitle: '', image: '', link: '/shop' }] }))}
+                    className="text-[10px] font-bold uppercase text-[#0F2C3E] bg-gray-100 px-4 py-2 rounded-full hover:bg-gray-200"
+                  >
+                    + Add Section
+                  </button>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-6">
+                  {settings.collections.map((c, i) => (
+                    <div key={i} className="bg-[#FAF9F6] rounded-3xl p-6 space-y-3 relative">
+                      <button
+                        type="button"
+                        onClick={() => setSettings(s => ({ ...s, collections: s.collections.filter((_, idx) => idx !== i) }))}
+                        className="absolute top-4 right-4 p-2 bg-red-50 text-red-500 rounded-full hover:bg-red-100"
+                      >
+                        <X size={14} />
+                      </button>
+                      <div className="relative h-32 bg-white rounded-2xl border-2 border-dashed border-gray-200 flex items-center justify-center overflow-hidden">
+                        {c.image
+                          ? <Image src={c.image} fill alt="" className="object-cover" unoptimized />
+                          : <Upload className="text-gray-300" />}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="absolute inset-0 opacity-0 cursor-pointer"
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0]; if (!file) return
+                            const url = await uploadStoreImage(file, `collections/${Date.now()}-${file.name.replace(/\s/g, '_')}`)
+                            if (url) setSettings(s => ({ ...s, collections: s.collections.map((cc, idx) => idx === i ? { ...cc, image: url } : cc) }))
+                          }}
+                        />
+                      </div>
+                      <input
+                        value={c.title}
+                        onChange={e => setSettings(s => ({ ...s, collections: s.collections.map((cc, idx) => idx === i ? { ...cc, title: e.target.value } : cc) }))}
+                        placeholder="Title (e.g. Glass Collection)"
+                        className="w-full bg-white p-3 rounded-full outline-none text-sm"
+                      />
+                      <input
+                        value={c.subtitle}
+                        onChange={e => setSettings(s => ({ ...s, collections: s.collections.map((cc, idx) => idx === i ? { ...cc, subtitle: e.target.value } : cc) }))}
+                        placeholder="Subtitle (e.g. Traditional Firozabad Artistry)"
+                        className="w-full bg-white p-3 rounded-full outline-none text-sm"
+                      />
+                      <input
+                        value={c.link}
+                        onChange={e => setSettings(s => ({ ...s, collections: s.collections.map((cc, idx) => idx === i ? { ...cc, link: e.target.value } : cc) }))}
+                        placeholder="Link (e.g. /shop or /category/glass-bangles)"
+                        className="w-full bg-white p-3 rounded-full outline-none text-sm"
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={saveSettings as any}
+                  disabled={savingSettings || uploading}
+                  className="w-full bg-[#0F2C3E] text-white py-5 rounded-full text-[11px] font-bold uppercase tracking-[0.3em] shadow-xl hover:bg-[#db2777] transition-all disabled:opacity-50 flex items-center justify-center gap-3"
+                >
+                  <Save size={16} /> {savingSettings ? 'Saving...' : 'Save Storefront Images'}
+                </button>
+              </div>
+            </div>
           </div>
         )}
 

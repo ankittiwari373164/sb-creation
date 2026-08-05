@@ -12,53 +12,87 @@ import ProductCard from '../../../components/ProductCard'
 import toast from 'react-hot-toast'
 
 // ─── Magnifier ────────────────────────────────────────────────────────────────
+// Fixed: previously the zoom background-size was based only on the container's
+// width/height, which ignores how `object-cover` actually crops the source
+// image when its aspect ratio differs from the container. That mismatch made
+// the zoomed view look shifted/misaligned. We now read the image's natural
+// dimensions and compute the true "cover" scale (like CSS object-fit: cover)
+// before applying the extra zoom factor, so the magnified view lines up
+// exactly with what's on screen. Touch devices are also supported now.
 function MagnifierImage({ src, alt }: { src: string; alt: string }) {
   const containerRef = useRef<HTMLDivElement>(null)
-  const lensRef = useRef<HTMLDivElement>(null)
   const [lensVisible, setLensVisible] = useState(false)
   const [lensStyle, setLensStyle] = useState<React.CSSProperties>({})
   const [bgStyle, setBgStyle] = useState<React.CSSProperties>({})
+  const [naturalSize, setNaturalSize] = useState<{ w: number; h: number } | null>(null)
 
   const LENS_SIZE = 220   // px — diameter of the magnifier circle
-  const ZOOM = 2.8        // zoom factor
+  const ZOOM = 2.5        // zoom factor
 
-  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+  // Preload the image (outside Next/Image) purely to read its true pixel size
+  useEffect(() => {
+    setNaturalSize(null)
+    const img = new window.Image()
+    img.src = src
+    img.onload = () => setNaturalSize({ w: img.naturalWidth, h: img.naturalHeight })
+  }, [src])
+
+  const updateLens = useCallback((clientX: number, clientY: number) => {
     const container = containerRef.current
-    if (!container) return
+    if (!container || !naturalSize) return
 
     const rect = container.getBoundingClientRect()
-    const x = e.clientX - rect.left
-    const y = e.clientY - rect.top
+    const x = clientX - rect.left
+    const y = clientY - rect.top
+    if (x < 0 || y < 0 || x > rect.width || y > rect.height) return
 
-    // Clamp so lens stays fully inside image
-    const clampedX = Math.max(LENS_SIZE / 2, Math.min(rect.width  - LENS_SIZE / 2, x))
+    // Clamp so the lens circle stays fully inside the image
+    const clampedX = Math.max(LENS_SIZE / 2, Math.min(rect.width - LENS_SIZE / 2, x))
     const clampedY = Math.max(LENS_SIZE / 2, Math.min(rect.height - LENS_SIZE / 2, y))
 
-    // Background-position so the zoomed area is centred in the lens
-    const bgX = -(clampedX * ZOOM - LENS_SIZE / 2)
-    const bgY = -(clampedY * ZOOM - LENS_SIZE / 2)
+    // Replicate object-fit: cover — the image is scaled up until it fully
+    // covers the container, then centered, before we apply the zoom factor.
+    const coverScale = Math.max(rect.width / naturalSize.w, rect.height / naturalSize.h)
+    const renderedW = naturalSize.w * coverScale
+    const renderedH = naturalSize.h * coverScale
+    const offsetX = (rect.width - renderedW) / 2
+    const offsetY = (rect.height - renderedH) / 2
+
+    const bgWidth = renderedW * ZOOM
+    const bgHeight = renderedH * ZOOM
+    const bgX = -(clampedX * ZOOM - LENS_SIZE / 2) + offsetX * ZOOM
+    const bgY = -(clampedY * ZOOM - LENS_SIZE / 2) + offsetY * ZOOM
 
     setLensStyle({
       left: clampedX - LENS_SIZE / 2,
-      top:  clampedY - LENS_SIZE / 2,
-      width:  LENS_SIZE,
+      top: clampedY - LENS_SIZE / 2,
+      width: LENS_SIZE,
       height: LENS_SIZE,
     })
     setBgStyle({
-      backgroundImage:    `url(${src})`,
-      backgroundSize:     `${rect.width * ZOOM}px ${rect.height * ZOOM}px`,
+      backgroundImage: `url(${src})`,
+      backgroundSize: `${bgWidth}px ${bgHeight}px`,
       backgroundPosition: `${bgX}px ${bgY}px`,
-      backgroundRepeat:   'no-repeat',
+      backgroundRepeat: 'no-repeat',
     })
-  }, [src, LENS_SIZE, ZOOM])
+  }, [src, naturalSize])
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => updateLens(e.clientX, e.clientY)
+  const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
+    const t = e.touches[0]
+    if (t) { setLensVisible(true); updateLens(t.clientX, t.clientY) }
+  }
 
   return (
     <div
       ref={containerRef}
-      className="relative w-full h-full group cursor-crosshair"
+      className="relative w-full h-full group cursor-crosshair touch-none"
       onMouseEnter={() => setLensVisible(true)}
       onMouseLeave={() => setLensVisible(false)}
       onMouseMove={handleMouseMove}
+      onTouchStart={handleTouchMove}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={() => setLensVisible(false)}
     >
       {/* Base image */}
       <Image
@@ -78,9 +112,8 @@ function MagnifierImage({ src, alt }: { src: string; alt: string }) {
       )}
 
       {/* Magnifier lens */}
-      {lensVisible && (
+      {lensVisible && naturalSize && (
         <div
-          ref={lensRef}
           className="absolute rounded-full border-[3px] border-[#D4AF37] shadow-2xl pointer-events-none z-20"
           style={{
             ...lensStyle,
@@ -103,10 +136,10 @@ export default function ProductDetailPage() {
   const [loading, setLoading]             = useState(true)
   const [quantity, setQuantity]           = useState(1)
   const [activeImg, setActiveImg]         = useState(0)
-  const [isWritingReview, setIsWritingReview] = useState(false)
   const [isWishlisted, setIsWishlisted]   = useState(false)
   const [selectedSize, setSelectedSize]   = useState('')
   const [selectedColor, setSelectedColor] = useState('')
+  const [selectedHand, setSelectedHand]   = useState<'one' | 'two'>('two')
 
   const addItem = useCartStore((state) => state.addItem)
 
@@ -132,7 +165,7 @@ export default function ProductDetailPage() {
         .from('products').select('*').eq('slug', slug).single()
       if (error) throw error
       setProduct(data)
-      const sizes = data.sizes?.length ? data.sizes : ['2.2', '2.4', '2.6', '2.8']
+      const sizes = data.sizes?.length ? data.sizes : ['2-2', '2-4', '2-6', '2-8']
       setSelectedSize(sizes[0])
       if (data.colors?.length) setSelectedColor(data.colors[0])
       const { data: similar } = await supabase
@@ -164,9 +197,22 @@ export default function ProductDetailPage() {
     ? [product.image_url, ...(product.gallery || [])].filter(Boolean)
     : []
 
+  const activePrice = product?.has_hand_option
+    ? (selectedHand === 'one' ? Number(product.one_hand_price) : Number(product.two_hand_price)) || product.price
+    : product?.price
+
   const handleAddToCart = () => {
     if (product) {
-      addItem({ ...product, selectedSize, selectedColor }, quantity)
+      addItem(
+        {
+          ...product,
+          price: activePrice,
+          selectedSize,
+          selectedColor,
+          ...(product.has_hand_option ? { selectedHand } : {}),
+        },
+        quantity
+      )
       toast.success('Added to your collection', {
         style: { background: '#2d2416', color: '#fff', borderRadius: '50px' },
       })
@@ -185,7 +231,7 @@ export default function ProductDetailPage() {
     </div>
   )
 
-  const sizes = product.sizes?.length ? product.sizes : ['2.2', '2.4', '2.6', '2.8']
+  const sizes = product.sizes?.length ? product.sizes : ['2-2', '2-4', '2-6', '2-8']
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
@@ -287,18 +333,46 @@ export default function ProductDetailPage() {
                 </span>
               </div>
               <p className="text-xl md:text-3xl font-serif text-[#D4AF37]">
-                ₹{product.price.toLocaleString()}
+                ₹{Number(activePrice || 0).toLocaleString()}
               </p>
             </div>
 
             {/* Description */}
             <p className="text-[#2d2416] leading-relaxed font-light text-sm md:text-base
-                          italic border-l-4 border-[#F8C8DC] pl-4 opacity-80 line-clamp-3">
+                          italic border-l-4 border-[#F8C8DC] pl-4 opacity-80 whitespace-pre-line">
               {product.description}
             </p>
 
             {/* Size + Colour */}
             <div className="space-y-4">
+              {/* Hand option */}
+              {product.has_hand_option && (
+                <div className="space-y-2">
+                  <span className="text-[8px] font-bold uppercase tracking-widest text-[#2d2416] opacity-60">
+                    Set For
+                  </span>
+                  <div className="flex gap-2">
+                    {([
+                      { key: 'one', label: 'One Hand', price: product.one_hand_price },
+                      { key: 'two', label: 'Two Hands', price: product.two_hand_price },
+                    ] as const).map(opt => (
+                      <button
+                        key={opt.key}
+                        onClick={() => setSelectedHand(opt.key)}
+                        className={`px-4 py-2 rounded-full border-2 text-xs font-bold transition-all flex flex-col items-center leading-tight ${
+                          selectedHand === opt.key
+                            ? 'bg-[#2d2416] text-white border-[#2d2416] shadow-md'
+                            : 'border-[#D4AF37] text-[#2d2416] hover:border-[#0F5A7E] hover:text-[#0F5A7E]'
+                        }`}
+                      >
+                        <span>{opt.label}</span>
+                        <span className="text-[9px] opacity-80">₹{Number(opt.price || 0).toLocaleString()}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Size */}
               <div className="space-y-2">
                 <span className="text-[8px] font-bold uppercase tracking-widest text-[#2d2416] opacity-60">
@@ -405,84 +479,7 @@ export default function ProductDetailPage() {
       {/* ── Below-fold: Reviews + Similar (unchanged layout) ── */}
       <div className="container mx-auto px-4 md:px-6">
 
-        {/* Reviews */}
-        <div className="mt-16 md:mt-20 pt-10 pb-10 border-t border-[#D4AF37]/20">
-          <div className="flex justify-between items-end mb-8">
-            <h2 className="text-2xl md:text-4xl font-serif text-[#2d2416]">
-              Patron <span className="italic font-light text-[#D4AF37]">Notes</span>
-            </h2>
-            <button
-              onClick={() => setIsWritingReview(!isWritingReview)}
-              className="text-[8px] md:text-xs font-bold uppercase tracking-[0.2em] text-[#2d2416]
-                         opacity-60 border-b-2 border-[#D4AF37] pb-1 hover:text-[#0F5A7E]
-                         hover:border-[#0F5A7E] transition-all"
-            >
-              {isWritingReview ? 'Close' : 'Share Narrative'}
-            </button>
-          </div>
-
-          <AnimatePresence>
-            {isWritingReview && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                className="overflow-hidden"
-              >
-                <form className="bg-[#F5E9DC] p-6 md:p-10 rounded-2xl md:rounded-[3rem] mb-8
-                                 grid grid-cols-1 md:grid-cols-2 gap-4 border-2 border-[#D4AF37]">
-                  <input
-                    placeholder="Name"
-                    className="bg-white rounded-full py-3 px-6 text-sm border-none outline-none
-                               focus:ring-2 focus:ring-[#0F5A7E]"
-                  />
-                  <div className="flex items-center gap-3 px-6">
-                    <span className="text-[8px] font-bold uppercase tracking-widest text-[#2d2416] opacity-60">
-                      Rating:
-                    </span>
-                    <div className="flex text-[#D4AF37] gap-1">
-                      {[...Array(5)].map((_, i) => (
-                        <Star key={i} size={14} fill="currentColor" />
-                      ))}
-                    </div>
-                  </div>
-                  <textarea
-                    placeholder="Your experience..."
-                    className="md:col-span-2 bg-white rounded-2xl p-6 text-sm border-none
-                               outline-none focus:ring-2 focus:ring-[#0F5A7E] resize-none"
-                    rows={4}
-                  />
-                  <button
-                    className="bg-[#2d2416] text-white py-3 rounded-full text-[8px] font-bold
-                               uppercase tracking-[0.2em] hover:bg-[#0F5A7E] transition-all"
-                  >
-                    Submit Review
-                  </button>
-                </form>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8">
-            {[1, 2, 3].map(i => (
-              <div
-                key={i}
-                className="bg-white p-6 md:p-10 rounded-xl md:rounded-[2.5rem] border-2
-                           border-[#D4AF37] hover:border-[#F8C8DC] transition-all shadow-sm"
-              >
-                <div className="flex text-[#D4AF37] mb-4">
-                  {[...Array(5)].map((_, j) => <Star key={j} size={11} fill="currentColor" />)}
-                </div>
-                <p className="font-light text-[#2d2416] text-sm md:text-base leading-relaxed italic opacity-80">
-                  &quot;A timeless piece from Firozabad. The craftsmanship is evident in the subtle details.&quot;
-                </p>
-                <p className="mt-6 text-[8px] font-bold uppercase tracking-[0.2em] text-[#2d2416]">
-                  Verified Patron
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
+        {/* Patron Notes section removed per request */}
 
         {/* Similar products */}
         {similarProducts.length > 0 && (

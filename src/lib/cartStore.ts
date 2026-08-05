@@ -1,11 +1,12 @@
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { persist, createJSONStorage } from 'zustand/middleware'
 import { Product, CartItem } from './supabase'
+import { cookieStorageAdapter } from './cookieStorage'
 
 interface CartStore {
   items: CartItem[]
   coupon: any | null
-  _hasHydrated: boolean          // ← new: true once localStorage is read
+  _hasHydrated: boolean          // ← true once the cart cookie has been read
   setHasHydrated: (v: boolean) => void
   addItem: (product: Product, quantity?: number) => void
   removeItem: (productId: string) => void
@@ -73,7 +74,9 @@ export const useCartStore = create<CartStore>()(
     }),
     {
       name: 'cart-storage',
-      // Called the instant rehydration from localStorage finishes
+      // Cart is persisted to a cookie instead of localStorage.
+      storage: createJSONStorage(() => cookieStorageAdapter),
+      // Called the instant rehydration from the cookie finishes
       onRehydrateStorage: () => (state) => {
         state?.setHasHydrated(true)
       },

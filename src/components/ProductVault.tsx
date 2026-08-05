@@ -19,7 +19,7 @@ export default function ProductVault({ products }: { products: any[] }) {
     e.preventDefault()
     e.stopPropagation()
     setSelectedProduct(product)
-    setTempSize(product.sizes?.[0] || '2.4')
+    setTempSize(product.sizes?.[0] || '2-4')
   }
 
   const confirmAddToCart = () => {
@@ -123,7 +123,7 @@ export default function ProductVault({ products }: { products: any[] }) {
                 <h3 className="text-lg md:text-2xl font-serif text-[#2d2416]">{selectedProduct.name}</h3>
                 
                 <div className="flex flex-wrap justify-center gap-2 md:gap-3 py-4 md:py-6">
-                  {(selectedProduct.sizes?.length > 0 ? selectedProduct.sizes : ['2.2', '2.4', '2.6', '2.8']).map((size: string) => (
+                  {(selectedProduct.sizes?.length > 0 ? selectedProduct.sizes : ['2-2', '2-4', '2-6', '2-8']).map((size: string) => (
                     <button
                       key={size}
                       onClick={() => setTempSize(size)}

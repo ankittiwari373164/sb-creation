@@ -1,5 +1,5 @@
 "use client";
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
@@ -35,6 +35,7 @@ const CategoryCard = ({ category, tall = false, delay = 0 }: { category: Categor
           src={category.image}
           alt={category.name}
           fill
+          unoptimized={category.image?.startsWith('http')}
           className="object-cover transition-transform duration-700 group-hover:scale-110"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-[#0F2C3E]/80 via-[#0F2C3E]/10 to-transparent" />
@@ -61,7 +62,34 @@ const CategoryCard = ({ category, tall = false, delay = 0 }: { category: Categor
 );
 
 const CreativeGallery = ({ categories }: { categories?: Category[] }) => {
-  const display = (categories && categories.length >= 5 ? categories : SAMPLE_CATEGORIES).slice(0, 5);
+  const [storeCategories, setStoreCategories] = useState<Category[] | null>(null)
+
+  // Collection cover images are managed from the admin panel
+  // (Settings → Storefront Images → Shop by Collection Covers).
+  useEffect(() => {
+    let active = true
+    fetch('/api/settings')
+      .then(r => r.json())
+      .then(s => {
+        if (!active) return
+        if (Array.isArray(s.collections) && s.collections.length > 0) {
+          setStoreCategories(
+            s.collections.map((c: any, i: number) => ({
+              id: i + 1,
+              name: c.title,
+              href: c.link || '/shop',
+              image: c.image,
+              tagline: c.subtitle,
+            }))
+          )
+        }
+      })
+      .catch(() => {})
+    return () => { active = false }
+  }, [])
+
+  const source = categories && categories.length >= 5 ? categories : (storeCategories || SAMPLE_CATEGORIES)
+  const display = source.slice(0, 5);
   // Layout: [left-top, left-bottom] | [centre BIG] | [right-top, right-bottom]
   const leftTop    = display[0];
   const leftBottom = display[1];

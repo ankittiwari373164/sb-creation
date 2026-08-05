@@ -16,14 +16,36 @@ export const supabaseAdmin = createClient(
   }
 )
 
+export type CollectionCover = {
+  title: string
+  subtitle: string
+  image: string
+  link: string
+}
+
 export type StoreSettings = {
   id: number
   razorpay_enabled: boolean
   cod_enabled: boolean
   razorpay_key_id: string
   razorpay_key_secret: string
+  hero_desktop_image: string
+  hero_mobile_image: string
+  collections: CollectionCover[]
   updated_at: string
 }
+
+// Sensible fallbacks so the storefront still renders something even before
+// an admin has configured these from the dashboard.
+export const DEFAULT_HERO_DESKTOP = '/banner6.png'
+export const DEFAULT_HERO_MOBILE = '/mobile.png'
+export const DEFAULT_COLLECTIONS: CollectionCover[] = [
+  { title: 'Glass Bangles', subtitle: 'Vibrant & Colourful', image: '/glass-bangles.png', link: '/category/glass-bangles' },
+  { title: 'Metal Bangles/Kadas', subtitle: 'Bold & Timeless', image: '/kada.png', link: '/category/metal-bangles-kadas' },
+  { title: 'Bangles Box', subtitle: 'Gift & Storage', image: '/box.png', link: '/category/bangles-box' },
+  { title: 'Bangle Sets', subtitle: 'Stack in Style', image: '/set.png', link: '/category/bangle-sets' },
+  { title: 'Bracelets & Watches', subtitle: 'Everyday Elegance', image: '/bracelets.png', link: '/category/bracelets-watches' },
+]
 
 // Reads the single settings row, creating it with safe defaults if missing.
 export async function getStoreSettings(): Promise<StoreSettings> {
@@ -42,6 +64,9 @@ export async function getStoreSettings(): Promise<StoreSettings> {
       cod_enabled: true,
       razorpay_key_id: '',
       razorpay_key_secret: '',
+      hero_desktop_image: DEFAULT_HERO_DESKTOP,
+      hero_mobile_image: DEFAULT_HERO_MOBILE,
+      collections: DEFAULT_COLLECTIONS,
     }
     const { data: created, error: insErr } = await supabaseAdmin
       .from('store_settings')
@@ -52,7 +77,12 @@ export async function getStoreSettings(): Promise<StoreSettings> {
     return created as StoreSettings
   }
 
-  return data as StoreSettings
+  return {
+    ...data,
+    hero_desktop_image: data.hero_desktop_image || DEFAULT_HERO_DESKTOP,
+    hero_mobile_image: data.hero_mobile_image || DEFAULT_HERO_MOBILE,
+    collections: Array.isArray(data.collections) && data.collections.length > 0 ? data.collections : DEFAULT_COLLECTIONS,
+  } as StoreSettings
 }
 
 // Validates the caller's Supabase access token and confirms they are an admin.

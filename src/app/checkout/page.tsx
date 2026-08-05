@@ -6,8 +6,14 @@ import { motion } from 'framer-motion'
 import { Truck, ShieldCheck, ArrowLeft, CreditCard, Lock, Tag, Banknote } from 'lucide-react'
 import { useCartStore } from '../../lib/cartStore'
 import { supabase } from '../../lib/supabase'
+import { getCookie, setCookie } from '../../lib/cookieStorage'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
+
+// Shipping details are autosaved to this cookie as the user types, so a
+// refresh / accidental tab close / dropped connection doesn't wipe out
+// everything they've already filled in. (Cookie-based, not localStorage.)
+const SHIPPING_COOKIE = 'sb_shipping_info'
 
 export default function CheckoutPage() {
   const router = useRouter()
@@ -20,17 +26,14 @@ export default function CheckoutPage() {
   useEffect(() => {
     import('country-state-city').then(m => {
       setCSC(m)
-      const india = m.Country.getAllCountries().find((c: any) => c.isoCode === 'IN')
-      if (india) {
-        setFormData(prev => ({
-          ...prev,
-          country: india.name,
-          countryCode: 'IN',
-          state: '',
-          stateCode: '',
-          city: '',
-        }))
-      }
+      // Only default to India if we didn't already restore a saved country
+      // from the autosaved shipping cookie.
+      setFormData(prev => {
+        if (prev.country) return prev
+        const india = m.Country.getAllCountries().find((c: any) => c.isoCode === 'IN')
+        if (!india) return prev
+        return { ...prev, country: india.name, countryCode: 'IN', state: '', stateCode: '', city: '' }
+      })
     })
   }, [])
 
@@ -44,7 +47,7 @@ export default function CheckoutPage() {
   const [discount, setDiscount] = useState(0)
   const [isApplying, setIsApplying] = useState(false)
 
-  const [formData, setFormData] = useState({
+  const defaultFormData = {
     fullName: '',
     email: '',
     phone: '',
@@ -56,7 +59,28 @@ export default function CheckoutPage() {
     city: '',
     pincode: '',
     paymentMethod: 'cod',
+  }
+
+  // Restore any previously autosaved shipping details (cookie-based) so the
+  // shopper doesn't have to retype everything if the checkout page reloads.
+  const [formData, setFormData] = useState(() => {
+    if (typeof window === 'undefined') return defaultFormData
+    const saved = getCookie(SHIPPING_COOKIE)
+    if (!saved) return defaultFormData
+    try {
+      return { ...defaultFormData, ...JSON.parse(saved) }
+    } catch {
+      return defaultFormData
+    }
   })
+
+  // Autosave shipping details to a cookie as the user types (debounced).
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setCookie(SHIPPING_COOKIE, JSON.stringify(formData), 30)
+    }, 400)
+    return () => clearTimeout(t)
+  }, [formData])
 
   const subtotal = getTotalPrice()
   const discountAmount = (subtotal * discount) / 100

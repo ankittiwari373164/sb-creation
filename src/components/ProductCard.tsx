@@ -82,7 +82,7 @@ export default function ProductCard({ product }: ProductCardProps) {
   const handleAddToCartInitiate = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    setTempSize((product as any).sizes?.[0] || '2.4')
+    setTempSize((product as any).sizes?.[0] || '2-4')
     setShowSizePopup(true)
   }
 
@@ -212,7 +212,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                 <div className="flex justify-center gap-2 md:gap-3 py-4 md:py-6 flex-wrap">
                   {((product as any).sizes?.length > 0
                     ? (product as any).sizes
-                    : ['2.2', '2.4', '2.6', '2.8']
+                    : ['2-2', '2-4', '2-6', '2-8']
                   ).map((size: string) => (
                     <button
                       key={size}
