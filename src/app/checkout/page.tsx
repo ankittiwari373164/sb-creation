@@ -47,7 +47,19 @@ export default function CheckoutPage() {
   const [discount, setDiscount] = useState(0)
   const [isApplying, setIsApplying] = useState(false)
 
-  const defaultFormData = {
+  const defaultFormData: {
+    fullName: string
+    email: string
+    phone: string
+    address: string
+    country: string
+    countryCode: string
+    state: string
+    stateCode: string
+    city: string
+    pincode: string
+    paymentMethod: string
+  } = {
     fullName: '',
     email: '',
     phone: '',
@@ -63,12 +75,12 @@ export default function CheckoutPage() {
 
   // Restore any previously autosaved shipping details (cookie-based) so the
   // shopper doesn't have to retype everything if the checkout page reloads.
-  const [formData, setFormData] = useState(() => {
+  const [formData, setFormData] = useState<typeof defaultFormData>(() => {
     if (typeof window === 'undefined') return defaultFormData
     const saved = getCookie(SHIPPING_COOKIE)
     if (!saved) return defaultFormData
     try {
-      return { ...defaultFormData, ...JSON.parse(saved) }
+      return { ...defaultFormData, ...(JSON.parse(saved) as Partial<typeof defaultFormData>) }
     } catch {
       return defaultFormData
     }
