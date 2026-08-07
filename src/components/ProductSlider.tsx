@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useMemo } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { ShoppingBag, Heart, Eye, X, Check, ChevronLeft, ChevronRight } from 'lucide-react'
@@ -8,6 +8,8 @@ import { useCartStore } from '../lib/cartStore'
 import { supabase } from '../lib/supabase'
 import toast from 'react-hot-toast'
 import { motion, AnimatePresence } from 'framer-motion'
+
+const MIN_COPIES = 6 // ensures enough width even with 1-2 products
 
 const ProductSlider = ({ products }: { products: any[] }) => {
   const addItem = useCartStore((state) => state.addItem)
@@ -21,6 +23,16 @@ const ProductSlider = ({ products }: { products: any[] }) => {
   const scrollStart = useRef(0)
   const dragMoved = useRef(false)
 
+  // Repeat products enough times so the loop feels seamless,
+  // regardless of whether there's 1 product or 20.
+  const loopedProducts = useMemo(() => {
+    if (!products || products.length === 0) return []
+    const copies = Math.max(MIN_COPIES, Math.ceil((MIN_COPIES * 3) / products.length))
+    return Array.from({ length: copies }, () => products).flat()
+  }, [products])
+
+  const oneSetWidthRef = useRef(0) // width of a single "products" set in px
+
   useEffect(() => {
     const fetchWishlist = async () => {
       const { data: { user } } = await supabase.auth.getUser()
@@ -31,6 +43,38 @@ const ProductSlider = ({ products }: { products: any[] }) => {
     }
     fetchWishlist()
   }, [])
+
+  // Measure one "set" width and start the scroll roughly in the middle,
+  // so the user can drag/click either direction and we can loop both ways.
+  useEffect(() => {
+    const el = scrollRef.current
+    if (!el || products.length === 0) return
+
+    const measure = () => {
+      const totalSets = loopedProducts.length / products.length
+      oneSetWidthRef.current = el.scrollWidth / totalSets
+      // center the scroll position so looping works both directions
+      el.scrollLeft = oneSetWidthRef.current * Math.floor(totalSets / 2)
+    }
+
+    // slight delay to ensure images/layout settled
+    const t = setTimeout(measure, 50)
+    return () => clearTimeout(t)
+  }, [loopedProducts, products.length])
+
+  const normalizeScroll = () => {
+    const el = scrollRef.current
+    const setWidth = oneSetWidthRef.current
+    if (!el || !setWidth) return
+
+    // If we've drifted near the start or end, silently jump back
+    // by whole "set" widths to stay in the safe middle zone.
+    if (el.scrollLeft < setWidth) {
+      el.scrollLeft += setWidth
+    } else if (el.scrollLeft > el.scrollWidth - setWidth * 2) {
+      el.scrollLeft -= setWidth
+    }
+  }
 
   const handleWishlist = async (e: React.MouseEvent, productId: string) => {
     e.preventDefault()
@@ -64,9 +108,12 @@ const ProductSlider = ({ products }: { products: any[] }) => {
   }
 
   const scrollByAmount = (dir: 'left' | 'right') => {
-    if (!scrollRef.current) return
-    const amount = scrollRef.current.clientWidth * 0.7
-    scrollRef.current.scrollBy({ left: dir === 'left' ? -amount : amount, behavior: 'smooth' })
+    const el = scrollRef.current
+    if (!el) return
+    const amount = el.clientWidth * 0.7
+    el.scrollBy({ left: dir === 'left' ? -amount : amount, behavior: 'smooth' })
+    // normalize shortly after the smooth scroll settles
+    setTimeout(normalizeScroll, 400)
   }
 
   // ---- Drag handlers (mouse) ----
@@ -89,9 +136,14 @@ const ProductSlider = ({ products }: { products: any[] }) => {
 
   const stopDragging = () => {
     isDragging.current = false
+    normalizeScroll()
   }
 
-  // Prevent click/navigation firing right after a drag
+  // Also normalize on native touch scroll / momentum scroll
+  const onScroll = () => {
+    normalizeScroll()
+  }
+
   const onCardClickCapture = (e: React.MouseEvent) => {
     if (dragMoved.current) {
       e.preventDefault()
@@ -111,7 +163,6 @@ const ProductSlider = ({ products }: { products: any[] }) => {
       </div>
 
       <div className="relative">
-        {/* Left arrow */}
         <button
           onClick={() => scrollByAmount('left')}
           className="absolute left-2 top-1/2 -translate-y-1/2 z-40 p-2 bg-white/90 hover:bg-white text-[#0F2C3E] rounded-full shadow-md border border-[#F8C8DC] hover:border-[#db2777] transition-all"
@@ -120,7 +171,6 @@ const ProductSlider = ({ products }: { products: any[] }) => {
           <ChevronLeft size={18} strokeWidth={2.5} />
         </button>
 
-        {/* Right arrow */}
         <button
           onClick={() => scrollByAmount('right')}
           className="absolute right-2 top-1/2 -translate-y-1/2 z-40 p-2 bg-white/90 hover:bg-white text-[#0F2C3E] rounded-full shadow-md border border-[#F8C8DC] hover:border-[#db2777] transition-all"
@@ -131,19 +181,20 @@ const ProductSlider = ({ products }: { products: any[] }) => {
 
         <div
           ref={scrollRef}
+          onScroll={onScroll}
           className="flex gap-3 md:gap-5 py-3 px-1 overflow-x-auto scrollbar-hide cursor-grab active:cursor-grabbing select-none scroll-smooth"
           onMouseDown={onMouseDown}
           onMouseMove={onMouseMove}
           onMouseUp={stopDragging}
           onMouseLeave={stopDragging}
         >
-          {products.map((product) => {
+          {loopedProducts.map((product, index) => {
             const primaryImage = product.gallery?.[0] || product.image_url || '/placeholder.jpg'
             const secondaryImage = product.gallery?.[1] || product.image_url || primaryImage
             const isLiked = wishlistIds.includes(product.id)
 
             return (
-              <div key={product.id} className="min-w-[180px] md:min-w-[230px] lg:min-w-[270px] flex-shrink-0">
+              <div key={`${product.id}-${index}`} className="min-w-[180px] md:min-w-[230px] lg:min-w-[270px] flex-shrink-0">
                 <Link
                   href={`/product/${product.slug}`}
                   className="block group"
