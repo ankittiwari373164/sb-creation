@@ -237,7 +237,13 @@ export default function AdminPage() {
         image_url: String(productForm.image_url || ''),
         slug: slug,
         sku: autoSku,
-        sizes: Array.isArray(productForm.sizes) ? productForm.sizes : [],
+        // Normalize any leftover old dot-format sizes ("2.4") to the correct
+        // dash format ("2-4") and drop duplicates before saving.
+        sizes: Array.isArray(productForm.sizes)
+          ? Array.from(new Set(productForm.sizes.map((s: string) =>
+              ({ '2.2': '2-2', '2.4': '2-4', '2.6': '2-6', '2.8': '2-8' } as Record<string, string>)[s] || s
+            )))
+          : [],
         colors: Array.isArray(productForm.colors) ? productForm.colors : [],
         gallery: Array.isArray(productForm.gallery) ? productForm.gallery : [],
         has_hand_option: !!productForm.has_hand_option,
