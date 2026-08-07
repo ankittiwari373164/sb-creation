@@ -9,7 +9,7 @@ import { supabase } from '../lib/supabase'
 import toast from 'react-hot-toast'
 import { motion, AnimatePresence } from 'framer-motion'
 
-const MIN_COPIES = 6 // ensures enough width even with 1-2 products
+const MIN_COPIES = 8 // ensures enough width even with 1-2 products
 
 const ProductSlider = ({ products }: { products: any[] }) => {
   const addItem = useCartStore((state) => state.addItem)
@@ -23,15 +23,14 @@ const ProductSlider = ({ products }: { products: any[] }) => {
   const scrollStart = useRef(0)
   const dragMoved = useRef(false)
 
-  // Repeat products enough times so the loop feels seamless,
-  // regardless of whether there's 1 product or 20.
+  const cardStepRef = useRef(0)   // width of ONE card + gap, in px
+  const setWidthRef = useRef(0)   // width of ONE full "products" set, in px
+
   const loopedProducts = useMemo(() => {
     if (!products || products.length === 0) return []
     const copies = Math.max(MIN_COPIES, Math.ceil((MIN_COPIES * 3) / products.length))
     return Array.from({ length: copies }, () => products).flat()
   }, [products])
-
-  const oneSetWidthRef = useRef(0) // width of a single "products" set in px
 
   useEffect(() => {
     const fetchWishlist = async () => {
@@ -44,34 +43,52 @@ const ProductSlider = ({ products }: { products: any[] }) => {
     fetchWishlist()
   }, [])
 
-  // Measure one "set" width and start the scroll roughly in the middle,
-  // so the user can drag/click either direction and we can loop both ways.
+  // Measure real card width + one "set" width, then re-measure on resize/image load,
+  // and start the scroll roughly in the middle so we can loop either direction.
   useEffect(() => {
     const el = scrollRef.current
     if (!el || products.length === 0) return
 
+    let centered = false
+
     const measure = () => {
+      const children = el.children
+      if (children.length < 2) return
+
+      const first = children[0] as HTMLElement
+      const second = children[1] as HTMLElement
+      cardStepRef.current = second.offsetLeft - first.offsetLeft
+
       const totalSets = loopedProducts.length / products.length
-      oneSetWidthRef.current = el.scrollWidth / totalSets
-      // center the scroll position so looping works both directions
-      el.scrollLeft = oneSetWidthRef.current * Math.floor(totalSets / 2)
+      setWidthRef.current = cardStepRef.current * products.length
+
+      if (!centered) {
+        el.scrollLeft = setWidthRef.current * Math.floor(totalSets / 2)
+        centered = true
+      }
     }
 
-    // slight delay to ensure images/layout settled
     const t = setTimeout(measure, 50)
-    return () => clearTimeout(t)
+    const ro = new ResizeObserver(() => measure())
+    ro.observe(el)
+
+    return () => {
+      clearTimeout(t)
+      ro.disconnect()
+    }
   }, [loopedProducts, products.length])
 
   const normalizeScroll = () => {
     const el = scrollRef.current
-    const setWidth = oneSetWidthRef.current
+    const setWidth = setWidthRef.current
     if (!el || !setWidth) return
 
-    // If we've drifted near the start or end, silently jump back
-    // by whole "set" widths to stay in the safe middle zone.
-    if (el.scrollLeft < setWidth) {
+    // Keep scrollLeft within the middle "safe zone" — jump back by
+    // whole set-widths (identical content) so the user never notices.
+    while (el.scrollLeft < setWidth) {
       el.scrollLeft += setWidth
-    } else if (el.scrollLeft > el.scrollWidth - setWidth * 2) {
+    }
+    while (el.scrollLeft > el.scrollWidth - setWidth * 2) {
       el.scrollLeft -= setWidth
     }
   }
@@ -107,13 +124,13 @@ const ProductSlider = ({ products }: { products: any[] }) => {
     }
   }
 
+  // Move exactly ONE card per arrow click
   const scrollByAmount = (dir: 'left' | 'right') => {
     const el = scrollRef.current
-    if (!el) return
-    const amount = el.clientWidth * 0.7
-    el.scrollBy({ left: dir === 'left' ? -amount : amount, behavior: 'smooth' })
-    // normalize shortly after the smooth scroll settles
-    setTimeout(normalizeScroll, 400)
+    const step = cardStepRef.current
+    if (!el || !step) return
+    el.scrollBy({ left: dir === 'left' ? -step : step, behavior: 'smooth' })
+    setTimeout(normalizeScroll, 350)
   }
 
   // ---- Drag handlers (mouse) ----
@@ -139,7 +156,6 @@ const ProductSlider = ({ products }: { products: any[] }) => {
     normalizeScroll()
   }
 
-  // Also normalize on native touch scroll / momentum scroll
   const onScroll = () => {
     normalizeScroll()
   }
