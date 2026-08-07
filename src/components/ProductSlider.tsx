@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { ShoppingBag, Heart, Eye, X, Check } from 'lucide-react'
@@ -14,7 +14,14 @@ const ProductSlider = ({ products }: { products: any[] }) => {
   const [wishlistIds, setWishlistIds] = useState<string[]>([])
   const [selectedProduct, setSelectedProduct] = useState<any>(null)
   const [tempSize, setTempSize] = useState<string>('')
-  
+
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const isDragging = useRef(false)
+  const startX = useRef(0)
+  const scrollStart = useRef(0)
+  const isPaused = useRef(false)
+  const dragMoved = useRef(false)
+
   const infiniteProducts = [...products, ...products]
 
   useEffect(() => {
@@ -26,6 +33,29 @@ const ProductSlider = ({ products }: { products: any[] }) => {
       }
     }
     fetchWishlist()
+  }, [])
+
+  // Auto-scroll loop (JS driven so we can pause/resume for drag)
+  useEffect(() => {
+    const el = scrollRef.current
+    if (!el) return
+
+    let rafId: number
+    const speed = 0.5 // px per frame, tweak for slower/faster
+
+    const step = () => {
+      if (!isPaused.current && el) {
+        el.scrollLeft += speed
+        // loop back seamlessly once we've scrolled past the first set
+        if (el.scrollLeft >= el.scrollWidth / 2) {
+          el.scrollLeft = 0
+        }
+      }
+      rafId = requestAnimationFrame(step)
+    }
+    rafId = requestAnimationFrame(step)
+
+    return () => cancelAnimationFrame(rafId)
   }, [])
 
   const handleWishlist = async (e: React.MouseEvent, productId: string) => {
@@ -59,6 +89,62 @@ const ProductSlider = ({ products }: { products: any[] }) => {
     }
   }
 
+  // ---- Drag handlers (mouse) ----
+  const onMouseDown = (e: React.MouseEvent) => {
+    if (!scrollRef.current) return
+    isDragging.current = true
+    dragMoved.current = false
+    isPaused.current = true
+    startX.current = e.pageX - scrollRef.current.offsetLeft
+    scrollStart.current = scrollRef.current.scrollLeft
+  }
+
+  const onMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging.current || !scrollRef.current) return
+    e.preventDefault()
+    const x = e.pageX - scrollRef.current.offsetLeft
+    const walk = x - startX.current
+    if (Math.abs(walk) > 5) dragMoved.current = true
+    scrollRef.current.scrollLeft = scrollStart.current - walk
+  }
+
+  const stopDragging = () => {
+    isDragging.current = false
+    // small delay before resuming auto-scroll so it doesn't jerk
+    setTimeout(() => { isPaused.current = false }, 800)
+  }
+
+  // ---- Drag handlers (touch) ----
+  const onTouchStart = (e: React.TouchEvent) => {
+    if (!scrollRef.current) return
+    isDragging.current = true
+    dragMoved.current = false
+    isPaused.current = true
+    startX.current = e.touches[0].pageX - scrollRef.current.offsetLeft
+    scrollStart.current = scrollRef.current.scrollLeft
+  }
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    if (!isDragging.current || !scrollRef.current) return
+    const x = e.touches[0].pageX - scrollRef.current.offsetLeft
+    const walk = x - startX.current
+    if (Math.abs(walk) > 5) dragMoved.current = true
+    scrollRef.current.scrollLeft = scrollStart.current - walk
+  }
+
+  const onTouchEnd = () => {
+    isDragging.current = false
+    setTimeout(() => { isPaused.current = false }, 800)
+  }
+
+  // Prevent the click/navigation from firing right after a drag
+  const onCardClickCapture = (e: React.MouseEvent) => {
+    if (dragMoved.current) {
+      e.preventDefault()
+      e.stopPropagation()
+    }
+  }
+
   return (
     <section className="bg-[#FFF0F5] py-6 overflow-hidden">
       <div className="container mx-auto px-0 mb-6 text-center">
@@ -70,60 +156,69 @@ const ProductSlider = ({ products }: { products: any[] }) => {
         </h2>
       </div>
 
-      <div className="relative flex group/marquee">
-        <div className="flex animate-marquee group-hover/marquee:pause-marquee gap-3 md:gap-5 py-3">
-          {infiniteProducts.map((product, index) => {
-            const primaryImage = product.gallery?.[0] || product.image_url || '/placeholder.jpg'
-            const secondaryImage = product.gallery?.[1] || product.image_url || primaryImage
-            const isLiked = wishlistIds.includes(product.id)
+      <div
+        ref={scrollRef}
+        className="flex gap-3 md:gap-5 py-3 overflow-x-auto scrollbar-hide cursor-grab active:cursor-grabbing select-none"
+        style={{ scrollBehavior: 'auto' }}
+        onMouseDown={onMouseDown}
+        onMouseMove={onMouseMove}
+        onMouseUp={stopDragging}
+        onMouseLeave={stopDragging}
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+      >
+        {infiniteProducts.map((product, index) => {
+          const primaryImage = product.gallery?.[0] || product.image_url || '/placeholder.jpg'
+          const secondaryImage = product.gallery?.[1] || product.image_url || primaryImage
+          const isLiked = wishlistIds.includes(product.id)
 
-            return (
-              // ↓ Reduced card width significantly
-              <div key={`${product.id}-${index}`} className="min-w-[180px] md:min-w-[230px] lg:min-w-[270px]">
-                <Link href={`/product/${product.slug}`} className="block group">
-                  
-                  {/* ↓ Reduced image height — square but smaller */}
-                  <div className="relative w-full aspect-square rounded-xl overflow-hidden bg-white shadow-md border border-[#F8C8DC] hover:shadow-lg hover:border-[#db2777] transition-all duration-300">
-                    
-                    <Image src={primaryImage} alt={product.name} fill className="object-cover transition-all duration-1000 group-hover:scale-110 group-hover:opacity-0" />
-                    <Image src={secondaryImage} alt="Detail" fill className="object-cover opacity-0 scale-125 transition-all duration-1000 group-hover:opacity-100 group-hover:scale-105" />
+          return (
+            <div key={`${product.id}-${index}`} className="min-w-[180px] md:min-w-[230px] lg:min-w-[270px] flex-shrink-0">
+              <Link
+                href={`/product/${product.slug}`}
+                className="block group"
+                onClickCapture={onCardClickCapture}
+                draggable={false}
+              >
+                <div className="relative w-full aspect-square rounded-xl overflow-hidden bg-white shadow-md border border-[#F8C8DC] hover:shadow-lg hover:border-[#db2777] transition-all duration-300">
 
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#0F2C3E]/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <Image src={primaryImage} alt={product.name} fill draggable={false} className="object-cover pointer-events-none transition-all duration-1000 group-hover:scale-110 group-hover:opacity-0" />
+                  <Image src={secondaryImage} alt="Detail" fill draggable={false} className="object-cover pointer-events-none opacity-0 scale-125 transition-all duration-1000 group-hover:opacity-100 group-hover:scale-105" />
 
-                    {/* Action buttons — smaller */}
-                    <div className="absolute inset-x-0 bottom-2 flex justify-center gap-1.5 z-30">
-                      <button
-                        onClick={(e) => handleAddToCartInitiate(e, product)}
-                        className="p-1.5 bg-[#0F2C3E] text-white rounded-full shadow hover:bg-[#db2777] transition-all active:scale-95"
-                      >
-                        <ShoppingBag size={11} strokeWidth={2.5} />
-                      </button>
-                      <div className="p-1.5 bg-white/95 text-[#0F2C3E] rounded-full shadow border border-[#F8C8DC] hover:border-[#db2777] transition-all cursor-pointer active:scale-95">
-                        <Eye size={11} strokeWidth={2.5} />
-                      </div>
-                      <button
-                        onClick={(e) => handleWishlist(e, product.id)}
-                        className="p-1.5 bg-white/95 rounded-full shadow border border-[#F8C8DC] hover:border-[#db2777] transition-all active:scale-95"
-                      >
-                        <Heart size={11} strokeWidth={2.5} className={isLiked ? 'fill-[#db2777] text-[#db2777]' : 'text-[#0F2C3E]'} />
-                      </button>
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#0F2C3E]/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+                  <div className="absolute inset-x-0 bottom-2 flex justify-center gap-1.5 z-30">
+                    <button
+                      onClick={(e) => handleAddToCartInitiate(e, product)}
+                      className="p-1.5 bg-[#0F2C3E] text-white rounded-full shadow hover:bg-[#db2777] transition-all active:scale-95"
+                    >
+                      <ShoppingBag size={11} strokeWidth={2.5} />
+                    </button>
+                    <div className="p-1.5 bg-white/95 text-[#0F2C3E] rounded-full shadow border border-[#F8C8DC] hover:border-[#db2777] transition-all cursor-pointer active:scale-95">
+                      <Eye size={11} strokeWidth={2.5} />
                     </div>
+                    <button
+                      onClick={(e) => handleWishlist(e, product.id)}
+                      className="p-1.5 bg-white/95 rounded-full shadow border border-[#F8C8DC] hover:border-[#db2777] transition-all active:scale-95"
+                    >
+                      <Heart size={11} strokeWidth={2.5} className={isLiked ? 'fill-[#db2777] text-[#db2777]' : 'text-[#0F2C3E]'} />
+                    </button>
                   </div>
+                </div>
 
-                  {/* ↓ Name + price always visible below the card */}
-                  <div className="mt-2 text-center">
-                    <h4 className="font-serif text-base md:text-lg text-[#0F2C3E] group-hover:text-[#db2777] transition-colors uppercase tracking-tight leading-tight line-clamp-1">
-                      {product.name}
-                    </h4>
-                    <p className="text-[#db2777] font-bold text-base md:text-lg mt-1">
-                      ₹{product.price.toLocaleString()}
-                    </p>
-                  </div>
-                </Link>
-              </div>
-            )
-          })}
-        </div>
+                <div className="mt-2 text-center">
+                  <h4 className="font-serif text-base md:text-lg text-[#0F2C3E] group-hover:text-[#db2777] transition-colors uppercase tracking-tight leading-tight line-clamp-1">
+                    {product.name}
+                  </h4>
+                  <p className="text-[#db2777] font-bold text-base md:text-lg mt-1">
+                    ₹{product.price.toLocaleString()}
+                  </p>
+                </div>
+              </Link>
+            </div>
+          )
+        })}
       </div>
 
       {/* Size Selection Popup */}
@@ -174,18 +269,13 @@ const ProductSlider = ({ products }: { products: any[] }) => {
         )}
       </AnimatePresence>
 
-      <style jsx>{`
-        .animate-marquee {
-          display: flex;
-          width: max-content;
-          animation: marquee 50s linear infinite;
+      <style jsx global>{`
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
         }
-        .pause-marquee {
-          animation-play-state: paused;
-        }
-        @keyframes marquee {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(-50%); }
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
         }
       `}</style>
     </section>
