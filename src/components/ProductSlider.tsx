@@ -29,6 +29,34 @@ const ProductSlider = ({ products }: { products: any[] }) => {
     el.scrollBy({ left: dir === 'left' ? -amount : amount, behavior: 'smooth' })
   }
 
+  // Infinite loop: the track holds 3 copies of the product list back to
+  // back. Once the shopper drags/arrows past the edge of the middle copy,
+  // we silently (no animation) snap the scroll position back by exactly one
+  // copy's width — so it looks like it scrolls forever in either direction,
+  // without any auto-playing animation.
+  const isResetting = useRef(false)
+  const handleTrackScroll = () => {
+    const el = trackRef.current
+    if (!el || isResetting.current) return
+    const setWidth = el.scrollWidth / 3
+    if (el.scrollLeft <= 0) {
+      isResetting.current = true
+      el.scrollLeft += setWidth
+      requestAnimationFrame(() => { isResetting.current = false })
+    } else if (el.scrollLeft >= setWidth * 2) {
+      isResetting.current = true
+      el.scrollLeft -= setWidth
+      requestAnimationFrame(() => { isResetting.current = false })
+    }
+  }
+
+  // Start centered in the middle copy so there's room to scroll both ways.
+  useEffect(() => {
+    const el = trackRef.current
+    if (!el) return
+    el.scrollLeft = el.scrollWidth / 3
+  }, [products])
+
   const handleDragStart = (clientX: number) => {
     const el = trackRef.current
     if (!el) return
@@ -45,7 +73,7 @@ const ProductSlider = ({ products }: { products: any[] }) => {
 
   const handleDragEnd = () => { isDragging.current = false }
 
-  const infiniteProducts = products
+  const infiniteProducts = [...products, ...products, ...products]
 
   useEffect(() => {
     const fetchWishlist = async () => {
@@ -126,6 +154,7 @@ const ProductSlider = ({ products }: { products: any[] }) => {
           onMouseMove={(e) => handleDragMove(e.clientX)}
           onMouseUp={handleDragEnd}
           onMouseLeave={handleDragEnd}
+          onScroll={handleTrackScroll}
           onTouchStart={(e) => handleDragStart(e.touches[0].clientX)}
           onTouchMove={(e) => handleDragMove(e.touches[0].clientX)}
           onTouchEnd={handleDragEnd}
