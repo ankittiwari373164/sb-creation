@@ -21,7 +21,7 @@ function formatDate(iso: string): string {
 }
 
 function getShortcode(postUrl: string): string {
-  const match = postUrl.match(/\/p\/([^/]+)/)
+  const match = postUrl.match(/\/(?:p|reel)\/([^/]+)/)
   return match ? match[1] : ''
 }
 
@@ -87,13 +87,13 @@ function PostPopup({
           {current.is_video && shortcode ? (
             <iframe
               key={current.id}
-              src={`https://www.instagram.com/p/${shortcode}/embed/`}
+              src={`https://www.instagram.com/${current.post_url.includes('/reel/') ? 'reel' : 'p'}/${shortcode}/embed/`}
               className="w-full"
               style={{ border: 'none', minHeight: '420px', width: '100%' }}
               scrolling="no"
               allowFullScreen
             />
-          ) : (
+          ) : current.image_url ? (
             <div className="relative w-full h-full min-h-[300px] md:min-h-[420px]">
               <Image
                 src={current.image_url}
@@ -101,6 +101,11 @@ function PostPopup({
                 fill
                 className="object-cover"
               />
+            </div>
+          ) : (
+            <div className="w-full h-full min-h-[300px] md:min-h-[420px] flex flex-col items-center justify-center gap-3 bg-gradient-to-br from-[#f9ce34] via-[#ee2a7b] to-[#6228d7]">
+              <Instagram size={40} className="text-white/90" />
+              <p className="text-white/90 text-xs font-medium px-6 text-center">Preview not available — view it directly on Instagram</p>
             </div>
           )}
 
@@ -218,13 +223,19 @@ function PostCard({
       onMouseLeave={() => setHovered(false)}
     >
       <div className="relative aspect-square w-full">
-        <Image
-          src={post.image_url}
-          alt={post.caption?.slice(0, 60) || 'Instagram post'}
-          fill
-          sizes="33vw"
-          className="object-cover transition-transform duration-500 group-hover:scale-105"
-        />
+        {post.image_url ? (
+          <Image
+            src={post.image_url}
+            alt={post.caption?.slice(0, 60) || 'Instagram post'}
+            fill
+            sizes="33vw"
+            className="object-cover transition-transform duration-500 group-hover:scale-105"
+          />
+        ) : (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 bg-gradient-to-br from-[#f9ce34] via-[#ee2a7b] to-[#6228d7]">
+            <Instagram size={20} className="text-white/90" />
+          </div>
+        )}
         {post.is_video && (
           <div className="absolute top-2 right-2 z-10 bg-black/50 rounded-full p-1">
             <Play size={9} className="text-white fill-white" />
