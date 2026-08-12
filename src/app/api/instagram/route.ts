@@ -7,18 +7,6 @@ const SOCIALAPI_KEY = process.env.SOCIALAPI_KEY
 const SOCIALAPI_BASE = 'https://api.social-api.ai/v1'
 const USERNAME = '_sbcreation'
 
-// SociaVault (optional) - a public-data scraping API for Instagram/TikTok/etc
-// with a real free tier (50 credits, no card) and pay-as-you-go after that
-// (credits never expire). Used ONLY for the two things SocialAPI genuinely
-// can't provide for Instagram: live follower/following counts and reel cover
-// images. Unlike our direct call to Instagram's own endpoint, SociaVault runs
-// through its own scraping infrastructure, so it isn't subject to the same
-// per-IP rate limiting we've been hitting. If SOCIAVAULT_KEY isn't set, this
-// whole path is skipped automatically and the free direct-scrape fallback
-// (fetchLiveInstagramCounts below) is used instead — nothing breaks.
-const SOCIAVAULT_KEY = process.env.SOCIAVAULT_KEY
-const SOCIAVAULT_BASE = 'https://api.sociavault.com/v1/scrape'
-
 // Cache configuration - reads (inbox) are unlimited on free tier, no need to be aggressive
 // Still cache for 24h to reduce API calls and provide better UX
 const CACHE_TTL = 24 * 60 * 60 * 1000 // 24 hours
@@ -165,121 +153,6 @@ async function fetchLiveInstagramCounts(username: string): Promise<{
     }
   } catch (e: any) {
     console.warn('[IG-live] Failed to fetch live counts:', e?.message)
-    return { ...empty, error: e?.message || 'Unknown fetch error' }
-  }
-}
-
-// ── SociaVault (optional, reliable secondary source) ──────────────────────────
-// Same shape of result as fetchLiveInstagramCounts (followers/following/posts +
-// a shortcode->thumbnail map), just sourced through SociaVault's proxied
-// infrastructure instead of a direct call. Tried FIRST when SOCIAVAULT_KEY is
-// set, since it won't get 429'd the way the direct call does.
-
-async function sociaVaultFetch(path: string, params: Record<string, string>) {
-  const url = new URL(`${SOCIAVAULT_BASE}${path}`)
-  Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v))
-  const res = await fetch(url.toString(), {
-    headers: { 'x-api-key': SOCIAVAULT_KEY! },
-    cache: 'no-store',
-  })
-  const text = await res.text()
-  // Wider slice than before — the previous 500-char cutoff hid the `items`
-  // field entirely on the posts endpoint, which is exactly what we need to
-  // see to fix the reel-cover matching.
-  console.log('[IG-SociaVault]', res.status, text.slice(0, 4000))
-  let data: any = {}
-  try { data = JSON.parse(text) } catch {}
-  return { ok: res.status === 200, status: res.status, data, raw: text }
-}
-
-async function fetchSociaVaultCounts(username: string): Promise<{
-  followers: number
-  following: number
-  posts_count: number
-  mediaByShortcode: Record<string, string>
-  error?: string
-} | null> {
-  if (!SOCIAVAULT_KEY?.trim()) return null
-  const empty = { followers: 0, following: 0, posts_count: 0, mediaByShortcode: {} }
-  try {
-    const res = await sociaVaultFetch('/instagram/profile', { handle: username })
-    if (!res.ok) return { ...empty, error: `HTTP ${res.status}: ${res.raw.slice(0, 200)}` }
-
-    // Documented response has appeared in two shapes depending on account/
-    // endpoint version: a flat one (data.follower_count) and a full nested
-    // one mirroring Instagram's own structure (data.data.user.edge_followed_by.count).
-    // Handle both defensively.
-    const flat = res.data?.data
-    const nestedUser = res.data?.data?.data?.user || res.data?.data?.user
-    const followers = flat?.follower_count ?? nestedUser?.edge_followed_by?.count ?? 0
-    const following = flat?.following_count ?? nestedUser?.edge_follow?.count ?? 0
-    const postsCount = flat?.media_count ?? nestedUser?.edge_owner_to_timeline_media?.count ?? 0
-
-    // Grab cover images from TWO separate SociaVault endpoints and merge them:
-    //   1. /instagram/posts  — the main profile grid (photos, carousels, and
-    //      reels that were shared to the feed)
-    //   2. /instagram/reels  — reels specifically, INCLUDING reels-only posts
-    //      that were never shared to the feed grid and so never show up in
-    //      /instagram/posts at all. This is confirmed the real cause of the
-    //      4 reels that kept coming back missing — they simply aren't in the
-    //      grid endpoint's data, only the dedicated reels endpoint's.
-    const mediaByShortcode: Record<string, string> = {}
-    const isVideoUrl = (url: string) => /\.mp4(\?|$)/i.test(url) || /video-|\/v\/t2\//i.test(url)
-
-    // Shared extraction logic for both endpoints — SociaVault's docs show
-    // /instagram/posts items as flat objects, and /instagram/reels items
-    // nested one level deeper under `media` (see their reels doc example:
-    // items.0.media.code / items.0.media.image_versions2). We check both
-    // shapes so the same function works for either response.
-    const extractCovers = (list: any[], label: string) => {
-      console.log(`[IG-SociaVault] ${label}: found ${list.length} items to check for covers`)
-      list.forEach((raw: any, i: number) => {
-        const n = raw?.media || raw // unwrap the /reels nested `media` shape if present
-        const cand = n?.image_versions2?.candidates?.[0]?.url
-        console.log(`[IG-SociaVault] ${label} item ${i}: code=${n?.code || n?.shortcode || 'none'} media_type=${n?.media_type} image_versions2_url=${cand ? cand.slice(0, 60) + '...' : 'MISSING'}`)
-
-        const shortcode = n?.code || n?.shortcode
-        const carouselFirst = Array.isArray(n?.carousel_media) ? n.carousel_media[0] : null
-        const candidates = [
-          n?.image_versions2?.candidates?.[0]?.url,
-          carouselFirst?.image_versions2?.candidates?.[0]?.url,
-          n?.thumbnail_src,
-          n?.display_url,
-          n?.thumbnail_url,
-        ]
-        const thumb = candidates.find((u) => u && typeof u === 'string' && !isVideoUrl(u)) || ''
-        if (shortcode && thumb) mediaByShortcode[shortcode] = thumb
-      })
-    }
-
-    const toList = (resData: any): any[] => {
-      const itemsField = resData?.data?.items
-      if (Array.isArray(itemsField)) return itemsField
-      if (itemsField && typeof itemsField === 'object') return Object.values(itemsField)
-      const edges = resData?.data?.user?.edge_owner_to_timeline_media?.edges
-      if (Array.isArray(edges)) return edges.map((e: any) => e?.node).filter(Boolean)
-      return []
-    }
-
-    const postsRes = await sociaVaultFetch('/instagram/posts', { handle: username })
-    if (postsRes.ok) extractCovers(toList(postsRes.data), 'posts')
-
-    // Tried pagination + the separate /reels endpoint (2 extra pages each) to
-    // reach further back for the reels still missing covers. Confirmed via
-    // testing: even after fetching 26 unique posts spanning several months,
-    // 4 specific recent reels never appeared in SociaVault's data for this
-    // account at all — that's a gap in their indexing of very recent posts
-    // (1-3 days old), not something more requests can fix. Reverted to the
-    // single lean call: 2 credits, ~12s response, instead of 5 credits/32s
-    // for zero additional coverage. Whatever isn't covered by this one call
-    // shows the gradient placeholder in the UI — that's the accepted,
-    // final state.
-
-    console.log(`[IG-SociaVault] Total covers built: ${Object.keys(mediaByShortcode).length} — ${Object.keys(mediaByShortcode).join(', ')}`)
-
-    return { followers, following, posts_count: postsCount, mediaByShortcode }
-  } catch (e: any) {
-    console.warn('[IG-SociaVault] Failed:', e?.message)
     return { ...empty, error: e?.message || 'Unknown fetch error' }
   }
 }
@@ -468,23 +341,17 @@ async function fetchAll(): Promise<{ posts: InstagramPost[]; profile: InstagramP
 
     const profile = parseProfile(instagramAccount, items.length)
 
-    // Get live follower/following/post counts + reel thumbnails. Tries
-    // SociaVault first (reliable, doesn't get IP-blocked) if configured,
-    // then falls back to the free direct Instagram scrape, then to a
-    // manually-set number as the last resort so the UI never just shows 0.
-    let source = 'sociavault'
-    let liveCounts = await fetchSociaVaultCounts(profile.username || USERNAME)
-    if (!liveCounts || liveCounts.error) {
-      if (liveCounts?.error) console.warn('[IG-SociaVault] Failed, falling back to direct scrape:', liveCounts.error)
-      source = 'direct-scrape'
-      liveCounts = await fetchLiveInstagramCounts(profile.username || USERNAME)
-    }
+    // Live follower/following/post counts + reel thumbnails via the free
+    // direct Instagram scrape. (SociaVault removed — replaced by RapidAPI
+    // sources, to be wired in next.) Falls back to a manually-set number if
+    // the direct scrape is rate-limited/blocked, so the UI never just shows 0.
+    const source = 'direct-scrape'
+    const liveCounts = await fetchLiveInstagramCounts(profile.username || USERNAME)
 
     if (liveCounts.error) {
-      console.warn(`[IG-live] Could not get live counts from any source (${source}), using fallback if configured:`, liveCounts.error)
-      // Both sources failed — fall back to a manually-set number rather than
-      // showing 0. Update these occasionally by hand; they're only used when
-      // every live source fails.
+      console.warn(`[IG-live] Could not get live counts from ${source}, using fallback if configured:`, liveCounts.error)
+      // Fall back to a manually-set number rather than showing 0. Update
+      // these occasionally by hand; they're only used when the live fetch fails.
       const followersOverride = Number(process.env.INSTAGRAM_FOLLOWERS_OVERRIDE)
       const followingOverride = Number(process.env.INSTAGRAM_FOLLOWING_OVERRIDE)
       if (Number.isFinite(followersOverride)) profile.followers = followersOverride
