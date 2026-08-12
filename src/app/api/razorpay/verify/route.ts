@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
 import { getStoreSettings, supabaseAdmin } from '../../../../lib/supabaseAdmin'
+import { sendOrderConfirmationEmail } from '../../../../lib/orderEmail'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -56,6 +57,10 @@ export async function POST(req: NextRequest) {
       .eq('id', order_id)
 
     if (error) throw error
+
+    // Fire-and-forget — don't let a slow/failed email delay or break the
+    // checkout response the customer is waiting on.
+    sendOrderConfirmationEmail(order_id).catch(() => {})
 
     return NextResponse.json({ ok: true })
   } catch (err: any) {
