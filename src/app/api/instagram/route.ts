@@ -7,6 +7,14 @@ const SOCIALAPI_KEY = process.env.SOCIALAPI_KEY
 const SOCIALAPI_BASE = 'https://api.social-api.ai/v1'
 const USERNAME = '_sbcreation'
 
+// RapidAPI: "Instagram Best Experience" — used for live follower/following
+// counts. Confirmed working via manual test: GET /profile?username=X returns
+// a flat object with follower_count/following_count/media_count directly, no
+// nested/varying shapes like other sources we've tried. One shared
+// X-RapidAPI-Key works across every API subscribed to on the account.
+const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY
+const RAPIDAPI_BEST_EXPERIENCE_HOST = 'instagram-best-experience.p.rapidapi.com'
+
 // Cache configuration - reads (inbox) are unlimited on free tier, no need to be aggressive
 // Still cache for 24h to reduce API calls and provide better UX
 const CACHE_TTL = 24 * 60 * 60 * 1000 // 24 hours
@@ -86,6 +94,58 @@ async function apiFetch(path: string, params: Record<string, string> = {}) {
   } catch {}
 
   return { ok: res.status === 200, status: res.status, data, raw: text }
+}
+
+// RapidAPI "Instagram Best Experience" — primary source for live
+// follower/following/post counts. Confirmed via manual test against a real
+// account: returns a flat object, no nesting to guess at.
+//   GET https://instagram-best-experience.p.rapidapi.com/profile?username=X
+//   → { follower_count, following_count, media_count, biography, ... }
+async function fetchRapidApiProfile(username: string): Promise<{
+  followers: number
+  following: number
+  posts_count: number
+  mediaByShortcode: Record<string, string>
+  error?: string
+} | null> {
+  if (!RAPIDAPI_KEY?.trim()) return null
+
+  try {
+    const url = `https://${RAPIDAPI_BEST_EXPERIENCE_HOST}/profile?username=${encodeURIComponent(username)}`
+    const res = await fetch(url, {
+      headers: {
+        'x-rapidapi-host': RAPIDAPI_BEST_EXPERIENCE_HOST,
+        'x-rapidapi-key': RAPIDAPI_KEY,
+      },
+      cache: 'no-store',
+    })
+    const text = await res.text()
+    console.log('[IG-RapidAPI]', res.status, text.slice(0, 500))
+
+    if (res.status !== 200) {
+      return { followers: 0, following: 0, posts_count: 0, mediaByShortcode: {}, error: `HTTP ${res.status}` }
+    }
+
+    let data: any = {}
+    try { data = JSON.parse(text) } catch { return { followers: 0, following: 0, posts_count: 0, mediaByShortcode: {}, error: 'Non-JSON response' } }
+
+    // A 404 comes back as Instagram's own HTML error page (not JSON from
+    // RapidAPI), so the JSON.parse above will already have failed for that
+    // case. This check catches a JSON-wrapped "not found" instead.
+    if (!data?.pk && !data?.follower_count && !data?.username) {
+      return { followers: 0, following: 0, posts_count: 0, mediaByShortcode: {}, error: 'Profile not found or empty response' }
+    }
+
+    return {
+      followers: data?.follower_count ?? 0,
+      following: data?.following_count ?? 0,
+      posts_count: data?.media_count ?? 0,
+      mediaByShortcode: {}, // this endpoint doesn't return media — covers still come from SocialAPI + gradient fallback
+    }
+  } catch (e: any) {
+    console.warn('[IG-RapidAPI] Failed:', e?.message)
+    return { followers: 0, following: 0, posts_count: 0, mediaByShortcode: {}, error: e?.message || 'Unknown fetch error' }
+  }
 }
 
 // Live follower/following count + recent media covers, all from ONE request
@@ -341,12 +401,17 @@ async function fetchAll(): Promise<{ posts: InstagramPost[]; profile: InstagramP
 
     const profile = parseProfile(instagramAccount, items.length)
 
-    // Live follower/following/post counts + reel thumbnails via the free
-    // direct Instagram scrape. (SociaVault removed — replaced by RapidAPI
-    // sources, to be wired in next.) Falls back to a manually-set number if
-    // the direct scrape is rate-limited/blocked, so the UI never just shows 0.
-    const source = 'direct-scrape'
-    const liveCounts = await fetchLiveInstagramCounts(profile.username || USERNAME)
+    // Live follower/following/post counts. Tries RapidAPI's "Instagram Best
+    // Experience" first (reliable, confirmed working, doesn't get IP-blocked
+    // the way the direct scrape does), falls back to the free direct scrape,
+    // then to a manually-set number as the last resort.
+    let source = 'rapidapi'
+    let liveCounts = await fetchRapidApiProfile(profile.username || USERNAME)
+    if (!liveCounts || liveCounts.error) {
+      if (liveCounts?.error) console.warn('[IG-RapidAPI] Failed, falling back to direct scrape:', liveCounts.error)
+      source = 'direct-scrape'
+      liveCounts = await fetchLiveInstagramCounts(profile.username || USERNAME)
+    }
 
     if (liveCounts.error) {
       console.warn(`[IG-live] Could not get live counts from ${source}, using fallback if configured:`, liveCounts.error)
@@ -451,7 +516,10 @@ export async function GET(request: Request) {
         posts_status: postsStatus,
         posts_count: postsLength,
         posts_snippet: postsSnippet,
-        live_counts: instagramAccount?.username
+        rapidapi_profile: instagramAccount?.username
+          ? await fetchRapidApiProfile(instagramAccount.username)
+          : null,
+        live_counts_fallback: instagramAccount?.username
           ? await fetchLiveInstagramCounts(instagramAccount.username)
           : null,
       })
