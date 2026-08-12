@@ -3,6 +3,7 @@ import './globals.css'
 import { Toaster } from 'react-hot-toast'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
+import MetaPixel from '../components/MetaPixel'
 
 export const metadata: Metadata = {
   title: 'SB Creation | Handcrafted Firozabad Bangles',
@@ -16,7 +17,7 @@ export const metadata: Metadata = {
     siteName: 'SB Creation',
     images: [
       {
-        url: '/logo.png', // This points to your floral logo in the public folder
+        url: '/logo.png',
         width: 1200,
         height: 630,
         alt: 'SB Creation Floral Logo',
@@ -34,7 +35,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        {/* Meta Pixel will be loaded here via the component */}
+      </head>
       <body>
+        <MetaPixel />
         <Navbar />
         <main className="min-h-screen">
           {children}
