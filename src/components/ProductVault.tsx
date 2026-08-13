@@ -11,21 +11,24 @@ import toast from 'react-hot-toast'
 export default function ProductVault({ products }: { products: any[] }) {
   const addItem = useCartStore((state) => state.addItem)
 
-  // Size Popup States
+  // Size + Color Popup States
   const [selectedProduct, setSelectedProduct] = useState<any>(null)
   const [tempSize, setTempSize] = useState<string>('')
+  const [tempColor, setTempColor] = useState<string>('')
 
   const handleAddToCartInitiate = (e: React.MouseEvent, product: any) => {
     e.preventDefault()
     e.stopPropagation()
     setSelectedProduct(product)
     setTempSize(product.sizes?.[0] || '2-4')
+    setTempColor(product.colors?.[0] || '')
   }
 
   const confirmAddToCart = () => {
     if (selectedProduct) {
-      addItem({ ...selectedProduct, selectedSize: tempSize })
-      toast.success(`${selectedProduct.name} (${tempSize}) added`, {
+      addItem({ ...selectedProduct, selectedSize: tempSize, selectedColor: tempColor || undefined })
+      const variantLabel = [tempSize, tempColor].filter(Boolean).join(' / ')
+      toast.success(`${selectedProduct.name} (${variantLabel}) added`, {
         style: { background: '#2d2416', color: '#fff', borderRadius: '50px' }
       })
       setSelectedProduct(null)
@@ -137,6 +140,29 @@ export default function ProductVault({ products }: { products: any[] }) {
                     </button>
                   ))}
                 </div>
+
+                {selectedProduct.colors?.length > 0 && (
+                  <div className="space-y-2">
+                    <span className="text-[#0F5A7E] text-[8px] md:text-[9px] font-bold uppercase tracking-[0.3em] md:tracking-[0.4em] block">Select Color</span>
+                    <div className="flex flex-wrap justify-center gap-2 md:gap-3">
+                      {selectedProduct.colors.map((color: string) => (
+                        <button
+                          key={color}
+                          onClick={() => setTempColor(color)}
+                          title={color}
+                          className={`w-9 h-9 md:w-10 md:h-10 rounded-full border-2 transition-all flex items-center justify-center ${
+                            tempColor === color
+                              ? 'border-[#2d2416] shadow-md scale-110'
+                              : 'border-[#D4AF37]/60 hover:border-[#0F5A7E]'
+                          }`}
+                          style={{ backgroundColor: color }}
+                        >
+                          {tempColor === color && <Check size={13} className="text-white drop-shadow" />}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 <button 
                   onClick={confirmAddToCart}

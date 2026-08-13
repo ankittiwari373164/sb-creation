@@ -22,6 +22,12 @@ export type Product = {
   has_hand_option?: boolean
   one_hand_price?: number
   two_hand_price?: number
+  // These three are only ever set on a product object once it's added to
+  // the cart (they represent the shopper's choice for that specific cart
+  // line, not a property of the product itself in the catalog).
+  selectedSize?: string
+  selectedColor?: string
+  selectedHand?: 'one' | 'two'
   created_at: string
   updated_at: string
 }
@@ -42,6 +48,8 @@ export type OrderItem = {
   product_id: string
   quantity: number
   price: number
+  size?: string | null
+  color?: string | null
 }
 
 export type CartItem = {

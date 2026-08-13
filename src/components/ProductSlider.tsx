@@ -14,6 +14,7 @@ const ProductSlider = ({ products }: { products: any[] }) => {
   const [wishlistIds, setWishlistIds] = useState<string[]>([])
   const [selectedProduct, setSelectedProduct] = useState<any>(null)
   const [tempSize, setTempSize] = useState<string>('')
+  const [tempColor, setTempColor] = useState<string>('')
 
   // Manual navigation (replaces the old auto-running marquee): arrow buttons
   // + drag-to-scroll, no animation.
@@ -105,12 +106,14 @@ const ProductSlider = ({ products }: { products: any[] }) => {
     e.stopPropagation()
     setSelectedProduct(product)
     setTempSize(product.sizes?.[0] || '2-4')
+    setTempColor(product.colors?.[0] || '')
   }
 
   const confirmAddToCart = () => {
     if (selectedProduct) {
-      addItem({ ...selectedProduct, selectedSize: tempSize })
-      toast.success(`${selectedProduct.name} (${tempSize}) added`, {
+      addItem({ ...selectedProduct, selectedSize: tempSize, selectedColor: tempColor || undefined })
+      const variantLabel = [tempSize, tempColor].filter(Boolean).join(' / ')
+      toast.success(`${selectedProduct.name} (${variantLabel}) added`, {
         style: { background: '#2d2416', color: '#fff', borderRadius: '50px' }
       })
       setSelectedProduct(null)
@@ -249,6 +252,28 @@ const ProductSlider = ({ products }: { products: any[] }) => {
                     </button>
                   ))}
                 </div>
+                {selectedProduct.colors?.length > 0 && (
+                  <div className="space-y-2">
+                    <span className="text-[10px] font-bold uppercase tracking-[0.4em] block text-[#0F5A7E]">Select Color</span>
+                    <div className="flex justify-center gap-2">
+                      {selectedProduct.colors.map((color: string) => (
+                        <button
+                          key={color}
+                          onClick={() => setTempColor(color)}
+                          title={color}
+                          className={`w-9 h-9 rounded-full border-2 transition-all flex items-center justify-center ${
+                            tempColor === color
+                              ? 'border-[#0F2C3E] shadow-md scale-110'
+                              : 'border-[#F8C8DC] hover:border-[#db2777]'
+                          }`}
+                          style={{ backgroundColor: color }}
+                        >
+                          {tempColor === color && <Check size={13} className="text-white drop-shadow" />}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 <button
                   onClick={confirmAddToCart}
                   className="w-full bg-[#0F2C3E] text-white py-3 rounded-full font-bold uppercase text-[10px] tracking-[0.3em] flex items-center justify-center gap-2 hover:bg-[#db2777] transition-all shadow-lg"

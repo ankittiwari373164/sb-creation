@@ -104,7 +104,7 @@ export default function CartPage() {
               <AnimatePresence>
                 {items.map((item) => (
                   <motion.div
-                    key={item.product.id}
+                    key={`${item.product.id}::${item.product.selectedSize || ''}::${item.product.selectedColor || ''}`}
                     layout
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -126,25 +126,45 @@ export default function CartPage() {
                       <div className="flex justify-between items-start gap-2">
                         <h3 className="text-base md:text-lg font-serif text-[#2d2416] truncate leading-snug">{item.product.name}</h3>
                         <button
-                          onClick={() => removeItem(item.product.id)}
+                          onClick={() => removeItem(item.product)}
                           className="text-[#D4AF37] hover:text-red-400 transition-colors shrink-0 p-1"
                         >
                           <Trash2 size={15} />
                         </button>
                       </div>
 
+                      {/* Selected variant (size / color) */}
+                      {(item.product.selectedSize || item.product.selectedColor) && (
+                        <div className="flex items-center gap-3 mt-1">
+                          {item.product.selectedSize && (
+                            <span className="text-[11px] font-bold uppercase tracking-wide text-[#0F5A7E] font-sans">
+                              Size: {item.product.selectedSize}
+                            </span>
+                          )}
+                          {item.product.selectedColor && (
+                            <span className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-[#5a4a42] font-sans">
+                              Color:
+                              <span
+                                className="inline-block w-3.5 h-3.5 rounded-full border border-[#D4AF37]/60"
+                                style={{ backgroundColor: item.product.selectedColor }}
+                              />
+                            </span>
+                          )}
+                        </div>
+                      )}
+
                       <div className="flex items-center justify-between mt-3">
                         {/* Qty */}
                         <div className="flex items-center bg-[#F5E9DC] rounded-full p-1 border border-[#D4AF37]/50">
                           <button
-                            onClick={() => updateQuantity(item.product.id, Math.max(1, item.quantity - 1))}
+                            onClick={() => updateQuantity(item.product, Math.max(1, item.quantity - 1))}
                             className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-white text-[#2d2416] transition-colors"
                           >
                             <Minus size={11} />
                           </button>
                           <span className="px-3 font-bold text-sm text-[#2d2416] font-sans">{item.quantity}</span>
                           <button
-                            onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
+                            onClick={() => updateQuantity(item.product, item.quantity + 1)}
                             className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-white text-[#2d2416] transition-colors"
                           >
                             <Plus size={11} />

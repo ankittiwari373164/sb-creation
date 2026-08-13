@@ -3,14 +3,28 @@ import { persist, createJSONStorage } from 'zustand/middleware'
 import { Product, CartItem } from './supabase'
 import { cookieStorageAdapter } from './cookieStorage'
 
+// A cart "line" is uniquely identified by product + size + color + hand
+// option, NOT just product id — otherwise adding the same product in two
+// different sizes/colors would silently merge into one row and the second
+// selection would be lost. This key is used everywhere items are matched,
+// updated, or removed.
+function variantKey(product: any): string {
+  return [
+    product?.id,
+    product?.selectedSize || '',
+    product?.selectedColor || '',
+    product?.selectedHand || '',
+  ].join('::')
+}
+
 interface CartStore {
   items: CartItem[]
   coupon: any | null
   _hasHydrated: boolean          // ← true once the cart cookie has been read
   setHasHydrated: (v: boolean) => void
   addItem: (product: Product, quantity?: number) => void
-  removeItem: (productId: string) => void
-  updateQuantity: (productId: string, quantity: number) => void
+  removeItem: (product: Product) => void
+  updateQuantity: (product: Product, quantity: number) => void
   setCoupon: (coupon: any) => void
   clearCart: () => void
   getTotalItems: () => number
@@ -28,13 +42,14 @@ export const useCartStore = create<CartStore>()(
 
       addItem: (product, quantity = 1) => {
         set((state) => {
+          const key = variantKey(product)
           const existingItem = state.items.find(
-            (item) => item.product.id === product.id
+            (item) => variantKey(item.product) === key
           )
           if (existingItem) {
             return {
               items: state.items.map((item) =>
-                item.product.id === product.id
+                variantKey(item.product) === key
                   ? { ...item, quantity: item.quantity + quantity }
                   : item
               ),
@@ -44,17 +59,19 @@ export const useCartStore = create<CartStore>()(
         })
       },
 
-      removeItem: (productId) => {
+      removeItem: (product) => {
+        const key = variantKey(product)
         set((state) => ({
-          items: state.items.filter((item) => item.product.id !== productId),
+          items: state.items.filter((item) => variantKey(item.product) !== key),
         }))
       },
 
-      updateQuantity: (productId, quantity) => {
-        if (quantity <= 0) { get().removeItem(productId); return }
+      updateQuantity: (product, quantity) => {
+        if (quantity <= 0) { get().removeItem(product); return }
+        const key = variantKey(product)
         set((state) => ({
           items: state.items.map((item) =>
-            item.product.id === productId ? { ...item, quantity } : item
+            variantKey(item.product) === key ? { ...item, quantity } : item
           ),
         }))
       },

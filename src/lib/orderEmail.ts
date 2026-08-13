@@ -23,7 +23,7 @@ export async function sendOrderConfirmationEmail(orderId: string): Promise<void>
 
     const { data: items, error: itemsError } = await supabaseAdmin
       .from('order_items')
-      .select('quantity, price, products ( name, image_url )')
+      .select('quantity, price, size, color, products ( name, image_url )')
       .eq('order_id', orderId)
 
     if (itemsError) {
@@ -42,10 +42,12 @@ export async function sendOrderConfirmationEmail(orderId: string): Promise<void>
     const itemRows = (items || [])
       .map((it: any) => {
         const name = it.products?.name || 'Item'
+        const variantBits = [it.size ? `Size: ${it.size}` : '', it.color ? `Color: ${it.color}` : ''].filter(Boolean)
+        const variantLabel = variantBits.length ? ` <span style="color:#999;font-size:12px;">(${variantBits.join(', ')})</span>` : ''
         const lineTotal = (Number(it.price) * Number(it.quantity)).toLocaleString('en-IN')
         return `
           <tr>
-            <td style="padding:10px 0;border-bottom:1px solid #eee;font-size:14px;color:#2d2416;">${name} × ${it.quantity}</td>
+            <td style="padding:10px 0;border-bottom:1px solid #eee;font-size:14px;color:#2d2416;">${name}${variantLabel} × ${it.quantity}</td>
             <td style="padding:10px 0;border-bottom:1px solid #eee;font-size:14px;color:#2d2416;text-align:right;">₹${lineTotal}</td>
           </tr>`
       })

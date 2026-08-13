@@ -1034,7 +1034,20 @@ export default function AdminPage() {
                           )}
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-bold text-[#0F2C3E] truncate">{item.products?.name || 'Product'}</p>
-                            <p className="text-[10px] text-gray-400 font-bold uppercase">Qty: {item.quantity} × ₹{(item.price || 0).toLocaleString()}</p>
+                            {(item.size || item.color) && (
+                              <div className="flex items-center gap-2 mt-0.5">
+                                {item.size && (
+                                  <span className="text-[9px] font-bold uppercase tracking-wide text-[#0F5A7E]">Size: {item.size}</span>
+                                )}
+                                {item.color && (
+                                  <span className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-wide text-gray-500">
+                                    Color:
+                                    <span className="inline-block w-3 h-3 rounded-full border border-gray-300" style={{ backgroundColor: item.color }} />
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                            <p className="text-[10px] text-gray-400 font-bold uppercase mt-0.5">Qty: {item.quantity} × ₹{(item.price || 0).toLocaleString()}</p>
                           </div>
                           <p className="text-sm font-serif text-[#0F2C3E] font-bold shrink-0">₹{((item.price || 0) * item.quantity).toLocaleString()}</p>
                         </div>

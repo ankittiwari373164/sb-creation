@@ -217,6 +217,8 @@ export default function CheckoutPage() {
       product_id: item.product.id,
       quantity: item.quantity,
       price: item.product.price,
+      size: item.product.selectedSize || null,
+      color: item.product.selectedColor || null,
     }))
 
     const { error: itemsError } = await supabase.from('order_items').insert(orderItems)

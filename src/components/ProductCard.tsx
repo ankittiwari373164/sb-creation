@@ -17,9 +17,10 @@ export default function ProductCard({ product }: ProductCardProps) {
   const addItem = useCartStore((state) => state.addItem)
   const [isWishlisted, setIsWishlisted] = useState(false)
 
-  // Size Popup States
+  // Size + Color Popup States
   const [showSizePopup, setShowSizePopup] = useState(false)
   const [tempSize, setTempSize] = useState<string>('')
+  const [tempColor, setTempColor] = useState<string>('')
 
   // Check if item is already in wishlist on load
   useEffect(() => {
@@ -83,13 +84,15 @@ export default function ProductCard({ product }: ProductCardProps) {
     e.preventDefault()
     e.stopPropagation()
     setTempSize((product as any).sizes?.[0] || '2-4')
+    setTempColor((product as any).colors?.[0] || '')
     setShowSizePopup(true)
   }
 
   const confirmAddToCart = () => {
-    addItem({ ...product, selectedSize: tempSize } as any)
+    addItem({ ...product, selectedSize: tempSize, selectedColor: tempColor || undefined } as any)
 
-    toast.success(`${product.name} (${tempSize}) added!`, {
+    const variantLabel = [tempSize, tempColor].filter(Boolean).join(' / ')
+    toast.success(`${product.name} (${variantLabel}) added!`, {
       icon: '💍',
       style: {
         background: '#2d2416',
@@ -227,6 +230,32 @@ export default function ProductCard({ product }: ProductCardProps) {
                     </button>
                   ))}
                 </div>
+
+                {/* Color selection — only shown when the product actually has colors */}
+                {(product as any).colors?.length > 0 && (
+                  <div className="space-y-2">
+                    <span className="text-[#0F5A7E] text-[8px] md:text-[10px] font-bold uppercase tracking-[0.3em] md:tracking-[0.4em] block">
+                      Select Color
+                    </span>
+                    <div className="flex justify-center gap-2 md:gap-3 flex-wrap">
+                      {(product as any).colors.map((color: string) => (
+                        <button
+                          key={color}
+                          onClick={() => setTempColor(color)}
+                          title={color}
+                          className={`w-9 h-9 md:w-10 md:h-10 rounded-full border-2 transition-all flex items-center justify-center ${
+                            tempColor === color
+                              ? 'border-[#2d2416] shadow-lg scale-110'
+                              : 'border-[#D4AF37]/60 hover:border-[#0F5A7E]'
+                          }`}
+                          style={{ backgroundColor: color }}
+                        >
+                          {tempColor === color && <Check size={14} className="text-white drop-shadow" />}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 <button
                   onClick={confirmAddToCart}
