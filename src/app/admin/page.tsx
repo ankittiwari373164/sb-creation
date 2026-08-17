@@ -358,9 +358,19 @@ export default function AdminPage() {
   // yourself. No WhatsApp Business API / approval needed for this.
   const buildWhatsAppLink = (order: any): string => {
     const shipping = order.shipping_address || {}
-    const rawPhone = String(shipping.phone || '').replace(/\D/g, '')
-    // Assume Indian numbers when no country code is present (10 digits).
-    const phone = rawPhone.length === 10 ? `91${rawPhone}` : rawPhone
+    // Normalize whatever format the customer typed the phone number in:
+    // strip everything but digits, then strip any leading zero(s) (a common
+    // habit some people type out of muscle memory, e.g. "07533925626"),
+    // THEN check length so a genuine 10-digit Indian mobile number always
+    // gets "91" prepended correctly — regardless of a stray leading 0.
+    let rawPhone = String(shipping.phone || '').replace(/\D/g, '')
+    rawPhone = rawPhone.replace(/^0+/, '')
+    let phone = rawPhone
+    if (rawPhone.length === 10) {
+      phone = `91${rawPhone}`
+    }
+    // else: already has a country code (12+ digits) or is some other length
+    // we can't safely guess at — passed through as-is rather than guessed wrong.
 
     const itemLines = (order.order_items || [])
       .map((it: any) => {
