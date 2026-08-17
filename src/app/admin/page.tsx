@@ -55,7 +55,7 @@ export default function AdminPage() {
     title: '', content: '', excerpt: '', image_url: '', category: 'Style Guide'
   })
 
-  const [couponForm, setCouponForm] = useState({ code: '', discount_percent: 10, type: 'percent' as 'percent' | 'bogo' })
+  const [couponForm, setCouponForm] = useState({ code: '', discount_percent: 10, type: 'percent' as 'percent' | 'bogo', applicable_product_ids: [] as string[] })
 
   // --- ⚙️ Store Settings (Payments) ---
   const [settings, setSettings] = useState({
@@ -326,14 +326,17 @@ export default function AdminPage() {
       code: couponForm.code.toUpperCase(),
       type: couponForm.type,
       // BOGO coupons don't use a percentage — the discount is computed at
-      // checkout as the price of the cheapest item in the cart.
+      // checkout as the price of the cheapest qualifying item in the cart.
       discount_percent: couponForm.type === 'bogo' ? 0 : couponForm.discount_percent,
+      // Which products this coupon applies to. Empty = applies to anything
+      // (percent coupons almost always want this; BOGO usually wants it scoped).
+      applicable_product_ids: couponForm.type === 'bogo' ? couponForm.applicable_product_ids : [],
     }
     const { error } = await supabase.from('coupons').insert([payload])
     if (error) toast.error('Error creating coupon')
     else {
       toast.success('Coupon Active')
-      setCouponForm({ code: '', discount_percent: 10, type: 'percent' })
+      setCouponForm({ code: '', discount_percent: 10, type: 'percent', applicable_product_ids: [] })
       fetchData()
     }
   }
@@ -708,6 +711,32 @@ export default function AdminPage() {
               </div>
               {couponForm.type === 'percent' && (
                 <div className="w-40 space-y-3"><label className="text-[10px] font-bold uppercase text-gray-400 ml-5">Discount %</label><input type="number" value={couponForm.discount_percent} onChange={e => setCouponForm({...couponForm, discount_percent: parseInt(e.target.value)})} className="w-full bg-[#FAF9F6] p-5 rounded-full outline-none font-bold text-sm" required /></div>
+              )}
+              {couponForm.type === 'bogo' && (
+                <div className="w-full space-y-3">
+                  <label className="text-[10px] font-bold uppercase text-gray-400 ml-5">Applies To (pick which products qualify — leave empty for any product)</label>
+                  <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto bg-[#FAF9F6] p-4 rounded-2xl">
+                    {products.map((p: any) => {
+                      const checked = couponForm.applicable_product_ids.includes(p.id)
+                      return (
+                        <button
+                          type="button"
+                          key={p.id}
+                          onClick={() => setCouponForm({
+                            ...couponForm,
+                            applicable_product_ids: checked
+                              ? couponForm.applicable_product_ids.filter((id) => id !== p.id)
+                              : [...couponForm.applicable_product_ids, p.id],
+                          })}
+                          className={`px-4 py-2 rounded-full text-[11px] font-bold transition-all ${checked ? 'bg-[#0F2C3E] text-white shadow' : 'bg-white text-gray-500 border border-gray-200'}`}
+                        >
+                          {p.name}
+                        </button>
+                      )
+                    })}
+                    {products.length === 0 && <p className="text-xs text-gray-400 px-2">No products yet</p>}
+                  </div>
+                </div>
               )}
               <button type="submit" className="bg-[#0F2C3E] text-white px-12 py-5 rounded-full text-[11px] font-bold uppercase tracking-widest shadow-lg hover:bg-[#db2777] transition-all">Activate</button>
             </form>

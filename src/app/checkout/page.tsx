@@ -46,7 +46,8 @@ export default function CheckoutPage() {
   })
 
   const [couponCode, setCouponCode] = useState('')
-  const [discount, setDiscount] = useState(0)
+  const [discountAmount, setDiscountAmount] = useState(0)   // flat rupee amount, works for both % and BOGO coupons
+  const [discountLabel, setDiscountLabel] = useState('')
   const [isApplying, setIsApplying] = useState(false)
 
   const defaultFormData: {
@@ -97,14 +98,15 @@ export default function CheckoutPage() {
   }, [formData])
 
   const subtotal = getTotalPrice()
-  const discountAmount = (subtotal * discount) / 100
-  const finalTotal = subtotal - discountAmount
+  const finalTotal = Math.max(0, subtotal - discountAmount)
 
-  // Read coupon/discount from URL params set by cart page
+  // Read coupon/discount from URL params set by cart page (already a flat
+  // rupee amount computed there — works the same regardless of whether it
+  // came from a % coupon or a BOGO coupon).
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     setCouponCode(params.get('code') || '')
-    setDiscount(Number(params.get('discount')) || 0)
+    setDiscountAmount(Number(params.get('discountAmount')) || 0)
   }, [])
 
   // Load payment settings
@@ -152,9 +154,34 @@ export default function CheckoutPage() {
 
       if (error || !data) {
         toast.error('Invalid or expired coupon')
-        setDiscount(0)
+        setDiscountAmount(0)
+        setDiscountLabel('')
+      } else if (data.type === 'bogo') {
+        const scopedIds: string[] = data.applicable_product_ids || []
+        const qualifyingItems = scopedIds.length === 0
+          ? items
+          : items.filter((i) => scopedIds.includes(i.product.id))
+
+        const totalQty = qualifyingItems.reduce((n, i) => n + i.quantity, 0)
+        if (totalQty < 2) {
+          toast.error(
+            scopedIds.length === 0
+              ? 'Add at least 2 items to use this Buy 1 Get 1 code'
+              : 'Add at least 2 qualifying items to use this Buy 1 Get 1 code'
+          )
+          setDiscountAmount(0)
+          setDiscountLabel('')
+        } else {
+          const unitPrices = qualifyingItems.flatMap((i) => Array(i.quantity).fill(i.product.price))
+          const cheapest = Math.min(...unitPrices)
+          setDiscountAmount(cheapest)
+          setDiscountLabel('Buy 1 Get 1 — cheapest qualifying item free')
+          toast.success('Buy 1 Get 1 applied — your cheapest qualifying item is free!')
+        }
       } else {
-        setDiscount(data.discount_percent)
+        const amount = (subtotal * data.discount_percent) / 100
+        setDiscountAmount(amount)
+        setDiscountLabel(`${data.discount_percent}% off`)
         toast.success(`Applied: ${data.discount_percent}% off!`)
       }
     } catch {
@@ -205,7 +232,7 @@ export default function CheckoutPage() {
         payment_method: paymentMethod,
         payment_status: 'pending',
         shipping_address: shippingAddress,
-        coupon_used: discount > 0 ? couponCode.toUpperCase() : null,
+        coupon_used: discountAmount > 0 ? couponCode.toUpperCase() : null,
       })
       .select()
       .single()
@@ -502,9 +529,9 @@ export default function CheckoutPage() {
                     <span>Subtotal</span>
                     <span className="font-semibold text-[#2d2416]">₹{subtotal.toLocaleString()}</span>
                   </div>
-                  {discount > 0 && (
+                  {discountAmount > 0 && (
                     <div className="flex justify-between text-sm font-bold text-[#d92b7a] font-sans">
-                      <span>Discount ({discount}%)</span>
+                      <span>{discountLabel || 'Discount'}</span>
                       <span>- ₹{discountAmount.toLocaleString()}</span>
                     </div>
                   )}

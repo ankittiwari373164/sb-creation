@@ -39,21 +39,31 @@ export default function CartPage() {
       }
 
       if (data.type === 'bogo') {
-        const totalQty = items.reduce((n, i) => n + i.quantity, 0)
+        // Only items in the coupon's product list qualify (empty list = any product).
+        const scopedIds: string[] = data.applicable_product_ids || []
+        const qualifyingItems = scopedIds.length === 0
+          ? items
+          : items.filter((i) => scopedIds.includes(i.product.id))
+
+        const totalQty = qualifyingItems.reduce((n, i) => n + i.quantity, 0)
         if (totalQty < 2) {
-          toast.error('Add at least 2 items to use this Buy 1 Get 1 code')
+          toast.error(
+            scopedIds.length === 0
+              ? 'Add at least 2 items to use this Buy 1 Get 1 code'
+              : 'Add at least 2 qualifying items to use this Buy 1 Get 1 code'
+          )
           setAppliedDiscount(0)
           setAppliedCouponLabel('')
           return
         }
-        // Cheapest single unit across the cart becomes free — expand each
-        // line by its quantity so multi-quantity lines are considered
+        // Cheapest single unit among qualifying items becomes free — expand
+        // each line by its quantity so multi-quantity lines are considered
         // per-unit, not per-line.
-        const unitPrices = items.flatMap((i) => Array(i.quantity).fill(i.product.price))
+        const unitPrices = qualifyingItems.flatMap((i) => Array(i.quantity).fill(i.product.price))
         const cheapest = Math.min(...unitPrices)
         setAppliedDiscount(cheapest)
-        setAppliedCouponLabel('Buy 1 Get 1 — cheapest item free')
-        toast.success('Buy 1 Get 1 applied — your cheapest item is free!')
+        setAppliedCouponLabel('Buy 1 Get 1 — cheapest qualifying item free')
+        toast.success('Buy 1 Get 1 applied — your cheapest qualifying item is free!')
       } else {
         const amount = (subtotal * data.discount_percent) / 100
         setAppliedDiscount(amount)
