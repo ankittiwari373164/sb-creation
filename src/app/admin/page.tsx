@@ -473,7 +473,7 @@ export default function AdminPage() {
                       <div className="space-y-2">
                         <label className="text-[10px] font-bold uppercase text-gray-400 ml-2">Main Image</label>
                         <div className="relative aspect-square bg-gray-50 rounded-3xl border-2 border-dashed border-gray-200 flex items-center justify-center overflow-hidden group">
-                           {productForm.image_url ? <Image src={productForm.image_url} fill alt="" className="object-cover" /> : <Upload className="text-gray-300" />}
+                           {productForm.image_url ? <Image src={productForm.image_url} fill alt="" className="object-cover" unoptimized /> : <Upload className="text-gray-300" />}
                            <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={e => handleFileUpload(e, 'main')} />
                         </div>
                       </div>
@@ -486,7 +486,7 @@ export default function AdminPage() {
                            </label>
                            {productForm.gallery?.map((u: string, i: number) => (
                              <div key={i} className="relative aspect-square rounded-xl overflow-hidden shadow-sm">
-                               <Image src={u} fill alt="" className="object-cover" />
+                               <Image src={u} fill alt="" className="object-cover" unoptimized />
                                <button type="button" onClick={() => setProductForm({...productForm, gallery: productForm.gallery.filter((_:any,idx:number)=>idx!==i)})} className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full"><X size={8}/></button>
                              </div>
                            ))}
@@ -770,7 +770,7 @@ export default function AdminPage() {
                       <input placeholder="Title of Story" value={blogForm.title} onChange={e => setBlogForm({...blogForm, title: e.target.value})} className="w-full bg-[#FAF9F6] p-5 rounded-full outline-none border focus:border-[#D4AF37]" required />
                       <input placeholder="Short Intro (Excerpt)" value={blogForm.excerpt} onChange={e => setBlogForm({...blogForm, excerpt: e.target.value})} className="w-full bg-[#FAF9F6] p-5 rounded-full outline-none" required />
                       <div className="relative h-40 bg-[#FAF9F6] rounded-2xl border-2 border-dashed border-gray-200 flex items-center justify-center overflow-hidden">
-                        {blogForm.image_url ? <Image src={blogForm.image_url} fill alt="" className="object-cover" /> : <div className="text-center text-gray-300"><Upload className="mx-auto mb-2"/><p className="text-[10px] font-bold uppercase">Cover Artwork</p></div>}
+                        {blogForm.image_url ? <Image src={blogForm.image_url} fill alt="" className="object-cover" unoptimized /> : <div className="text-center text-gray-300"><Upload className="mx-auto mb-2"/><p className="text-[10px] font-bold uppercase">Cover Artwork</p></div>}
                         <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={e => handleFileUpload(e, 'blog')} />
                       </div>
                    </div>
