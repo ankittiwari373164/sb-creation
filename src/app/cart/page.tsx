@@ -14,7 +14,8 @@ export default function CartPage() {
   const { items, updateQuantity, removeItem, getTotalPrice, getTotalItems } = useCartStore()
   const [mounted, setMounted] = useState(false)
   const [couponInput, setCouponInput] = useState('')
-  const [appliedDiscount, setAppliedDiscount] = useState(0)
+  const [appliedDiscount, setAppliedDiscount] = useState(0)     // flat rupee amount, works for both % and BOGO
+  const [appliedCouponLabel, setAppliedCouponLabel] = useState('')
   const [checkingOut, setCheckingOut] = useState(false)
   const router = useRouter()
 
@@ -33,9 +34,31 @@ export default function CartPage() {
       if (error || !data) {
         toast.error('Invalid code')
         setAppliedDiscount(0)
+        setAppliedCouponLabel('')
+        return
+      }
+
+      if (data.type === 'bogo') {
+        const totalQty = items.reduce((n, i) => n + i.quantity, 0)
+        if (totalQty < 2) {
+          toast.error('Add at least 2 items to use this Buy 1 Get 1 code')
+          setAppliedDiscount(0)
+          setAppliedCouponLabel('')
+          return
+        }
+        // Cheapest single unit across the cart becomes free — expand each
+        // line by its quantity so multi-quantity lines are considered
+        // per-unit, not per-line.
+        const unitPrices = items.flatMap((i) => Array(i.quantity).fill(i.product.price))
+        const cheapest = Math.min(...unitPrices)
+        setAppliedDiscount(cheapest)
+        setAppliedCouponLabel('Buy 1 Get 1 — cheapest item free')
+        toast.success('Buy 1 Get 1 applied — your cheapest item is free!')
       } else {
-        setAppliedDiscount(data.discount_percent)
-        toast.success(`Discount applied: ${data.discount_percent}% off!`)
+        const amount = (subtotal * data.discount_percent) / 100
+        setAppliedDiscount(amount)
+        setAppliedCouponLabel(`${data.discount_percent}% off`)
+        toast.success(`Applied: ${data.discount_percent}% off!`)
       }
     } catch (err) {
       toast.error('Error checking code')
@@ -48,13 +71,16 @@ export default function CartPage() {
     setCheckingOut(true)
     const params = new URLSearchParams({
       code: couponInput,
-      discount: String(appliedDiscount),
+      // Pass the already-computed flat rupee amount, not a percentage —
+      // this is what makes BOGO (and any future non-percent coupon type)
+      // work without checkout needing to know how it was calculated.
+      discountAmount: String(appliedDiscount),
     })
     router.push(`/checkout?${params.toString()}`)
   }, [checkingOut, couponInput, appliedDiscount, router])
 
   const subtotal = getTotalPrice()
-  const discountAmount = (subtotal * appliedDiscount) / 100
+  const discountAmount = Math.min(appliedDiscount, subtotal)
   const finalTotal = subtotal - discountAmount
 
   if (!mounted) return <div className="min-h-screen bg-white" />
@@ -147,6 +173,7 @@ export default function CartPage() {
                               <span
                                 className="inline-block w-3.5 h-3.5 rounded-full border border-[#D4AF37]/60"
                                 style={{ backgroundColor: item.product.selectedColor }}
+                                title={item.product.selectedColor}
                               />
                             </span>
                           )}
@@ -218,7 +245,7 @@ export default function CartPage() {
 
                   {appliedDiscount > 0 && (
                     <div className="flex justify-between text-sm font-bold text-[#d92b7a] font-sans">
-                      <span>Discount ({appliedDiscount}%)</span>
+                      <span>{appliedCouponLabel || 'Discount'}</span>
                       <span>- ₹{discountAmount.toLocaleString()}</span>
                     </div>
                   )}

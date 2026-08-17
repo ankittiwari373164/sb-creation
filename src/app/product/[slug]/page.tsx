@@ -350,6 +350,7 @@ export default function ProductDetailPage() {
                       <button
                         key={color}
                         onClick={() => setSelectedColor(color)}
+                        title={color}
                         className={`w-8 h-8 rounded-full border-2 transition-all p-0.5 ${
                           selectedColor === color ? 'border-[#0F5A7E]' : 'border-transparent'
                         }`}

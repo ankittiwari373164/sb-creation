@@ -7,7 +7,7 @@ import {
   Plus, Edit, Trash2, Upload, X, Settings, History, 
   Ticket, BookOpen, Save, Users, Package, ShoppingBag,
   ExternalLink, CheckCircle, Search, LayoutDashboard, User, RefreshCcw, LogOut,
-  Eye, MapPin, Phone, Mail, CreditCard, ChevronDown
+  Eye, MapPin, Phone, Mail, CreditCard, ChevronDown, MessageCircle
 } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import toast from 'react-hot-toast'
@@ -48,14 +48,14 @@ export default function AdminPage() {
   const [productForm, setProductForm] = useState<any>({
     name: '', price: '', stock: '', category: PRODUCT_CATEGORIES[0],
     description: '', image_url: '', gallery: [], colors: [], sizes: ['2-4', '2-6'],
-    has_hand_option: false, one_hand_price: '', two_hand_price: '', new_color: '#D4AF37'
+    has_hand_option: false, one_hand_price: '', two_hand_price: '', new_color: ''
   })
 
   const [blogForm, setBlogForm] = useState({
     title: '', content: '', excerpt: '', image_url: '', category: 'Style Guide'
   })
 
-  const [couponForm, setCouponForm] = useState({ code: '', discount_percent: 10 })
+  const [couponForm, setCouponForm] = useState({ code: '', discount_percent: 10, type: 'percent' as 'percent' | 'bogo' })
 
   // --- ⚙️ Store Settings (Payments) ---
   const [settings, setSettings] = useState({
@@ -283,7 +283,7 @@ export default function AdminPage() {
 
   const resetProductForm = () => {
     // 💎 Reset to default category
-    setProductForm({ name: '', price: '', stock: '', category: PRODUCT_CATEGORIES[0], description: '', image_url: '', gallery: [], colors: [], sizes: ['2-4', '2-6'], has_hand_option: false, one_hand_price: '', two_hand_price: '', new_color: '#D4AF37' })
+    setProductForm({ name: '', price: '', stock: '', category: PRODUCT_CATEGORIES[0], description: '', image_url: '', gallery: [], colors: [], sizes: ['2-4', '2-6'], has_hand_option: false, one_hand_price: '', two_hand_price: '', new_color: '' })
     setShowProductForm(false)
     setEditingId(null)
   }
@@ -296,7 +296,7 @@ export default function AdminPage() {
       has_hand_option: !!p.has_hand_option,
       one_hand_price: p.one_hand_price != null ? String(p.one_hand_price) : '',
       two_hand_price: p.two_hand_price != null ? String(p.two_hand_price) : '',
-      new_color: '#D4AF37'
+      new_color: ''
     })
     setEditingId(p.id)
     setShowProductForm(true)
@@ -322,11 +322,18 @@ export default function AdminPage() {
   // --- 🎫 Coupon Actions ---
   const saveCoupon = async (e: React.FormEvent) => {
     e.preventDefault()
-    const { error } = await supabase.from('coupons').insert([{ ...couponForm, code: couponForm.code.toUpperCase() }])
+    const payload = {
+      code: couponForm.code.toUpperCase(),
+      type: couponForm.type,
+      // BOGO coupons don't use a percentage — the discount is computed at
+      // checkout as the price of the cheapest item in the cart.
+      discount_percent: couponForm.type === 'bogo' ? 0 : couponForm.discount_percent,
+    }
+    const { error } = await supabase.from('coupons').insert([payload])
     if (error) toast.error('Error creating coupon')
     else {
       toast.success('Coupon Active')
-      setCouponForm({ code: '', discount_percent: 10 })
+      setCouponForm({ code: '', discount_percent: 10, type: 'percent' })
       fetchData()
     }
   }
@@ -339,6 +346,44 @@ export default function AdminPage() {
       toast.success('Deleted')
       fetchData()
     }
+  }
+
+  // --- 💬 WhatsApp order confirmation (manual send) ---
+  // Builds a wa.me deep link with the order details pre-filled into the
+  // message box. Nothing is sent automatically — clicking it just opens
+  // WhatsApp (web or app) with the message ready, so you still tap Send
+  // yourself. No WhatsApp Business API / approval needed for this.
+  const buildWhatsAppLink = (order: any): string => {
+    const shipping = order.shipping_address || {}
+    const rawPhone = String(shipping.phone || '').replace(/\D/g, '')
+    // Assume Indian numbers when no country code is present (10 digits).
+    const phone = rawPhone.length === 10 ? `91${rawPhone}` : rawPhone
+
+    const itemLines = (order.order_items || [])
+      .map((it: any) => {
+        const variant = [it.size ? `Size: ${it.size}` : '', it.color ? `Color: ${it.color}` : '']
+          .filter(Boolean)
+          .join(', ')
+        const variantSuffix = variant ? ` (${variant})` : ''
+        return `• ${it.products?.name || 'Item'}${variantSuffix} × ${it.quantity} — ₹${(it.price * it.quantity).toLocaleString()}`
+      })
+      .join('\n')
+
+    const message = [
+      `Hi ${shipping.fullName || 'there'}! 🎉`,
+      `Your order #${String(order.id).slice(0, 8).toUpperCase()} from SB Creation is confirmed.`,
+      '',
+      itemLines,
+      '',
+      `Total: ₹${(order.total_amount || 0).toLocaleString()}`,
+      `Payment: ${order.payment_method === 'cod' ? 'Cash on Delivery' : (order.payment_status === 'paid' ? 'Paid Online' : 'Pending')}`,
+      '',
+      `Shipping to: ${shipping.address || ''}, ${shipping.city || ''} ${shipping.pincode || ''}`,
+      '',
+      'Thank you for shopping with SB Creation! 💛',
+    ].join('\n')
+
+    return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`
   }
 
   if (loading && products.length === 0) return (
@@ -445,43 +490,51 @@ export default function AdminPage() {
                       </div>
                     </div>
 
-                    {/* Colors — real color picker + swatches (any custom color) */}
+                    {/* Colors — plain text names (e.g. "Emerald Green"), no hex picker.
+                        Customer-facing everywhere shows the name as a text pill, not a
+                        colored swatch, since custom names aren't valid CSS colors. */}
                     <div className="space-y-3">
                       <label className="text-[10px] font-bold uppercase text-gray-400 ml-2">Available Colors</label>
                       <div className="flex items-center gap-3">
                         <input
-                          type="color"
-                          value={productForm.new_color || '#D4AF37'}
+                          type="text"
+                          value={productForm.new_color || ''}
                           onChange={e => setProductForm({ ...productForm, new_color: e.target.value })}
-                          className="w-12 h-12 rounded-xl border-2 border-gray-200 cursor-pointer bg-transparent p-0"
+                          onKeyDown={e => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault()
+                              const c = (productForm.new_color || '').trim()
+                              if (c && !productForm.colors?.includes(c)) {
+                                setProductForm({ ...productForm, colors: [...(productForm.colors || []), c], new_color: '' })
+                              }
+                            }
+                          }}
+                          placeholder="e.g. Emerald Green"
+                          className="flex-1 bg-gray-50 p-4 rounded-full outline-none text-sm border border-gray-200"
                         />
                         <button
                           type="button"
                           onClick={() => {
-                            const c = productForm.new_color || '#D4AF37'
-                            if (!productForm.colors?.includes(c)) {
-                              setProductForm({ ...productForm, colors: [...(productForm.colors || []), c] })
+                            const c = (productForm.new_color || '').trim()
+                            if (c && !productForm.colors?.includes(c)) {
+                              setProductForm({ ...productForm, colors: [...(productForm.colors || []), c], new_color: '' })
                             }
                           }}
-                          className="px-5 py-3 rounded-xl text-[10px] font-bold uppercase bg-gray-100 text-[#0F2C3E] hover:bg-gray-200 transition-all"
+                          className="px-5 py-3 rounded-xl text-[10px] font-bold uppercase bg-gray-100 text-[#0F2C3E] hover:bg-gray-200 transition-all shrink-0"
                         >
                           + Add Color
                         </button>
                       </div>
-                      <div className="flex flex-wrap gap-3 pt-1">
+                      <div className="flex flex-wrap gap-2 pt-1">
                         {productForm.colors?.map((c: string) => (
-                          <div key={c} className="relative group/color">
-                            <div
-                              title={c}
-                              className="w-9 h-9 rounded-full border-2 border-gray-200 shadow-inner"
-                              style={{ backgroundColor: c }}
-                            />
+                          <div key={c} className="flex items-center gap-2 bg-[#FAF9F6] border border-gray-200 rounded-full pl-4 pr-2 py-2">
+                            <span className="text-xs font-bold text-[#0F2C3E]">{c}</span>
                             <button
                               type="button"
                               onClick={() => setProductForm({ ...productForm, colors: productForm.colors.filter((z: string) => z !== c) })}
-                              className="absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full p-0.5 opacity-0 group-hover/color:opacity-100 transition-all"
+                              className="bg-red-50 text-red-500 rounded-full p-1 hover:bg-red-100 transition-all"
                             >
-                              <X size={9} />
+                              <X size={10} />
                             </button>
                           </div>
                         ))}
@@ -646,11 +699,20 @@ export default function AdminPage() {
             <h2 className="text-2xl font-serif text-[#0F2C3E]">Promotions</h2>
             <form onSubmit={saveCoupon} className="bg-white p-10 rounded-[3rem] border border-gray-100 flex flex-wrap gap-6 items-end shadow-xl">
               <div className="flex-1 min-w-[250px] space-y-3"><label className="text-[10px] font-bold uppercase text-gray-400 ml-5">Coupon Code</label><input value={couponForm.code} onChange={e => setCouponForm({...couponForm, code: e.target.value.toUpperCase()})} placeholder="SAVE20" className="w-full bg-[#FAF9F6] p-5 rounded-full outline-none font-bold text-sm uppercase" required /></div>
-              <div className="w-40 space-y-3"><label className="text-[10px] font-bold uppercase text-gray-400 ml-5">Discount %</label><input type="number" value={couponForm.discount_percent} onChange={e => setCouponForm({...couponForm, discount_percent: parseInt(e.target.value)})} className="w-full bg-[#FAF9F6] p-5 rounded-full outline-none font-bold text-sm" required /></div>
+              <div className="w-56 space-y-3">
+                <label className="text-[10px] font-bold uppercase text-gray-400 ml-5">Type</label>
+                <div className="flex bg-[#FAF9F6] rounded-full p-1.5">
+                  <button type="button" onClick={() => setCouponForm({ ...couponForm, type: 'percent' })} className={`flex-1 py-3.5 rounded-full text-[10px] font-bold uppercase transition-all ${couponForm.type === 'percent' ? 'bg-[#0F2C3E] text-white shadow' : 'text-gray-400'}`}>% Off</button>
+                  <button type="button" onClick={() => setCouponForm({ ...couponForm, type: 'bogo' })} className={`flex-1 py-3.5 rounded-full text-[10px] font-bold uppercase transition-all ${couponForm.type === 'bogo' ? 'bg-[#0F2C3E] text-white shadow' : 'text-gray-400'}`}>Buy 1 Get 1</button>
+                </div>
+              </div>
+              {couponForm.type === 'percent' && (
+                <div className="w-40 space-y-3"><label className="text-[10px] font-bold uppercase text-gray-400 ml-5">Discount %</label><input type="number" value={couponForm.discount_percent} onChange={e => setCouponForm({...couponForm, discount_percent: parseInt(e.target.value)})} className="w-full bg-[#FAF9F6] p-5 rounded-full outline-none font-bold text-sm" required /></div>
+              )}
               <button type="submit" className="bg-[#0F2C3E] text-white px-12 py-5 rounded-full text-[11px] font-bold uppercase tracking-widest shadow-lg hover:bg-[#db2777] transition-all">Activate</button>
             </form>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {coupons.map(c => <div key={c.id} className="bg-white p-8 rounded-[3rem] border flex justify-between items-center shadow-sm relative overflow-hidden group"><div className="absolute top-0 right-0 p-4 opacity-5"><Ticket size={60} /></div><div className="z-10"><h4 className="text-2xl font-serif text-[#0F2C3E]">{c.code}</h4><p className="text-[10px] text-[#db2777] font-bold uppercase tracking-widest">{c.discount_percent}% Discount Active</p></div><button onClick={() => deleteItem('coupons', c.id)} className="p-3 text-red-500 hover:bg-red-50 rounded-full transition-all z-10"><Trash2 size={18}/></button></div>)}
+              {coupons.map(c => <div key={c.id} className="bg-white p-8 rounded-[3rem] border flex justify-between items-center shadow-sm relative overflow-hidden group"><div className="absolute top-0 right-0 p-4 opacity-5"><Ticket size={60} /></div><div className="z-10"><h4 className="text-2xl font-serif text-[#0F2C3E]">{c.code}</h4><p className="text-[10px] text-[#db2777] font-bold uppercase tracking-widest">{c.type === 'bogo' ? 'Buy 1 Get 1 Free' : `${c.discount_percent}% Discount Active`}</p></div><button onClick={() => deleteItem('coupons', c.id)} className="p-3 text-red-500 hover:bg-red-50 rounded-full transition-all z-10"><Trash2 size={18}/></button></div>)}
             </div>
           </div>
         )}
@@ -1017,6 +1079,16 @@ export default function AdminPage() {
                         <p>{selectedOrder.shipping_address.country}</p>
                       </div>
                     </div>
+                    {selectedOrder.shipping_address.phone && (
+                      <a
+                        href={buildWhatsAppLink(selectedOrder)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-full mt-2 bg-[#25D366] text-white py-3 rounded-full text-[11px] font-bold uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-[#1ebe5a] transition-all shadow"
+                      >
+                        <MessageCircle size={15} /> Send Order Confirmation on WhatsApp
+                      </a>
+                    )}
                   </div>
                 )}
 
@@ -1040,9 +1112,8 @@ export default function AdminPage() {
                                   <span className="text-[9px] font-bold uppercase tracking-wide text-[#0F5A7E]">Size: {item.size}</span>
                                 )}
                                 {item.color && (
-                                  <span className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-wide text-gray-500">
-                                    Color:
-                                    <span className="inline-block w-3 h-3 rounded-full border border-gray-300" style={{ backgroundColor: item.color }} />
+                                  <span className="text-[9px] font-bold uppercase tracking-wide text-gray-500">
+                                    Color: <span className="text-[#0F2C3E]">{item.color}</span>
                                   </span>
                                 )}
                               </div>

@@ -255,7 +255,7 @@ const ProductSlider = ({ products }: { products: any[] }) => {
                 {selectedProduct.colors?.length > 0 && (
                   <div className="space-y-2">
                     <span className="text-[10px] font-bold uppercase tracking-[0.4em] block text-[#0F5A7E]">Select Color</span>
-                    <div className="flex justify-center gap-2">
+                    <div className="flex justify-center gap-2 flex-wrap">
                       {selectedProduct.colors.map((color: string) => (
                         <button
                           key={color}

@@ -55,6 +55,15 @@ interface Cache {
 
 let cache: Cache | null = null
 
+// A "last known good" snapshot of live counts, kept separately from the main
+// 24h cache and NOT bound by that TTL. Whenever a live fetch succeeds, this
+// gets updated. Whenever a live fetch fails (429s, etc — expected to happen
+// periodically on a free-tier API), we fall back to this instead of
+// resetting to 0 — so a temporary rate limit never makes the storefront show
+// "0 Followers" for real users. Only resets when a source actually succeeds
+// again with a real number.
+let lastGoodCounts: { followers: number; following: number; posts_count: number } | null = null
+
 // Belt-and-suspenders: never serve an image_url that's actually a video file,
 // no matter where it came from (fresh fetch or an old cache entry). This is
 // the same check used when building covers, applied once more as a final
@@ -415,17 +424,33 @@ async function fetchAll(): Promise<{ posts: InstagramPost[]; profile: InstagramP
 
     if (liveCounts.error) {
       console.warn(`[IG-live] Could not get live counts from ${source}, using fallback if configured:`, liveCounts.error)
-      // Fall back to a manually-set number rather than showing 0. Update
-      // these occasionally by hand; they're only used when the live fetch fails.
-      const followersOverride = Number(process.env.INSTAGRAM_FOLLOWERS_OVERRIDE)
-      const followingOverride = Number(process.env.INSTAGRAM_FOLLOWING_OVERRIDE)
-      if (Number.isFinite(followersOverride)) profile.followers = followersOverride
-      if (Number.isFinite(followingOverride)) profile.following = followingOverride
+      if (lastGoodCounts) {
+        // Preferred fallback: whatever we last successfully fetched, no
+        // matter how long ago — better than showing 0 or a stale manual number.
+        console.log('[IG-live] Falling back to last known good counts:', lastGoodCounts)
+        profile.followers = lastGoodCounts.followers
+        profile.following = lastGoodCounts.following
+        if (lastGoodCounts.posts_count > 0) profile.posts_count = lastGoodCounts.posts_count
+      } else {
+        // No successful fetch has ever happened on this server instance yet
+        // (e.g. right after a deploy) — fall back to a manually-set number
+        // if configured, so it's still not a bare 0.
+        const followersOverride = Number(process.env.INSTAGRAM_FOLLOWERS_OVERRIDE)
+        const followingOverride = Number(process.env.INSTAGRAM_FOLLOWING_OVERRIDE)
+        if (Number.isFinite(followersOverride)) profile.followers = followersOverride
+        if (Number.isFinite(followingOverride)) profile.following = followingOverride
+      }
     } else {
       console.log(`[IG-live] Got live counts from: ${source}`)
       profile.followers = liveCounts.followers
       profile.following = liveCounts.following
       if (liveCounts.posts_count > 0) profile.posts_count = liveCounts.posts_count
+      // Remember this success for next time a live fetch fails.
+      lastGoodCounts = {
+        followers: liveCounts.followers,
+        following: liveCounts.following,
+        posts_count: liveCounts.posts_count,
+      }
     }
 
     // Backfill any post SocialAPI returned with no cover image (this is
