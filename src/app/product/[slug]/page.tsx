@@ -49,13 +49,13 @@ function MagnifierImage({ src, alt }: { src: string; alt: string }) {
         src={src}
         alt={alt}
         fill
+        unoptimized
         className="object-cover"
         style={{
           transform: isZooming ? `scale(${ZOOM})` : 'scale(1)',
           transformOrigin: origin,
           transition: isZooming ? 'transform 0.05s linear' : 'transform 0.3s ease',
         }}
-        unoptimized
       />
 
       {/* Zoom hint badge — disappears while zooming */}

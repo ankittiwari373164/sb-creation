@@ -175,8 +175,8 @@ const ProductSlider = ({ products }: { products: any[] }) => {
                   {/* ↓ Reduced image height — square but smaller */}
                   <div className="relative w-full aspect-square rounded-xl overflow-hidden bg-white shadow-md border border-[#F8C8DC] hover:shadow-lg hover:border-[#db2777] transition-all duration-300">
                     
-                    <Image src={primaryImage} alt={product.name} fill className="object-cover transition-all duration-1000 group-hover:scale-110 group-hover:opacity-0" />
-                    <Image src={secondaryImage} alt="Detail" fill className="object-cover opacity-0 scale-125 transition-all duration-1000 group-hover:opacity-100 group-hover:scale-105" />
+                    <Image src={primaryImage} alt={product.name} fill unoptimized className="object-cover transition-all duration-1000 group-hover:scale-110 group-hover:opacity-0" />
+                    <Image src={secondaryImage} alt="Detail" fill unoptimized className="object-cover opacity-0 scale-125 transition-all duration-1000 group-hover:opacity-100 group-hover:scale-105" />
 
                     <div className="absolute inset-0 bg-gradient-to-t from-[#0F2C3E]/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 

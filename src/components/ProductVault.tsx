@@ -63,6 +63,7 @@ export default function ProductVault({ products }: { products: any[] }) {
                 src={product.image_url || '/placeholder.jpg'}
                 alt={product.name}
                 fill
+                unoptimized
                 className="object-cover transition-transform duration-1000 group-hover:scale-110"
               />
 

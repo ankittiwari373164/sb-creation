@@ -622,7 +622,7 @@ export default function AdminPage() {
                 <div key={p.id} className="bg-white p-6 rounded-[2.5rem] border border-gray-100 flex items-center justify-between group hover:border-[#D4AF37]/30 transition-all shadow-sm">
                   <div className="flex items-center gap-6">
                     <div className="w-16 h-16 bg-[#FAF9F6] rounded-2xl overflow-hidden relative shadow-inner">
-                       <Image src={p.image_url || '/placeholder.jpg'} fill alt="" className="object-cover" />
+                       <Image src={p.image_url || '/placeholder.jpg'} fill alt="" className="object-cover" unoptimized />
                     </div>
                     <div>
                       <h4 className="font-bold text-[#0F2C3E] line-clamp-1 pr-2">{p.name}</h4>
@@ -782,7 +782,7 @@ export default function AdminPage() {
             <div className="grid md:grid-cols-2 gap-8">
               {blogs.map(b => (
                 <div key={b.id} className="bg-white p-6 rounded-[3rem] border border-gray-100 flex items-center gap-6 shadow-sm group hover:border-[#D4AF37]/30 transition-all">
-                  <div className="w-24 h-24 bg-[#FAF9F6] rounded-[1.5rem] overflow-hidden relative shadow-inner"><Image src={b.image_url || '/placeholder.jpg'} fill alt="" className="object-cover" /></div>
+                  <div className="w-24 h-24 bg-[#FAF9F6] rounded-[1.5rem] overflow-hidden relative shadow-inner"><Image src={b.image_url || '/placeholder.jpg'} fill alt="" className="object-cover" unoptimized /></div>
                   <div className="flex-1"><h4 className="font-bold text-[#0F2C3E] leading-tight line-clamp-2">{b.title}</h4><p className="text-[9px] text-gray-400 font-bold uppercase mt-1">{b.category}</p></div>
                   <button onClick={() => deleteItem('blog_posts', b.id)} className="p-3 text-red-400 hover:bg-red-50 rounded-full opacity-0 group-hover:opacity-100 transition-all"><Trash2 size={20}/></button>
                 </div>
@@ -1140,7 +1140,7 @@ export default function AdminPage() {
                         <div key={i} className="flex items-center gap-4 p-4 bg-[#FAF9F6] rounded-2xl">
                           {item.products?.image_url && (
                             <div className="relative w-14 h-14 rounded-xl overflow-hidden shrink-0">
-                              <Image src={item.products.image_url} fill alt={item.products?.name} className="object-cover" />
+                              <Image src={item.products.image_url} fill alt={item.products?.name} className="object-cover" unoptimized />
                             </div>
                           )}
                           <div className="flex-1 min-w-0">

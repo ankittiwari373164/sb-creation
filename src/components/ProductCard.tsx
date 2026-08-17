@@ -123,6 +123,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                 src={product.image_url || '/placeholder-product.jpg'}
                 alt={product.name}
                 fill
+                unoptimized
                 className="object-cover transition-transform duration-500 group-hover:scale-105"
               />
 

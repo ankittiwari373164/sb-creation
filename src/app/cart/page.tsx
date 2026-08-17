@@ -153,6 +153,7 @@ export default function CartPage() {
                         src={item.product.image_url || '/placeholder.jpg'}
                         alt={item.product.name}
                         fill
+                        unoptimized
                         className="object-cover"
                       />
                     </div>
