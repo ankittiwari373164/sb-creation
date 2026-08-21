@@ -60,7 +60,6 @@ export default function AdminPage() {
   // --- ⚙️ Store Settings (Payments) ---
   const [settings, setSettings] = useState({
     razorpay_enabled: false,
-    cod_enabled: true,
     razorpay_key_id: '',
     razorpay_key_secret: '',
     hero_desktop_image: '',
@@ -111,7 +110,6 @@ export default function AdminPage() {
       const data = await res.json()
       setSettings({
         razorpay_enabled: !!data.razorpay_enabled,
-        cod_enabled: !!data.cod_enabled,
         razorpay_key_id: data.razorpay_key_id || '',
         razorpay_key_secret: data.razorpay_key_secret || '',
         hero_desktop_image: data.hero_desktop_image || '',
@@ -823,22 +821,6 @@ export default function AdminPage() {
               {/* Payment method toggles */}
               <div className="space-y-5">
                 <h3 className="text-[10px] font-bold uppercase tracking-widest text-[#D4AF37]">Accepted Methods</h3>
-
-                {/* COD toggle */}
-                <div className="flex items-center justify-between bg-[#FAF9F6] p-6 rounded-3xl">
-                  <div>
-                    <p className="font-bold text-[#0F2C3E]">Cash on Delivery</p>
-                    <p className="text-xs text-gray-400 mt-0.5">Let customers pay when the order arrives.</p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setSettings(s => ({ ...s, cod_enabled: !s.cod_enabled }))}
-                    className={`relative w-14 h-8 rounded-full transition-colors shrink-0 ${settings.cod_enabled ? 'bg-[#0F2C3E]' : 'bg-gray-300'}`}
-                    aria-pressed={settings.cod_enabled}
-                  >
-                    <span className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full shadow transition-transform ${settings.cod_enabled ? 'translate-x-6' : ''}`} />
-                  </button>
-                </div>
 
                 {/* Razorpay toggle */}
                 <div className="flex items-center justify-between bg-[#FAF9F6] p-6 rounded-3xl">

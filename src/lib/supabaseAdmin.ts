@@ -26,7 +26,6 @@ export type CollectionCover = {
 export type StoreSettings = {
   id: number
   razorpay_enabled: boolean
-  cod_enabled: boolean
   razorpay_key_id: string
   razorpay_key_secret: string
   hero_desktop_image: string
@@ -61,7 +60,6 @@ export async function getStoreSettings(): Promise<StoreSettings> {
     const defaults = {
       id: 1,
       razorpay_enabled: false,
-      cod_enabled: true,
       razorpay_key_id: '',
       razorpay_key_secret: '',
       hero_desktop_image: DEFAULT_HERO_DESKTOP,

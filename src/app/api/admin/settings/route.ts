@@ -13,7 +13,6 @@ export async function GET(req: NextRequest) {
     const s = await getStoreSettings()
     return NextResponse.json({
       razorpay_enabled: s.razorpay_enabled,
-      cod_enabled: s.cod_enabled,
       razorpay_key_id: s.razorpay_key_id || '',
       razorpay_key_secret: s.razorpay_key_secret || '',
       hero_desktop_image: s.hero_desktop_image || '',
@@ -33,10 +32,14 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
 
+    // COD was removed entirely — the `cod_enabled` column no longer exists
+    // in store_settings, so it must never be sent in a payload written to
+    // that table (writing an unknown column is what caused "Could not find
+    // the 'cod_enabled' column of 'store_settings'" on every settings save,
+    // including unrelated ones like saving storefront images).
     const payload: Record<string, any> = {
       id: 1,
       razorpay_enabled: !!body.razorpay_enabled,
-      cod_enabled: !!body.cod_enabled,
       razorpay_key_id: String(body.razorpay_key_id ?? '').trim(),
       updated_at: new Date().toISOString(),
     }
