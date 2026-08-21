@@ -4,6 +4,7 @@ import { Toaster } from 'react-hot-toast'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import MetaPixel from '../components/MetaPixel'
+import Analytics from '../components/Analytics'
 
 export const metadata: Metadata = {
   title: 'SB Creation | Handcrafted Firozabad Bangles',
@@ -39,6 +40,7 @@ export default function RootLayout({
         {/* Meta Pixel will be loaded here via the component */}
       </head>
       <body>
+        <Analytics />
         <MetaPixel />
         <Navbar />
         <main className="min-h-screen">
